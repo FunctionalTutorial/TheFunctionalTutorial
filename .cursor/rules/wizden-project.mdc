@@ -1,0 +1,148 @@
+---
+description: Wizden fork conventions, file placement, and Space Station 14 ECS/coding practices
+alwaysApply: true
+---
+
+# Wizden Project Rules
+
+This is a Space Station 14 content fork (Wizden). Follow upstream SS14/Robust Toolbox ECS architecture and the Wizden-specific placement rules below.
+
+**Do not edit `RobustToolbox/`.** It is a separate engine project (read-only submodule). All work belongs in Wizden content; see `robust-toolbox-readonly.mdc`.
+
+## Wizden File Placement
+
+### New original content — put it in Wizden folders
+
+All **new** Wizden code and assets belong under Wizden folder structures, mirroring existing layout:
+
+| Area | Location |
+|------|----------|
+| Server systems | `Content.Server/Wizden/` or `Content.Server/_Wizden/` |
+| Shared components, events, systems | `Content.Shared/Wizden/` or `Content.Shared/_Wizden/` |
+| Client systems, UI | `Content.Client/Wizden/` or `Content.Client/_Wizden/` |
+| YAML prototypes | `Resources/Prototypes/_Wizden/` |
+| Maps | `Resources/Maps/**/Wizden/` |
+| Textures / audio | `Resources/Textures/**/Wizden/`, `Resources/Audio/**/Wizden/` as appropriate |
+
+Organize by feature (e.g. `Content.Server/Wizden/Example/ExampleSystem.cs`, `Content.Shared/Wizden/Example/ExampleComponent.cs`). Use file-scoped namespaces matching the folder path (e.g. `namespace Content.Server.Wizden.Example;`).
+
+Do **not** add new standalone features as loose files outside Wizden paths.
+
+### Editing upstream files — mark every change with `//Wizden`
+
+When modifying **existing** files that are **not** inside a Wizden subfolder, annotate every changed line or block:
+
+**Single-line change** — append `//Wizden` (optional short note):
+
+```csharp
+using Content.Server.Wizden.Chat; //Wizden
+public int Range { get; private set; } = 6; //Wizden: 10>6 to reduce spam
+```
+
+**Multi-line block** — wrap with begin/end comments:
+
+```csharp
+//Wizden - Begin
+public void SetYield(SeedData seed, int newYield)
+{
+    seed.Yield = newYield;
+}
+//Wizden - End
+```
+
+Also acceptable: `//Wizden Block start` / `//Wizden block end`, or descriptive variants like `//Wizden - FeatureName Start`.
+
+Apply the same rule to YAML edits in non-Wizden prototype files when adding or changing Wizden content inline.
+
+Files already under `Wizden/` or `_Wizden/` paths do **not** need these markers.
+
+---
+
+## Entity-Component-System (ECS)
+
+Reference: [SS14 ECS wiki](https://docs.spacestation14.com/en/robust-toolbox/ecs.html)
+
+### Core model
+
+- **Entities** are identifiers (UIDs). An entity is a bundle of components, not a class hierarchy.
+- **Components** are **data only** — fields, markers, `[DataField]` properties. No logic, no private setters with behavior, no methods that mutate state.
+- **Entity systems** (`EntitySystem` subclasses) hold **all behavior**. They subscribe to events, expose public API methods, and modify components.
+
+Prefer **composition over inheritance**. Instead of deep class trees (`Human → BaseCarbon → BaseMob`), attach components (`Damageable`, `Buckleable`, `MindComponent`, `PowerReceiver`) as needed.
+
+### Systems
+
+- Auto-created singletons; subscribe in `Initialize()` via `SubscribeLocalEvent`.
+- Depend on other systems with `[Dependency]`, not `IoCManager.Resolve` or manual caching.
+- Public API methods: put `Entity<T?>` / `EntityUid` first, call `Resolve()` at the start of the body.
+- Use system proxy helpers (`Name(uid)`, `Transform(uid)`) instead of `EntityManager.GetComponent` where available.
+- Client systems are torn down on disconnect — clean up in `Shutdown()` when needed.
+
+### Events
+
+- **Directed events** (raised on an entity) are preferred over broadcast events.
+- Event class names end in `Event`. Handlers named `OnXEvent`.
+- Events should be **structs**, raised **by ref**, with `[ByRefEvent]` when applicable.
+- Patterns: lifestage (`ComponentInit`, `ComponentShutdown`), informative (immutable), cancellable (`CancellableEntityEventArgs`), handled (`HandledEntityEventArgs`).
+- **Do not use method events** for new code — call public methods on entity systems instead.
+- Avoid async in simulation code; use events (especially for DoAfter).
+
+### Components (data rules)
+
+- All component data fields are **public**.
+- Use `[RegisterComponent]`, `[NetworkedComponent]` where needed; shared base components are `abstract`.
+- Restrict writes with `[Access(...)]` and `[Friend(...)]` — logic lives in the system, not the component setter.
+- Use `EntityUid?` for optional entities, never `EntityUid.Invalid`.
+- Prototype IDs: `ProtoId<T>`, not raw magic strings.
+
+---
+
+## SS14 Coding Conventions
+
+Reference: [SS14 Conventions wiki](https://docs.spacestation14.com/en/general-development/codebase-info/conventions.html)
+
+### General
+
+- No copy-paste — extract shared helpers. No magic strings/numbers — use `const`, `static readonly`, or `ProtoId<T>`.
+- Comment **why**, not what. Use XML docs on public APIs and `[DataField]` members.
+- Human-readable text via localization (`Loc.GetString`), never as dictionary keys or identifiers.
+- Fields and auto-properties before methods. File-scoped namespaces. One parameter per line when signatures wrap.
+
+### Prototypes & resources
+
+- Prefer **prototypes over enums** for in-game types.
+- Don't cache prototypes — store `ProtoId<T>` and resolve via `IPrototypeManager`.
+- Sounds: `SoundSpecifier` / `SoundCollectionSpecifier`. Sprites: `SpriteSpecifier`.
+- Use CVars or constants for tunable values.
+
+### Performance & style
+
+- Prefer event-driven logic over per-tick `Update()` when possible.
+- Classes must be `sealed`, `abstract`, `static`, or `[Virtual]`.
+- No extension methods on `EntityUid`, components, or entity systems — use system public methods.
+- UI: prefer XAML over pure C# UI definitions.
+- Avoid variable captures in lambdas passed to hot paths; use overloads that accept custom state.
+
+### Entity system example (pattern to follow)
+
+```csharp
+public sealed class FooSystem : EntitySystem
+{
+    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+
+    public override void Initialize()
+    {
+        SubscribeLocalEvent<FooComponent, ComponentInit>(OnFooInit);
+        SubscribeLocalEvent<FooComponent, InteractUsingEvent>(OnInteract);
+    }
+
+    public void SetCounter(Entity<FooComponent?> ent, int count)
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return;
+
+        ent.Comp.InteractCounter = count;
+        RaiseLocalEvent(ent, new FooCounterChangedEvent(count));
+    }
+}
+```
