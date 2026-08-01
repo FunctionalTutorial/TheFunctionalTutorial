@@ -158,7 +158,8 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
 
     private void PrepareGrid(EntityUid gridUid)
     {
-        ForcePowerGrid(gridUid);
+        // Power/atmos simplification is applied from TutorialRolePrototype.SimplifiedEnvironment
+        // after load (cargo keeps live atmos for undock/space practice).
 
         var gravity = EnsureComp<GravityComponent>(gridUid);
         _gravity.EnableGravity(gridUid, gravity);
@@ -456,17 +457,6 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
             _transform.Unanchor(uid, xform);
         _power.SetNeedsPower(uid, false);
         return uid;
-    }
-
-    private void ForcePowerGrid(EntityUid gridUid)
-    {
-        var query = EntityQueryEnumerator<TransformComponent>();
-        while (query.MoveNext(out var uid, out var xform))
-        {
-            if (xform.GridUid != gridUid)
-                continue;
-            _power.SetNeedsPower(uid, false);
-        }
     }
 
     private EntityCoordinates ResolveShuttleSpawn(EntityUid shuttleUid)

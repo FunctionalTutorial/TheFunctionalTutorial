@@ -2,6 +2,7 @@
   id: TutorialChef
   job: Chef
   stub: false
+  simplifiedEnvironment: true
   category: Service
   map: /Maps/_Functional/TutorialServer/Roles/Chef.yml
 

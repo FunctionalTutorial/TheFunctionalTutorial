@@ -2,6 +2,7 @@
   id: TutorialHeadOfPersonnel
   job: HeadOfPersonnel
   stub: false
+  simplifiedEnvironment: true
   category: Command
   map: /Maps/_Functional/TutorialServer/Roles/HeadOfPersonnel.yml
   roomTemplate: TutorialSectionCommand

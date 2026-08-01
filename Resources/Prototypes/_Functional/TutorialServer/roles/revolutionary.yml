@@ -3,6 +3,7 @@
   job: Passenger
   antag: HeadRev
   stub: false
+  simplifiedEnvironment: true
   category: Wizden antagonists
   name: tutorial-antag-rev-name
   roomTemplate: TutorialSectionMaintAntag

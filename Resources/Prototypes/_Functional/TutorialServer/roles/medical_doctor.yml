@@ -2,6 +2,7 @@
   id: TutorialMedicalDoctor
   job: MedicalDoctor
   stub: false
+  simplifiedEnvironment: true
   category: Medical
   map: /Maps/_Functional/TutorialServer/Roles/MedicalDoctor.yml
   roomTemplate: TutorialSectionMedbay

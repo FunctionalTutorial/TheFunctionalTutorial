@@ -2,6 +2,7 @@
   id: TutorialSecurityOfficer
   job: SecurityOfficer
   stub: false
+  simplifiedEnvironment: true
   category: Security
   map: /Maps/_Functional/TutorialServer/Roles/SecurityOfficer.yml
   roomTemplate: TutorialSectionSecurity

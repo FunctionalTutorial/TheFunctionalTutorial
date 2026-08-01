@@ -5,6 +5,7 @@
   id: TutorialPassenger
   job: Passenger
   stub: false
+  simplifiedEnvironment: true
   category: Civilian
   name: tutorial-job-passenger-name
   map: /Maps/_Functional/TutorialServer/Roles/Passenger.yml
@@ -13,7 +14,7 @@
   roomTemplate: TutorialSectionArrivals
   guidebook: Jobs
   practiceSpawns:
-  # Room 0 — walk end-to-end, then pickup / drop / use / stow / drink (no room change).
+  # Room 0 â€” walk end-to-end, then pickup / drop / use / stow / drink (no room change).
   # Marker offset > ReachMarker range (1.5) so spawn at chamber center does not auto-complete.
   - id: TutorialPassengerTrainer
     room: 0
@@ -31,7 +32,7 @@
   - id: DrinkWaterBottleFull
     room: 0
     offset: 0.5, -1
-  # Chamber 1 — pry-exit destination (Arrivals maint gate). Keeps the second stamp.
+  # Chamber 1 â€” pry-exit destination (Arrivals maint gate). Keeps the second stamp.
   - id: TutorialStepMarker
     room: 1
     offset: 0, -1.5

@@ -2,6 +2,7 @@
   id: TutorialChemist
   job: Chemist
   stub: false
+  simplifiedEnvironment: true
   category: Medical
   map: /Maps/_Functional/TutorialServer/Roles/Chemist.yml
   roomTemplate: TutorialSectionChem

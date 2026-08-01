@@ -3,6 +3,7 @@
   job: Passenger
   antag: NukeopsCommander
   stub: false
+  simplifiedEnvironment: true
   category: Wizden antagonists
   shuttleArena: TutorialArenaNukeopsInfiltrator
   map: /Maps/_Functional/TutorialServer/Antag_NukeopsCommander.yml

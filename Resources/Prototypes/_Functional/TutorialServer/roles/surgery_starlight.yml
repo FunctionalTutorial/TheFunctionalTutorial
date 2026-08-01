@@ -2,6 +2,7 @@
   id: TutorialSurgeryStarlight
   job: MedicalDoctor
   stub: false
+  simplifiedEnvironment: true
   category: Server specific
   subCategory: Starlight
   name: tutorial-job-surgery-starlight-name

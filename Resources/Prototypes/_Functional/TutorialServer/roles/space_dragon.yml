@@ -1,0 +1,87 @@
+- type: tutorialRole
+  id: TutorialAntagDragon
+  antag: Dragon
+  stub: false
+  simplifiedEnvironment: true
+  category: Wizden antagonists
+  name: tutorial-antag-dragon-name
+  spawnEntity: MobDragon
+  roomTemplate: TutorialSectionMaintAntag
+  guidebook: MinorAntagonists
+  placeholderObjectives:
+  - CarpRiftsObjective
+  - DragonSurviveObjective
+  practiceSpawns:
+  - id: TutorialPracticeMobVictim
+    room: 0
+    offset: -1, -0.5
+  - id: TutorialPracticeMobVictim
+    room: 0
+    offset: 1, -0.5
+  - id: TutorialStepMarker
+    room: 0
+    offset: 0, -1.5
+    marker: dragon-pass
+  goals:
+  - id: welcome
+    title: tutorial-antag-dragon-goal-welcome
+    subGoals:
+    - id: intro
+      text: tutorial-antag-dragon-sg-intro
+      complete: Acknowledge
+  - id: abilities
+    title: tutorial-antag-dragon-goal-abilities
+    subGoals:
+    - id: breath-tip
+      text: tutorial-antag-dragon-sg-breath-tip
+      complete: Acknowledge
+      hint: tutorial-antag-dragon-sg-breath-hint
+    - id: use-breath
+      text: tutorial-antag-dragon-sg-use-breath
+      complete: ActionUsed
+      entity: ActionDragonsBreath
+    - id: melee-tip
+      text: tutorial-antag-dragon-sg-melee-tip
+      complete: Acknowledge
+  - id: hunt
+    title: tutorial-antag-dragon-goal-hunt
+    subGoals:
+    - id: kill-dummy
+      text: tutorial-antag-dragon-sg-kill
+      complete: PracticeMobDead
+      hint: tutorial-antag-dragon-sg-kill-hint
+  - id: feast
+    title: tutorial-antag-dragon-goal-feast
+    subGoals:
+    - id: devour-tip
+      text: tutorial-antag-dragon-sg-devour-tip
+      complete: Acknowledge
+      hint: tutorial-antag-dragon-sg-devour-hint
+    - id: devour-human
+      text: tutorial-antag-dragon-sg-devour
+      complete: DragonDevoured
+  - id: portal
+    title: tutorial-antag-dragon-goal-portal
+    subGoals:
+    - id: rift-tip
+      text: tutorial-antag-dragon-sg-rift-tip
+      complete: Acknowledge
+      hint: tutorial-antag-dragon-sg-rift-hint
+      stuckHint: tutorial-antag-dragon-sg-rift-stuck
+    - id: open-rift
+      text: tutorial-antag-dragon-sg-open-rift
+      complete: MapHasEntity
+      entity: CarpRift
+    - id: defend-tip
+      text: tutorial-antag-dragon-sg-defend-tip
+      complete: Acknowledge
+  - id: finish
+    title: tutorial-antag-dragon-goal-finish
+    subGoals:
+    - id: walk
+      text: tutorial-antag-dragon-sg-walk
+      complete: ReachMarker
+      marker: dragon-pass
+    - id: done
+      text: tutorial-antag-dragon-sg-done
+      complete: Acknowledge

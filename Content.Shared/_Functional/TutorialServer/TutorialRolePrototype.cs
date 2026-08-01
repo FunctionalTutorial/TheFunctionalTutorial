@@ -38,6 +38,14 @@ public sealed partial class TutorialRolePrototype : IPrototype
     public bool Stub = true;
 
     /// <summary>
+    /// When true, after the private map loads: force APC receivers to not need power and
+    /// freeze grid atmospherics (fill-once, no LINDA/pipe/device ticks). Leave false for
+    /// engineering/cargo tutorials that teach live power, spacing, or EVA.
+    /// </summary>
+    [DataField]
+    public bool SimplifiedEnvironment;
+
+    /// <summary>
     /// Map/grid path to load when <see cref="Room"/> is unset (stubs / legacy).
     /// </summary>
     [DataField]
@@ -211,7 +219,8 @@ public sealed partial class TutorialSubGoalData
     public string? Tag;
 
     /// <summary>
-    /// Entity prototype for HoldItem / ObtainItem / UseInHand matching.
+    /// Entity prototype for HoldItem / ObtainItem / UseInHand / HasAction /
+    /// ActionUsed / MapHasEntity matching.
     /// </summary>
     [DataField]
     public EntProtoId? Entity;
@@ -608,4 +617,16 @@ public enum TutorialStepComplete : byte
     /// Unfolding the beacon as a thief auto-links it to their mind.
     /// </summary>
     ThiefBeaconLinked,
+
+    /// <summary>
+    /// Player successfully used an action matching <see cref="TutorialSubGoalData.Entity"/>
+    /// (fires after the action event is handled).
+    /// </summary>
+    ActionUsed,
+
+    /// <summary>
+    /// Player finished devouring a humanoid (Devour do-after completed on a
+    /// <c>HumanoidProfile</c> target — grants Ichor healing for space dragons).
+    /// </summary>
+    DragonDevoured,
 }

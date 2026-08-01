@@ -1,4 +1,4 @@
-﻿- type: tutorialRole
+- type: tutorialRole
   id: TutorialCargoTechnician
   job: CargoTechnician
   stub: false

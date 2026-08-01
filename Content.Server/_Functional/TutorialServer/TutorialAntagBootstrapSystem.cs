@@ -1,3 +1,6 @@
+using Content.Server.Dragon;
+using Content.Server.Ghost.Roles.Components;
+using Content.Server.NPC.HTN;
 using Content.Server.PDA.Ringer;
 using Content.Server.Revolutionary;
 using Content.Server.Store.Systems;
@@ -52,6 +55,7 @@ public sealed class TutorialAntagBootstrapSystem : EntitySystem
     private static readonly EntProtoId MindRoleTraitor = "MindRoleTraitor";
     private static readonly EntProtoId MindRoleThief = "MindRoleThief";
     private static readonly EntProtoId MindRoleWizard = "MindRoleWizard";
+    private static readonly EntProtoId MindRoleDragon = "MindRoleDragon";
     private static readonly FixedPoint2 TutorialUplinkBalance = 20;
     private static readonly EntProtoId ActionChangelingStore = "ActionChangelingStore";
     private static readonly EntProtoId ActionChangelingStingDna = "ActionChangelingStingDna";
@@ -102,6 +106,9 @@ public sealed class TutorialAntagBootstrapSystem : EntitySystem
             case "Wizard":
                 ApplyWizard(mindId);
                 break;
+            case "Dragon":
+                ApplyDragon(mob, mindId);
+                break;
         }
     }
 
@@ -137,6 +144,24 @@ public sealed class TutorialAntagBootstrapSystem : EntitySystem
     {
         if (!_roles.MindHasRole<WizardRoleComponent>(mindId))
             _roles.MindAddRole(mindId, MindRoleWizard, silent: true);
+    }
+
+    private void ApplyDragon(EntityUid mob, EntityUid mindId)
+    {
+        // Spawned MobDragon is a ghost-role NPC — strip takeover + HTN for the tutorial body.
+        RemComp<GhostRoleComponent>(mob);
+        RemComp<GhostTakeoverAvailableComponent>(mob);
+        RemComp<HTNComponent>(mob);
+
+        // Disable the 5-minute rift timeout so practice tips cannot gib the player.
+        if (TryComp<DragonComponent>(mob, out var dragon))
+        {
+            dragon.RiftMaxAccumulator = float.MaxValue;
+            dragon.RiftAccumulator = 0f;
+        }
+
+        if (!_roles.MindHasRole<DragonRoleComponent>(mindId))
+            _roles.MindAddRole(mindId, MindRoleDragon, silent: true);
     }
 
     private void ApplyInitialInfected(EntityUid mob, EntityUid mindId)

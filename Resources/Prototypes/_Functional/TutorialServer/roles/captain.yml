@@ -2,6 +2,7 @@
   id: TutorialCaptain
   job: Captain
   stub: false
+  simplifiedEnvironment: true
   category: Command
   map: /Maps/_Functional/TutorialServer/Roles/Captain.yml
   roomTemplate: TutorialSectionCommand

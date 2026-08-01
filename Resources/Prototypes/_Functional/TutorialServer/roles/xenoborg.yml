@@ -2,6 +2,7 @@
   id: TutorialAntagXenoborg
   antag: Xenoborg
   stub: false
+  simplifiedEnvironment: true
   category: Wizden antagonists
   name: tutorial-antag-xenoborg-name
   spawnEntity: XenoborgEngi

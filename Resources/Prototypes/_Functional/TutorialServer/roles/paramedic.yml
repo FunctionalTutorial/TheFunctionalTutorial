@@ -2,6 +2,7 @@
   id: TutorialParamedic
   job: Paramedic
   stub: false
+  simplifiedEnvironment: true
   category: Medical
   map: /Maps/_Functional/TutorialServer/Roles/Paramedic.yml
   roomTemplate: TutorialSectionMedbay

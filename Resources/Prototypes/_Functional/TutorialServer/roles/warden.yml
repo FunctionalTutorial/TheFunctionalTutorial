@@ -2,6 +2,7 @@
   id: TutorialWarden
   job: Warden
   stub: false
+  simplifiedEnvironment: true
   category: Security
   map: /Maps/_Functional/TutorialServer/Roles/Warden.yml
   roomTemplate: TutorialSectionBrig

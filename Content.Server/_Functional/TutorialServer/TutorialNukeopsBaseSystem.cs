@@ -40,8 +40,8 @@ public sealed partial class TutorialNukeopsBaseSystem : EntitySystem
     {
         mapUid = _map.CreateMap(out var mapId);
         gridUid = BuildGrid(mapId);
+        // Marker for tests / tooling; force-power + freeze applied via SimplifiedEnvironment.
         EnsureComp<TutorialForcePowerGridComponent>(gridUid);
-        ForcePowerGrid(gridUid);
         PrepareAtmosphere(gridUid);
 
         spawnCoords = new EntityCoordinates(gridUid, new Vector2(6.5f, 15.5f));
@@ -152,17 +152,6 @@ public sealed partial class TutorialNukeopsBaseSystem : EntitySystem
         EnsureComp<GasTileOverlayComponent>(gridUid);
         if (TryComp<MapGridComponent>(gridUid, out var gridComp))
             _atmos.RebuildGridAtmosphere((gridUid, Comp<GridAtmosphereComponent>(gridUid), gridComp));
-    }
-
-    private void ForcePowerGrid(EntityUid gridUid)
-    {
-        var query = EntityQueryEnumerator<Content.Server.Power.Components.ApcPowerReceiverComponent, TransformComponent>();
-        while (query.MoveNext(out var uid, out _, out var xform))
-        {
-            if (xform.GridUid != gridUid)
-                continue;
-            _power.SetNeedsPower(uid, false);
-        }
     }
 
     private EntityUid SpawnAnchored(EntProtoId proto, EntityUid gridUid, Vector2i tile)

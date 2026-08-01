@@ -127,22 +127,7 @@
 
 
 # Deep Changeling tutorial lives in roles/changeling.yml
-
-- type: tutorialRole
-  id: TutorialAntagDragon
-  job: Passenger
-  antag: Dragon
-  stub: true
-  category: Wizden antagonists
-  map: /Maps/_Functional/TutorialServer/Antag_Dragon.yml
-  steps:
-  - id: explore
-    text: tutorial-stub-explore-gear
-    complete: Acknowledge
-  - id: done
-    text: tutorial-stub-ghost-when-done
-    complete: Acknowledge
-
+# Deep Space Dragon tutorial lives in roles/space_dragon.yml
 
 # Deep HeadRev (+ Rev) tutorial lives in roles/revolutionary.yml
 # Deep Zombie (+ Initial Infected) tutorial lives in roles/zombie.yml

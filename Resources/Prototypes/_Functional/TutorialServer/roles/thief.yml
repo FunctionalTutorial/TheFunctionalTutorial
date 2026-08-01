@@ -12,6 +12,7 @@
   job: Passenger
   antag: Thief
   stub: false
+  simplifiedEnvironment: true
   category: Wizden antagonists
   name: tutorial-antag-thief-name
   startingGear: TutorialThiefGear

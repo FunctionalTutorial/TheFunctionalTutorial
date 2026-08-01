@@ -2,6 +2,7 @@
   id: TutorialHeadOfSecurity
   job: HeadOfSecurity
   stub: false
+  simplifiedEnvironment: true
   category: Security
   map: /Maps/_Functional/TutorialServer/Roles/HeadOfSecurity.yml
   roomTemplate: TutorialSectionSecurity

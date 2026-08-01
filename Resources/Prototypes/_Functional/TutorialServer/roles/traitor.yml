@@ -3,6 +3,7 @@
   job: Passenger
   antag: Traitor
   stub: false
+  simplifiedEnvironment: true
   category: Wizden antagonists
   map: /Maps/_Functional/TutorialServer/Roles/Traitor.yml
   roomTemplate: TutorialSectionMaintAntag

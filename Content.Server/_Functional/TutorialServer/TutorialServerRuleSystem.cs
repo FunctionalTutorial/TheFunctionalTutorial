@@ -601,13 +601,14 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (roleProto.SpawnEntity == null && roleProto.StartingGear == null && roleProto.Job != null)
             _jobs.MindAddJob(mindId, roleProto.Job.Value);
 
+        // Mind roles first so RoleRequirement placeholder objectives (e.g. dragon rifts) can attach.
+        _antagBootstrap.ApplyTutorialAntag(mob, mindId, roleProto.Antag);
+
         if (TryComp<MindComponent>(mindId, out var mindComp))
         {
             foreach (var objectiveId in roleProto.PlaceholderObjectives)
                 _mind.TryAddObjective(mindId, mindComp, objectiveId);
         }
-
-        _antagBootstrap.ApplyTutorialAntag(mob, mindId, roleProto.Antag);
 
         SpawnPracticeEntities(roleProto, gridUid, spawnCoords);
 

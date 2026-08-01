@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Content.Server.Atmos.EntitySystems;
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Shared._Functional.TutorialServer;
+using Content.Shared.Atmos.Components;
 using Robust.Server.GameObjects;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
@@ -19,6 +21,7 @@ namespace Content.Server._Functional.TutorialServer;
 /// </summary>
 public sealed partial class TutorialMapSystem : EntitySystem
 {
+    [Dependency] private readonly AtmosphereSystem _atmos = default!;
     [Dependency] private readonly MapSystem _map = default!;
     [Dependency] private readonly MapLoaderSystem _mapLoader = default!;
     [Dependency] private readonly PowerReceiverSystem _power = default!;
@@ -75,20 +78,55 @@ public sealed partial class TutorialMapSystem : EntitySystem
         else if (TryLoadTutorialMap(role.Map, out mapUid, out gridUid, out spawnCoords))
         {
             loaded = true;
-            if (HasComp<TutorialForcePowerGridComponent>(gridUid))
-                ForcePowerGrid(gridUid);
         }
 
         if (loaded)
         {
             _rooms.EnsureGridSupport(gridUid);
             _rooms.EnableInherentGravity(gridUid);
-            _rooms.EnsureApcsCharged(gridUid);
-            if (HasComp<TutorialForcePowerGridComponent>(gridUid))
-                ForcePowerGrid(gridUid);
+
+            // Charge APCs on every grid (shuttle arenas / salvage debris included).
+            var gridQuery = EntityQueryEnumerator<MapGridComponent, TransformComponent>();
+            while (gridQuery.MoveNext(out var otherGrid, out _, out var xform))
+            {
+                if (xform.MapUid != mapUid)
+                    continue;
+                _rooms.EnsureApcsCharged(otherGrid);
+            }
+
+            // Role flag is authoritative over crop-stamped TutorialForcePowerGridComponent.
+            if (role.SimplifiedEnvironment)
+                ApplySimplifiedEnvironment(mapUid);
         }
 
         return loaded;
+    }
+
+    /// <summary>
+    /// Force-power every APC receiver and freeze atmospherics on all grids of a tutorial map.
+    /// </summary>
+    public void ApplySimplifiedEnvironment(EntityUid mapUid)
+    {
+        if (!Exists(mapUid) || TerminatingOrDeleted(mapUid))
+            return;
+
+        var gridQuery = EntityQueryEnumerator<MapGridComponent, TransformComponent>();
+        while (gridQuery.MoveNext(out var gridUid, out _, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            ForcePowerGrid(gridUid);
+            FreezeGridAtmosphere(gridUid);
+        }
+    }
+
+    private void FreezeGridAtmosphere(EntityUid gridUid)
+    {
+        if (!TryComp<GridAtmosphereComponent>(gridUid, out var atmos))
+            return;
+
+        _atmos.SetAtmosphereSimulation((gridUid, atmos), false);
     }
 
     /// <summary>

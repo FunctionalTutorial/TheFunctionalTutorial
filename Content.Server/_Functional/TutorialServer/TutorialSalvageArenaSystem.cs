@@ -63,7 +63,8 @@ public sealed class TutorialSalvageArenaSystem : EntitySystem
 
     private void PrepareGrid(EntityUid gridUid)
     {
-        ForcePowerGrid(gridUid);
+        // Power/atmos simplification is applied from TutorialRolePrototype.SimplifiedEnvironment
+        // after load (salvage keeps live atmos for EVA / space exposure).
 
         var gravity = EnsureComp<GravityComponent>(gridUid);
         _gravity.EnableGravity(gridUid, gravity);
@@ -76,17 +77,6 @@ public sealed class TutorialSalvageArenaSystem : EntitySystem
         EnsureComp<GasTileOverlayComponent>(gridUid);
         if (TryComp<MapGridComponent>(gridUid, out var gridComp))
             _atmos.RebuildGridAtmosphere((gridUid, Comp<GridAtmosphereComponent>(gridUid), gridComp));
-    }
-
-    private void ForcePowerGrid(EntityUid gridUid)
-    {
-        var query = EntityQueryEnumerator<TransformComponent>();
-        while (query.MoveNext(out var uid, out var xform))
-        {
-            if (xform.GridUid != gridUid)
-                continue;
-            _power.SetNeedsPower(uid, false);
-        }
     }
 
     private EntityUid BuildBay(MapId mapId)

@@ -3,6 +3,7 @@
   job: Passenger
   antag: Changeling
   stub: false
+  simplifiedEnvironment: true
   category: Wizden antagonists
   name: tutorial-antag-changeling-name
   roomTemplate: TutorialSectionMaintAntag

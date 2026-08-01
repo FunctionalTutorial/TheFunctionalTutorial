@@ -17,6 +17,7 @@ using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
 using Content.Shared.Anomaly;
 using Content.Shared.Anomaly.Components;
+using Content.Server.Power.Components;
 using Content.Shared.Atmos.Components;
 using Content.Shared.CCVar;
 using Content.Shared.Cuffs.Components;
@@ -1290,6 +1291,56 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
+    public async Task TutorialSimplifiedEnvironment_FreezesAtmosAndForcePowers()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var maps = server.System<TutorialMapSystem>();
+        var proto = server.ProtoMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var chef = proto.Index<TutorialRolePrototype>("TutorialChef");
+            Assert.That(chef.SimplifiedEnvironment, Is.True);
+
+            Assert.That(maps.TryLoadTutorialMap(chef, out var chefMap, out var chefGrid, out _), Is.True);
+            Assert.That(server.EntMan.TryGetComponent<GridAtmosphereComponent>(chefGrid, out var chefAtmos), Is.True);
+            Assert.That(chefAtmos!.Simulated, Is.False, "Simplified roles should freeze grid atmos after fill");
+
+            var forcedReceiver = false;
+            var receiverQuery = server.EntMan.AllEntityQueryEnumerator<ApcPowerReceiverComponent, TransformComponent>();
+            while (receiverQuery.MoveNext(out _, out var receiver, out var xform))
+            {
+                if (xform.GridUid != chefGrid || receiver.PowerDisabled)
+                    continue;
+                Assert.That(receiver.NeedsPower, Is.False, "Simplified roles force APC receivers to not need power");
+                forcedReceiver = true;
+                break;
+            }
+
+            Assert.That(forcedReceiver, Is.True, "Chef practice map should have at least one APC power receiver");
+            maps.UnloadTutorialMap(chefMap);
+
+            var atmosRole = proto.Index<TutorialRolePrototype>("TutorialAtmosphericTechnician");
+            Assert.That(atmosRole.SimplifiedEnvironment, Is.False);
+
+            Assert.That(maps.TryLoadTutorialMap(atmosRole, out var atmosMap, out var atmosGrid, out _), Is.True);
+            Assert.That(server.EntMan.TryGetComponent<GridAtmosphereComponent>(atmosGrid, out var liveAtmos), Is.True);
+            Assert.That(liveAtmos!.Simulated, Is.True, "Engineering atmos tutorial must keep live simulation");
+            maps.UnloadTutorialMap(atmosMap);
+        });
+    }
+
+    [Test]
     public async Task TutorialAtmosTeg_BootstrapProducesPower()
     {
         var pair = Pair;
@@ -1715,6 +1766,23 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(wizGear.Equipment.Values.Any(v => v == "WizardTeleportScroll"), Is.False,
                 "Tutorial wizard gear must not include the teleport scroll");
             Assert.That(wizGear.Equipment.Values.Any(v => v == "WizardsGrimoire"), Is.True);
+
+            var dragon = proto.Index<TutorialRolePrototype>("TutorialAntagDragon");
+            Assert.That(dragon.Stub, Is.False);
+            Assert.That(dragon.Antag, Is.EqualTo(new ProtoId<AntagPrototype>("Dragon")));
+            Assert.That(dragon.SpawnEntity, Is.EqualTo(new EntProtoId("MobDragon")));
+            Assert.That(dragon.RoomTemplate,
+                Is.EqualTo(new ProtoId<TutorialRoomTemplatePrototype>("TutorialSectionMaintAntag")));
+            Assert.That(Sub(dragon, "use-breath").Complete, Is.EqualTo(TutorialStepComplete.ActionUsed));
+            Assert.That(Sub(dragon, "use-breath").Entity, Is.EqualTo(new EntProtoId("ActionDragonsBreath")));
+            Assert.That(Sub(dragon, "kill-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDead));
+            Assert.That(Sub(dragon, "devour-human").Complete, Is.EqualTo(TutorialStepComplete.DragonDevoured));
+            Assert.That(Sub(dragon, "open-rift").Complete, Is.EqualTo(TutorialStepComplete.MapHasEntity));
+            Assert.That(Sub(dragon, "open-rift").Entity, Is.EqualTo(new EntProtoId("CarpRift")));
+            Assert.That(dragon.PracticeSpawns.Count(p => p.Id == "TutorialPracticeMobVictim"), Is.GreaterThanOrEqualTo(2));
+            Assert.That(proto.HasIndex(new EntProtoId("ActionSpawnRift")));
+            Assert.That(proto.HasIndex(new EntProtoId("ActionDevour")));
+            Assert.That(proto.HasIndex(new EntProtoId("MindRoleDragon")));
         });
     }
 
@@ -1772,6 +1840,12 @@ public sealed class TutorialServerTests : GameTest
                 "Wizard den map must load");
             Assert.That(wizSpawn != default, Is.True);
             maps.UnloadTutorialMap(wizMap);
+
+            var dragon = proto.Index<TutorialRolePrototype>("TutorialAntagDragon");
+            Assert.That(maps.TryLoadTutorialMap(dragon, out var dragonMap, out _, out var dragonSpawn), Is.True,
+                "Space Dragon maint arena must load");
+            Assert.That(dragonSpawn != default, Is.True);
+            maps.UnloadTutorialMap(dragonMap);
         });
     }
 

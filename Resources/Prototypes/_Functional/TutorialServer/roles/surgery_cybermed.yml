@@ -2,6 +2,7 @@
   id: TutorialSurgeryCyberMed
   job: MedicalDoctor
   stub: false
+  simplifiedEnvironment: true
   category: Server specific
   subCategory: BPL14
   name: tutorial-job-surgery-cybermed-name

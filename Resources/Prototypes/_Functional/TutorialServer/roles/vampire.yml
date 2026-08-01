@@ -3,6 +3,7 @@
   job: Passenger
   antag: Vampire
   stub: false
+  simplifiedEnvironment: true
   category: Server specific
   subCategory: Starlight
   name: tutorial-antag-vampire-name

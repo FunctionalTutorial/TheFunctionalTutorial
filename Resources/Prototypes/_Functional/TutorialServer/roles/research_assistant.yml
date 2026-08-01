@@ -1,9 +1,10 @@
-# Science progression — walk the Saltern science lab to the R&D console location,
+# Science progression â€” walk the Saltern science lab to the R&D console location,
 # unlock a tech, and print on the robotics fabricator. Single chamber (no stamp).
 - type: tutorialRole
   id: TutorialResearchAssistant
   job: ResearchAssistant
   stub: false
+  simplifiedEnvironment: true
   category: Science
   map: /Maps/_Functional/TutorialServer/Roles/Scientist.yml
   roomTemplate: TutorialSectionScience

@@ -3,6 +3,7 @@
   id: TutorialScientist
   job: Scientist
   stub: false
+  simplifiedEnvironment: true
   category: Science
   map: /Maps/_Functional/TutorialServer/Roles/Scientist.yml
   roomTemplate: TutorialSectionScience

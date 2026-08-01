@@ -49,9 +49,13 @@ using Content.Shared.Research.Prototypes;
 using Content.Shared.Roles;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Actions;
+using Content.Shared.Actions.Components;
+using Content.Shared.Actions.Events;
 using Content.Shared.Changeling.Components;
 using Content.Shared.Changeling.Systems;
+using Content.Shared.Devour;
 using Content.Shared.Emag.Systems;
+using Content.Shared.Humanoid;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Revolutionary.Components;
@@ -95,6 +99,8 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
 
     private readonly HashSet<EntityUid> _changelingDevoured = new();
     private readonly HashSet<EntityUid> _changelingStung = new();
+    private readonly HashSet<EntityUid> _dragonDevoured = new();
+    private readonly Dictionary<EntityUid, HashSet<EntProtoId>> _actionsUsed = new();
 
     /// <summary>
     /// Suppress nested <see cref="OnUndock"/> while force-clearing dual docks.
@@ -149,6 +155,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         SubscribeLocalEvent<TutorialPracticeMobComponent, KnockedDownEvent>(OnPracticeMobKnockedDown);
         SubscribeLocalEvent<TutorialParticipantComponent, ChangelingDevouredEvent>(OnChangelingDevoured);
         SubscribeLocalEvent<TutorialParticipantComponent, ChangelingStingDnaEvent>(OnChangelingStung);
+        SubscribeLocalEvent<ActionComponent, ActionPerformedEvent>(OnActionPerformed);
+        SubscribeLocalEvent<TutorialParticipantComponent, DevourDoAfterEvent>(
+            OnDragonDevoured,
+            after: [typeof(DevourSystem)]);
     }
 
     public override void Update(float frameTime)
@@ -323,8 +333,62 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                     if (IsThiefBeaconLinked(xform.MapUid))
                         _tutorial.AdvanceSubGoal(uid);
                     break;
+                case TutorialStepComplete.ActionUsed:
+                    if (sub.Entity != null &&
+                        _actionsUsed.TryGetValue(uid, out var used) &&
+                        used.Contains(sub.Entity.Value))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.DragonDevoured:
+                    if (_dragonDevoured.Contains(uid))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
             }
         }
+    }
+
+    private void OnActionPerformed(Entity<ActionComponent> ent, ref ActionPerformedEvent args)
+    {
+        if (!TryComp<TutorialParticipantComponent>(args.Performer, out var part))
+            return;
+
+        var protoId = MetaData(ent).EntityPrototype?.ID;
+        if (protoId == null)
+            return;
+
+        var actionProto = new EntProtoId(protoId);
+        if (!_actionsUsed.TryGetValue(args.Performer, out var used))
+        {
+            used = new HashSet<EntProtoId>();
+            _actionsUsed[args.Performer] = used;
+        }
+
+        used.Add(actionProto);
+
+        if (!_tutorial.TryGetCurrentSubGoal(args.Performer, part, out var sub) ||
+            sub.Complete != TutorialStepComplete.ActionUsed ||
+            sub.Entity != actionProto)
+            return;
+
+        _tutorial.AdvanceSubGoal(args.Performer);
+    }
+
+    private void OnDragonDevoured(Entity<TutorialParticipantComponent> ent, ref DevourDoAfterEvent args)
+    {
+        if (args.Cancelled || args.Args.Target is not { } target)
+            return;
+
+        // Ichor heal only applies to humanoid preference targets.
+        if (!HasComp<HumanoidProfileComponent>(target))
+            return;
+
+        _dragonDevoured.Add(ent.Owner);
+
+        if (!_tutorial.TryGetCurrentSubGoal(ent.Owner, ent.Comp, out var sub) ||
+            sub.Complete != TutorialStepComplete.DragonDevoured)
+            return;
+
+        _tutorial.AdvanceSubGoal(ent.Owner);
     }
 
     private void OnChangelingDevoured(Entity<TutorialParticipantComponent> ent, ref ChangelingDevouredEvent args)

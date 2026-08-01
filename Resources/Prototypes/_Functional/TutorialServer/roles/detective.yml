@@ -2,6 +2,7 @@
   id: TutorialDetective
   job: Detective
   stub: false
+  simplifiedEnvironment: true
   category: Security
   map: /Maps/_Functional/TutorialServer/Roles/Detective.yml
   roomTemplate: TutorialSectionSecurity

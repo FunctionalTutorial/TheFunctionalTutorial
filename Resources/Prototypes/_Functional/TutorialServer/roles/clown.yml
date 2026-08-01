@@ -2,6 +2,7 @@
   id: TutorialClown
   job: Clown
   stub: false
+  simplifiedEnvironment: true
   category: Service
   map: /Maps/_Functional/TutorialServer/Roles/Clown.yml
   roomTemplate: TutorialSectionTheatre

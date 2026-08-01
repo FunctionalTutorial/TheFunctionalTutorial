@@ -3,6 +3,7 @@
   job: Passenger
   antag: InitialInfected
   stub: false
+  simplifiedEnvironment: true
   category: Wizden antagonists
   name: tutorial-antag-zombie-name
   roomTemplate: TutorialSectionMaintAntag

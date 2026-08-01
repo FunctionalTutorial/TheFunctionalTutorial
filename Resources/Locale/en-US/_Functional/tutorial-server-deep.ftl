@@ -790,6 +790,32 @@ tutorial-job-borg-sg-new-laws = You are now a Subverted Silicon. Check Laws agai
 tutorial-job-borg-sg-walk = Walk to the marked practice spot.
 tutorial-job-borg-sg-done = Cyborg tutorial complete. Use the Choose a tutorial action to pick another role.
 
+# Space Dragon
+tutorial-antag-dragon-name = Space Dragon
+tutorial-antag-dragon-goal-welcome = Welcome, space dragon
+tutorial-antag-dragon-goal-abilities = Abilities
+tutorial-antag-dragon-goal-hunt = Hunt
+tutorial-antag-dragon-goal-feast = Devour for health
+tutorial-antag-dragon-goal-portal = Carp rift portal
+tutorial-antag-dragon-goal-finish = Tutorial complete
+tutorial-antag-dragon-sg-intro = You are practicing as a Space Dragon. Your real-round goals are to summon three fully charged carp rifts and survive. You have a five-minute timer between rifts — if it runs out with no charging rift, you die. This practice room disables that timer so you can learn safely.
+tutorial-antag-dragon-sg-breath-tip = Dragon's Breath fires a line of flame — use it to burn attackers, not to cook your own carp. Find the action on your hotbar. Acknowledge when ready to try it.
+tutorial-antag-dragon-sg-breath-hint = Hotbar → Dragon's Breath → click a tile or direction to spew fire.
+tutorial-antag-dragon-sg-use-breath = Use Dragon's Breath (aim at empty floor or a wall away from the practice Urist).
+tutorial-antag-dragon-sg-melee-tip = Your claws are strong melee (pierce + slash). You can also force-pry doors and Devour walls when you need a breach. Acknowledge when ready to hunt.
+tutorial-antag-dragon-sg-kill = Kill a practice Urist with your claws (beat them until they die or go critical).
+tutorial-antag-dragon-sg-kill-hint = Click the Urist in combat mode. Alive targets cannot be Devoured — they must be critical or dead.
+tutorial-antag-dragon-sg-devour-tip = Devour swallows crit/dead humanoids and feeds you Ichor for a minor heal. Living targets are rejected. You can also Devour doors and walls (slower). Acknowledge when ready.
+tutorial-antag-dragon-sg-devour-hint = Hotbar → Devour → click a dead or critical Urist, then wait for the short do-after.
+tutorial-antag-dragon-sg-devour = Devour a dead or critical practice Urist to gain Ichor healing.
+tutorial-antag-dragon-sg-rift-tip = Summon Carp Rift opens a portal on the station grid. Stay on solid floor away from space (about two tiles), and keep rifts spaced apart. Only one rift may charge at a time. Acknowledge when ready.
+tutorial-antag-dragon-sg-rift-hint = Hotbar → Summon Carp Rift. Stand in the middle of the room, not against space tiles.
+tutorial-antag-dragon-sg-rift-stuck = Rifts need a grid, no nearby space within two tiles, and cannot stack within 15 meters of another rift.
+tutorial-antag-dragon-sg-open-rift = Open a carp rift portal with Summon Carp Rift.
+tutorial-antag-dragon-sg-defend-tip = A charging rift takes five minutes and is fragile — defend it. At half charge the station is warned. Destroyed rifts weaken you for two minutes. After three finished rifts the timeout pressure ends. Acknowledge when you understand.
+tutorial-antag-dragon-sg-walk = Walk to the marked practice spot.
+tutorial-antag-dragon-sg-done = Space Dragon tutorial complete. Use the Choose a tutorial action to pick another role.
+
 # Changeling
 tutorial-antag-changeling-name = Changeling
 tutorial-antag-changeling-goal-welcome = Welcome, changeling

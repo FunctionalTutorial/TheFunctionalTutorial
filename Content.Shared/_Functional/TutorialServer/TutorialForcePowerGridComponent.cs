@@ -1,7 +1,9 @@
 namespace Content.Shared._Functional.TutorialServer;
 
 /// <summary>
-/// When present on a tutorial grid, all ApcPowerReceivers are forced to not need power after load.
+/// Marker stamped on some tutorial grids. Prefer
+/// <see cref="TutorialRolePrototype.SimplifiedEnvironment"/> for force-power + frozen atmos;
+/// this component alone no longer drives load-time power stubbing.
 /// </summary>
 [RegisterComponent]
 public sealed partial class TutorialForcePowerGridComponent : Component;

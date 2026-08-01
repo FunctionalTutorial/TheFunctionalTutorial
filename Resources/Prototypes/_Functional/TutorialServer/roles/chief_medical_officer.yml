@@ -2,6 +2,7 @@
   id: TutorialChiefMedicalOfficer
   job: ChiefMedicalOfficer
   stub: false
+  simplifiedEnvironment: true
   category: Medical
   map: /Maps/_Functional/TutorialServer/Roles/ChiefMedicalOfficer.yml
   roomTemplate: TutorialSectionMedbay
