@@ -1,0 +1,100 @@
+﻿- type: tutorialRole
+  id: TutorialCargoTechnician
+  job: CargoTechnician
+  stub: false
+  category: Cargo
+  map: /Maps/_Functional/TutorialServer/Roles/CargoTechnician.yml
+  shuttleArena: TutorialArenaCargoShuttle
+  guidebook: Cargo
+  practiceSpawns: []
+  goals:
+  - id: welcome
+    title: tutorial-job-cargo-technician-goal-welcome
+    subGoals:
+    - id: intro
+      text: tutorial-job-cargo-technician-sg-intro
+      complete: Acknowledge
+    - id: look-around
+      text: tutorial-job-cargo-technician-sg-look-around
+      complete: Acknowledge
+  - id: pilot
+    title: tutorial-job-cargo-technician-goal-pilot
+    subGoals:
+    - id: open-console
+      text: tutorial-job-cargo-technician-sg-open-console
+      complete: PilotShuttle
+    - id: controls
+      text: tutorial-job-cargo-technician-sg-controls
+      complete: Acknowledge
+  - id: undock-bay
+    title: tutorial-job-cargo-technician-goal-undock-bay
+    subGoals:
+    - id: undock-explain
+      text: tutorial-job-cargo-technician-sg-undock-explain
+      complete: Acknowledge
+    - id: undock-bay
+      text: tutorial-job-cargo-technician-sg-undock-bay
+      complete: UndockShuttle
+      marker: cargo-bay
+  - id: fly-ats
+    title: tutorial-job-cargo-technician-goal-fly-ats
+    subGoals:
+    - id: throttle
+      text: tutorial-job-cargo-technician-sg-throttle
+      complete: ShuttleThrottle
+    - id: fly-tips
+      text: tutorial-job-cargo-technician-sg-fly-ats
+      complete: Acknowledge
+  - id: dock-ats
+    title: tutorial-job-cargo-technician-goal-dock-ats
+    subGoals:
+    - id: dock-ats-explain
+      text: tutorial-job-cargo-technician-sg-dock-ats-explain
+      complete: Acknowledge
+    - id: dock-ats
+      text: tutorial-job-cargo-technician-sg-dock-ats
+      complete: DockShuttle
+      marker: ats
+  - id: sell
+    title: tutorial-job-cargo-technician-goal-sell
+    subGoals:
+    - id: sell-explain
+      text: tutorial-job-cargo-technician-sg-sell-explain
+      complete: Acknowledge
+    - id: sell-pallet
+      text: tutorial-job-cargo-technician-sg-sell-pallet
+      complete: InteractTargetTag
+      tag: TutorialCargoSell
+    - id: sell-goods
+      text: tutorial-job-cargo-technician-sg-sell-goods
+      complete: CargoSold
+      minCount: 1
+    - id: bounty-tip
+      text: tutorial-job-cargo-technician-sg-bounty-tip
+      complete: Acknowledge
+    - id: sell-bounty
+      text: tutorial-job-cargo-technician-sg-sell-bounty
+      complete: CargoBountyFulfilled
+    - id: sell-tip
+      text: tutorial-job-cargo-technician-sg-sell-tip
+      complete: Acknowledge
+  - id: return-bay
+    title: tutorial-job-cargo-technician-goal-return-bay
+    subGoals:
+    - id: undock-ats
+      text: tutorial-job-cargo-technician-sg-undock-ats
+      complete: UndockShuttle
+      marker: ats
+    - id: fly-home
+      text: tutorial-job-cargo-technician-sg-fly-home
+      complete: Acknowledge
+    - id: dock-bay
+      text: tutorial-job-cargo-technician-sg-dock-bay
+      complete: DockShuttle
+      marker: cargo-bay
+  - id: finish
+    title: tutorial-job-cargo-technician-goal-finish
+    subGoals:
+    - id: done
+      text: tutorial-job-cargo-technician-sg-done
+      complete: Acknowledge

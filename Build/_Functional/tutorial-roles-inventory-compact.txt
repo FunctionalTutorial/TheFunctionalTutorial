@@ -1,0 +1,500 @@
+﻿
+======== Civilian ========
+
+### Passenger
+id=TutorialPassenger | room=TutorialRoomCivilian | guidebook=Jobs
+goals=7 subGoals=12 | interactivity ACK=2 ACTIVE=10 | score_hint=83% active
+practiceSpawns n=11 | machines[1]: ClosetToolFilled | markers[1]: TutorialStepMarker | items=9
+progression: Finish before specializing into other jobs
+  G welcome | tutorial-job-passenger-goal-welcome
+    intro{Acknowledge}
+  G move | tutorial-job-passenger-goal-move
+    walk{ReachMarker|m=basics-pass}
+  G pickup | tutorial-job-passenger-goal-pickup
+    hold-crowbar{HoldItem|e=Crowbar}; hold-light{HoldItem|e=FlashlightLantern}
+  G inventory | tutorial-job-passenger-goal-inventory
+    stow-light{StowItem|e=FlashlightLantern}; hold-light-again{HoldItem|e=FlashlightLantern}; use-light{UseInHand|e=FlashlightLantern}
+  G drink | tutorial-job-passenger-goal-drink
+    hold-water{HoldItem|e=DrinkWaterBottleFull}; drink-water{UseInHand|e=DrinkWaterBottleFull}
+  G crowbar-door | tutorial-job-passenger-goal-crowbar
+    hold-crowbar-door{HoldTag|tag=Crowbar}; pry-door{InteractTag|tag=Crowbar}
+  G finish | tutorial-job-passenger-goal-finish
+    done{Acknowledge}
+
+======== Service ========
+
+### Bartender
+id=TutorialBartender | room=TutorialRoomBar | guidebook=Bartender
+goals=5 subGoals=10 | interactivity ACK=3 ACTIVE=7 | score_hint=70% active
+practiceSpawns n=8 | machines[1]: LockerBoozeFilled | vendors[1]: TutorialVendingMachineBooze | markers[1]: TutorialStepMarker | items=5
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-bartender-goal-welcome
+    intro{Acknowledge}
+  G stock | tutorial-job-bartender-goal-stock
+    booze-vend{InteractTargetTag|tag=TutorialVending}; hold-glass{HoldItem|e=DrinkGlass}
+  G mix | tutorial-job-bartender-goal-mix
+    hold-shaker{HoldItem|e=DrinkShaker}; hold-vodka{HoldItem|e=DrinkBottleVodka}; hold-orange{HoldItem|e=DrinkJuiceOrangeCarton}; screwdriver{SolutionContains|r=ScrewdriverCocktail|min=1}
+  G floor | tutorial-job-bartender-goal-floor
+    exits-tip{Acknowledge}; walk{ReachMarker|m=bar-pass}
+  G finish | tutorial-job-bartender-goal-finish
+    done{Acknowledge}
+
+### Botanist
+id=TutorialBotanist | room=TutorialRoomBotany | guidebook=Botany
+goals=5 subGoals=8 | interactivity ACK=3 ACTIVE=5 | score_hint=62% active
+practiceSpawns n=9 | machines[3]: CrateHydroponicsSeeds, LockerBotanistFilled, TutorialHydroponicsTray | markers[1]: TutorialStepMarker | items=4
+progression: Feeds Chef and Chemist (Robust Harvest / chem-chef)
+  G welcome | tutorial-job-botanist-goal-welcome
+    intro{Acknowledge}
+  G seeds | tutorial-job-botanist-goal-seeds
+    hold-seeds{HoldItem|e=WheatSeeds}; tray{InteractTargetTag|tag=TutorialHydroTray}
+  G harvest | tutorial-job-botanist-goal-harvest
+    hold-bucket{HoldItem|e=Bucket}; harvest-wheat{HydroHarvest|e=WheatBushel}; handoff-tip{Acknowledge}
+  G floor | tutorial-job-botanist-goal-floor
+    walk{ReachMarker|m=hydro-pass}
+  G finish | tutorial-job-botanist-goal-finish
+    done{Acknowledge}
+
+### Chaplain
+id=TutorialChaplain | room=TutorialRoomChapel | guidebook=Service
+goals=4 subGoals=7 | interactivity ACK=2 ACTIVE=5 | score_hint=71% active
+practiceSpawns n=5 | machines[1]: AltarNanotrasen | markers[1]: TutorialStepMarker | items=3
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-chaplain-goal-welcome
+    intro{Acknowledge}
+  G sacred | tutorial-job-chaplain-goal-sacred
+    hold-bible{HoldItem|e=Bible}; hold-bible-ready{HoldItem|e=Bible}; hold-book{HoldItem|e=BookRandom}
+  G floor | tutorial-job-chaplain-goal-floor
+    walk{ReachMarker|m=chapel-pass}; hold-wine{HoldItem|e=DrinkBottleNTCahors}
+  G finish | tutorial-job-chaplain-goal-finish
+    done{Acknowledge}
+
+### Chef
+id=TutorialChef | room=TutorialRoomKitchen | guidebook=Chef
+goals=5 subGoals=13 | interactivity ACK=2 ACTIVE=11 | score_hint=85% active
+practiceSpawns n=16 | machines[4]: ClosetChefFilled, CrateFreezer, TutorialKitchenElectricGrill, TutorialKitchenMicrowave | vendors[3]: TutorialVendingMachineChefvend, TutorialVendingMachineCondiments, TutorialVendingMachineDinnerware | markers[1]: TutorialStepMarker | items=8
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-chef-goal-welcome
+    intro{Acknowledge}; look-around{ReachMarker|m=chef-pass}
+  G tools | tutorial-job-chef-goal-tools
+    knife{HoldItem|e=KitchenKnife}; eggs{HoldItem|e=FoodEgg}; dinnerware{InteractTargetTag|tag=TutorialVending}
+  G burger | tutorial-job-chef-goal-burger
+    meat{HoldItem|e=FoodMeat}; bun{HoldItem|e=FoodBreadBun}; microwave{InteractTargetTag|tag=TutorialMicrowave}; burger-done{HoldItem|e=FoodBurgerPlain}
+  G cake | tutorial-job-chef-goal-cake
+    batter{HoldItem|e=FoodCakeBatter}; bake{InteractTargetTag|tag=TutorialMicrowave}; cake-done{HoldItem|e=FoodCakePlain}
+  G finish | tutorial-job-chef-goal-finish
+    done{Acknowledge}
+
+### Clown
+id=TutorialClown | room=TutorialRoomService | guidebook=Service
+goals=4 subGoals=10 | interactivity ACK=4 ACTIVE=6 | score_hint=60% active
+practiceSpawns n=7 | markers[1]: TutorialStepMarker | items=6
+progression: Never lethal traps in medical or engineering
+  G welcome | tutorial-job-clown-goal-welcome
+    intro{Acknowledge}; conduct{Acknowledge}
+  G honk | tutorial-job-clown-goal-honk
+    hold-horn{HoldItem|e=BikeHorn}; use-horn{UseInHand|e=BikeHorn}
+  G pranks | tutorial-job-clown-goal-pranks
+    hold-soap{HoldItem|e=Soap}; hold-peel{HoldItem|e=TrashBananaPeel}; slip-tip{Acknowledge}; hold-crayon{HoldTag|tag=Crayon}; walk{ReachMarker|m=clown-pass}
+  G finish | tutorial-job-clown-goal-finish
+    done{Acknowledge}
+
+### Janitor
+id=TutorialJanitor | room=TutorialRoomJanitor | guidebook=Janitorial
+goals=5 subGoals=11 | interactivity ACK=3 ACTIVE=8 | score_hint=73% active
+practiceSpawns n=12 | machines[2]: ClosetJanitorFilled, CrateJanitorialSupplies | markers[1]: TutorialStepMarker | items=9
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-janitor-goal-welcome
+    intro{Acknowledge}
+  G kit | tutorial-job-janitor-goal-kit
+    hold-mop{HoldTag|tag=Mop}; hold-bucket{HoldItem|e=Bucket}; hold-galoshes{HoldItem|e=ClothingShoesGaloshes}
+  G mop | tutorial-job-janitor-goal-mop
+    clear-puddle{PuddleCleared|m=blood-puddle}; drain{InteractTargetTag|tag=TutorialDrain}
+  G clean | tutorial-job-janitor-goal-clean
+    hold-spray{HoldItem|e=SprayBottleSpaceCleaner}; potassium-tip{Acknowledge}; hold-bag{HoldItem|e=TrashBag}; walk{ReachMarker|m=clean-pass}
+  G finish | tutorial-job-janitor-goal-finish
+    done{Acknowledge}
+
+### Mime
+id=TutorialMime | room=TutorialRoomService | guidebook=Service
+goals=4 subGoals=8 | interactivity ACK=4 ACTIVE=4 | score_hint=50% active
+practiceSpawns n=6 | markers[1]: TutorialStepMarker | items=5
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-mime-goal-welcome
+    intro{Acknowledge}
+  G vows | tutorial-job-mime-goal-vows
+    silence{Acknowledge}; hold-pen{HoldItem|e=Pen}; wall-tip{Acknowledge}
+  G art | tutorial-job-mime-goal-art
+    hold-crayon{HoldItem|e=CrayonMime}; hold-paper{HoldTag|tag=Paper}; walk{ReachMarker|m=mime-pass}
+  G finish | tutorial-job-mime-goal-finish
+    done{Acknowledge}
+
+======== Command ========
+
+### Captain
+id=TutorialCaptain | room=TutorialRoomCommand | guidebook=Command
+goals=4 subGoals=9 | interactivity ACK=3 ACTIVE=6 | score_hint=67% active
+practiceSpawns n=8 | machines[1]: LockerCaptainFilled | markers[1]: TutorialStepMarker | items=6
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-captain-goal-welcome
+    intro{Acknowledge}
+  G command | tutorial-job-captain-goal-command
+    hold-headset{HoldItem|e=ClothingHeadsetCommand}; hold-stamp{HoldItem|e=RubberStampCaptain}; hold-pen{HoldItem|e=PenCap}
+  G disk | tutorial-job-captain-goal-disk
+    hold-disk{HoldItem|e=NukeDiskFake}; hold-clipboard{HoldItem|e=BoxFolderClipboard}; shuttle-tip{Acknowledge}; walk{ReachMarker|m=bridge-pass}
+  G finish | tutorial-job-captain-goal-finish
+    done{Acknowledge}
+
+### HeadOfPersonnel
+id=TutorialHeadOfPersonnel | room=TutorialRoomCommand | guidebook=Command
+goals=4 subGoals=10 | interactivity ACK=3 ACTIVE=7 | score_hint=70% active
+practiceSpawns n=8 | machines[2]: LockerHeadOfPersonnelFilled, TutorialComputerId | markers[1]: TutorialStepMarker | items=5
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-head-of-personnel-goal-welcome
+    intro{Acknowledge}
+  G office | tutorial-job-head-of-personnel-goal-office
+    hold-headset{HoldItem|e=ClothingHeadsetCommand}; hold-stamp{HoldItem|e=RubberStampHop}; hold-pen{HoldItem|e=PenHop}
+  G ids | tutorial-job-head-of-personnel-goal-ids
+    id-console{InteractTargetTag|tag=TutorialIdConsole}; hold-clipboard{HoldItem|e=BoxFolderClipboard}; hold-paper{HoldTag|tag=Paper}; access-tip{Acknowledge}; walk{ReachMarker|m=hop-pass}
+  G finish | tutorial-job-head-of-personnel-goal-finish
+    done{Acknowledge}
+
+======== Security ========
+
+### Detective
+id=TutorialDetective | room=TutorialRoomSecurity | guidebook=Security
+goals=4 subGoals=9 | interactivity ACK=3 ACTIVE=6 | score_hint=67% active
+practiceSpawns n=8 | machines[2]: ForensicScanner, LockerDetectiveFilled | mobs[1]: TutorialPracticeMob | markers[1]: TutorialStepMarker | items=4
+progression: Log findings for the HoS
+  G welcome | tutorial-job-detective-goal-welcome
+    intro{Acknowledge}
+  G forensics | tutorial-job-detective-goal-forensics
+    hold-scanner{HoldItem|e=ForensicScanner}; scan-evidence{InteractTargetTag|tag=TutorialForensicsEvidence}; hold-pad{HoldItem|e=ForensicPad}; fiber-tip{Acknowledge}
+  G detain | tutorial-job-detective-goal-detain
+    hold-cuffs{HoldItem|e=Handcuffs}; cuff-dummy{PracticeMobCuffed}; walk{ReachMarker|m=det-pass}
+  G finish | tutorial-job-detective-goal-finish
+    done{Acknowledge}
+
+### HeadOfSecurity
+id=TutorialHeadOfSecurity | room=TutorialRoomSecurity | guidebook=Security
+goals=4 subGoals=10 | interactivity ACK=3 ACTIVE=7 | score_hint=70% active
+practiceSpawns n=9 | machines[1]: LockerHeadOfSecurityFilled | vendors[1]: TutorialVendingMachineSec | mobs[1]: TutorialPracticeMob | markers[1]: TutorialStepMarker | items=5
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-head-of-security-goal-welcome
+    intro{Acknowledge}
+  G command | tutorial-job-head-of-security-goal-command
+    hold-headset{HoldItem|e=ClothingHeadsetCommand}; hold-stamp{HoldItem|e=RubberStampHos}; law-tip{Acknowledge}
+  G gear | tutorial-job-head-of-security-goal-gear
+    hold-cuffs{HoldItem|e=Handcuffs}; cuff-dummy{PracticeMobCuffed}; hold-baton{HoldItem|e=Stunbaton}; sec-vend{InteractTargetTag|tag=TutorialVending}; walk{ReachMarker|m=hos-pass}
+  G finish | tutorial-job-head-of-security-goal-finish
+    done{Acknowledge}
+
+### SecurityOfficer
+id=TutorialSecurityOfficer | room=TutorialRoomSecurity | guidebook=Security
+goals=4 subGoals=11 | interactivity ACK=3 ACTIVE=8 | score_hint=73% active
+practiceSpawns n=10 | machines[1]: LockerSecurityFilled | vendors[1]: TutorialVendingMachineSec | mobs[1]: TutorialPracticeMob | markers[1]: TutorialStepMarker | items=6
+progression: Warden sets brig times
+  G welcome | tutorial-job-security-officer-goal-welcome
+    intro{Acknowledge}
+  G tools | tutorial-job-security-officer-goal-tools
+    hold-baton{HoldItem|e=Stunbaton}; hold-disabler{HoldItem|e=WeaponDisabler}; hold-flash{HoldItem|e=Flash}; use-seclite{UseInHand|e=FlashlightSeclite}
+  G arrest | tutorial-job-security-officer-goal-arrest
+    hold-cuffs{HoldItem|e=Handcuffs}; cuff-dummy{PracticeMobCuffed}; sec-vend{InteractTargetTag|tag=TutorialVending}; law-tip{Acknowledge}; walk{ReachMarker|m=sec-pass}
+  G finish | tutorial-job-security-officer-goal-finish
+    done{Acknowledge}
+
+### Warden
+id=TutorialWarden | room=TutorialRoomSecurity | guidebook=Security
+goals=4 subGoals=10 | interactivity ACK=3 ACTIVE=7 | score_hint=70% active
+practiceSpawns n=11 | machines[1]: LockerWardenFilled | vendors[1]: TutorialVendingMachineSec | mobs[1]: TutorialPracticeMob | markers[1]: TutorialStepMarker | items=7
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-warden-goal-welcome
+    intro{Acknowledge}
+  G brig | tutorial-job-warden-goal-brig
+    hold-stamp{HoldItem|e=RubberStampWarden}; hold-clipboard{HoldItem|e=BoxFolderClipboard}; hold-cuffs{HoldItem|e=Handcuffs}; cuff-dummy{PracticeMobCuffed}
+  G armory | tutorial-job-warden-goal-armory
+    brig-timer{InteractTargetTag|tag=TutorialBrigTimer}; gun-safe{InteractTargetTag|tag=TutorialSecLocker}; armory-tip{Acknowledge}; walk{ReachMarker|m=warden-pass}
+  G finish | tutorial-job-warden-goal-finish
+    done{Acknowledge}
+
+======== Medical ========
+
+### Chemist
+id=TutorialChemist | room=TutorialRoomMedical | guidebook=Medical
+goals=5 subGoals=11 | interactivity ACK=3 ACTIVE=8 | score_hint=73% active
+practiceSpawns n=8 | machines[3]: TutorialChemDispenser, TutorialChemMaster, TutorialKitchenReagentGrinder | markers[1]: TutorialStepMarker | items=4
+progression: Botanists supply produce; deliver meds to doctors
+  G welcome | tutorial-job-chemist-goal-welcome
+    intro{Acknowledge}
+  G glassware | tutorial-job-chemist-goal-glassware
+    hold-beaker{HoldItem|e=Beaker}; hold-large{HoldItem|e=LargeBeaker}
+  G mix | tutorial-job-chemist-goal-mix
+    dispenser{InteractTargetTag|tag=TutorialChemDispenser}; inaprovaline{SolutionContains|r=Inaprovaline|min=1}; chemmaster{InteractTargetTag|tag=TutorialChemMaster}
+  G grind | tutorial-job-chemist-goal-grind
+    hold-produce{HoldItem|e=FoodApple}; grinder{InteractTargetTag|tag=TutorialGrinder}; tip{Acknowledge}; walk{ReachMarker|m=chem-pass}
+  G finish | tutorial-job-chemist-goal-finish
+    done{Acknowledge}
+
+### ChiefMedicalOfficer
+id=TutorialChiefMedicalOfficer | room=TutorialRoomMedical | guidebook=Medical
+goals=4 subGoals=11 | interactivity ACK=3 ACTIVE=8 | score_hint=73% active
+practiceSpawns n=10 | machines[1]: LockerChiefMedicalOfficerFilled | vendors[1]: TutorialVendingMachineMedical | mobs[1]: TutorialPracticeMobDamaged | markers[1]: TutorialStepMarker | items=6
+progression: Coordinate paramedics / triage
+  G welcome | tutorial-job-chief-medical-officer-goal-welcome
+    intro{Acknowledge}
+  G command | tutorial-job-chief-medical-officer-goal-command
+    hold-headset{HoldItem|e=ClothingHeadsetCommand}; hold-clipboard{HoldItem|e=BoxFolderClipboard}
+  G clinic | tutorial-job-chief-medical-officer-goal-clinic
+    hold-analyzer{HoldItem|e=HandheldHealthAnalyzer}; hold-hypo{HoldItem|e=Hypospray}; use-hypo{UseInHand|e=Hypospray}; get-brute{ObtainItem|e=Brutepack}; heal-dummy{PracticeMobDamageBelow|maxDmg=5}; coord-tip{Acknowledge}; walk{ReachMarker|m=cmo-pass}
+  G finish | tutorial-job-chief-medical-officer-goal-finish
+    done{Acknowledge}
+
+### MedicalDoctor
+id=TutorialMedicalDoctor | room=TutorialRoomMedical | guidebook=Medical
+goals=4 subGoals=9 | interactivity ACK=3 ACTIVE=6 | score_hint=67% active
+practiceSpawns n=8 | machines[1]: LockerMedicalFilled | vendors[1]: TutorialVendingMachineMedical | mobs[1]: TutorialPracticeMobDamaged | markers[1]: TutorialStepMarker | items=4
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-medical-doctor-goal-welcome
+    intro{Acknowledge}
+  G diagnose | tutorial-job-medical-doctor-goal-diagnose
+    hold-analyzer{HoldItem|e=HandheldHealthAnalyzer}; med-vend{InteractTargetTag|tag=TutorialVending}
+  G treat | tutorial-job-medical-doctor-goal-treat
+    get-brute{ObtainItem|e=Brutepack}; get-burn{ObtainItem|e=Ointment}; heal-dummy{PracticeMobDamageBelow|maxDmg=5}; crit-tip{Acknowledge}; walk{ReachMarker|m=med-pass}
+  G finish | tutorial-job-medical-doctor-goal-finish
+    done{Acknowledge}
+
+### Paramedic
+id=TutorialParamedic | room=TutorialRoomMedical | guidebook=Medical
+goals=4 subGoals=9 | interactivity ACK=4 ACTIVE=5 | score_hint=56% active
+practiceSpawns n=11 | engines[1]: LockerParamedicFilled | mobs[1]: TutorialPracticeMobCrit | markers[1]: TutorialStepMarker | items=8
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-paramedic-goal-welcome
+    intro{Acknowledge}
+  G gear | tutorial-job-paramedic-goal-gear
+    hold-bed{HoldItem|e=RollerBedSpawnFolded}; hold-epi{HoldItem|e=ChemistryBottleEpinephrine}; hold-gauze{HoldItem|e=Gauze}
+  G rescue | tutorial-job-paramedic-goal-rescue
+    heal-dummy{PracticeMobDamageBelow|maxDmg=40}; walk{ReachMarker|m=para-pass}; bodybag-tip{Acknowledge}; externals-tip{Acknowledge}
+  G finish | tutorial-job-paramedic-goal-finish
+    done{Acknowledge}
+
+======== Science ========
+
+### ResearchDirector
+id=TutorialResearchDirector | room=TutorialRoomScience | guidebook=Science
+goals=5 subGoals=14 | interactivity ACK=4 ACTIVE=10 | score_hint=71% active
+practiceSpawns n=11 | machines[4]: AnomalyScanner, LockerResearchDirectorFilled, NodeScanner, TutorialAnomalySpawnPad | vendors[1]: TutorialVendingMachineYouTool | markers[1]: TutorialStepMarker | items=4
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-research-director-goal-welcome
+    intro{Acknowledge}
+  G command | tutorial-job-research-director-goal-command
+    hold-headset{HoldItem|e=ClothingHeadsetCommand}; hold-clipboard{HoldItem|e=BoxFolderClipboard}
+  G anomaly | tutorial-job-research-director-goal-anomaly
+    hold-anomaly{HoldItem|e=AnomalyScanner}; spawn-explain{Acknowledge}; spawn-anomaly{SpawnAnomaly}; scan-anomaly{ScanAnomaly}; hold-chimp{HoldItem|e=TutorialWeaponPistolCHIMP}; stabilize-anomaly{StabilizeAnomaly}; remove-anomaly{RemoveAnomaly}
+  G lab | tutorial-job-research-director-goal-lab
+    lead-tip{Acknowledge}; tool-vend{InteractTargetTag|tag=TutorialVending}; walk{ReachMarker|m=rd-pass}
+  G finish | tutorial-job-research-director-goal-finish
+    done{Acknowledge}
+
+### Scientist
+id=TutorialScientist | room=TutorialRoomScience | guidebook=Science
+goals=5 subGoals=15 | interactivity ACK=4 ACTIVE=11 | score_hint=73% active
+practiceSpawns n=12 | machines[4]: AnomalyScanner, LockerScienceFilled, NodeScanner, TutorialAnomalySpawnPad | vendors[1]: TutorialVendingMachineYouTool | markers[1]: TutorialStepMarker | items=5
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-scientist-goal-welcome
+    intro{Acknowledge}
+  G scanners | tutorial-job-scientist-goal-scanners
+    hold-anomaly{HoldItem|e=AnomalyScanner}; hold-node{HoldItem|e=NodeScanner}; hold-beaker{HoldItem|e=Beaker}
+  G anomaly | tutorial-job-scientist-goal-anomaly
+    spawn-explain{Acknowledge}; spawn-anomaly{SpawnAnomaly}; scan-anomaly{ScanAnomaly}; contain-explain{Acknowledge}; hold-chimp{HoldItem|e=TutorialWeaponPistolCHIMP}; stabilize-anomaly{StabilizeAnomaly}; remove-anomaly{RemoveAnomaly}
+  G tools | tutorial-job-scientist-goal-tools
+    tool-vend{InteractTargetTag|tag=TutorialVending}; hold-multitool{HoldItem|e=Multitool}; walk{ReachMarker|m=sci-pass}
+  G finish | tutorial-job-scientist-goal-finish
+    done{Acknowledge}
+
+======== Engineering ========
+
+### AtmosphericTechnician
+id=TutorialAtmosphericTechnician | room=TutorialRoomEngineering | guidebook=Engineering
+goals=6 subGoals=18 | interactivity ACK=6 ACTIVE=12 | score_hint=67% active
+practiceSpawns n=15 | machines[5]: GasPressurePump, LockerAtmosphericsFilled, TutorialGasCanisterOxygen, TutorialGasVentPump, TutorialGasVentScrubber | engines[2]: TutorialTegCenter, TutorialTegCirculator | markers[1]: TutorialStepMarker | items=6
+progression: Prereq: Station Engineer; Next: Chief Engineer (step 3/4)
+  G welcome | tutorial-job-atmospheric-technician-goal-welcome
+    intro{Acknowledge}
+  G kit | tutorial-job-atmospheric-technician-goal-kit
+    hold-suit{HoldItem|e=ClothingOuterHardsuitAtmos}; hold-magboots{HoldItem|e=ClothingShoesBootsMag}; use-magboots{UseInHand|e=ClothingShoesBootsMag}; hold-analyzer{HoldItem|e=GasAnalyzer}; scan-canister{InteractTargetTag|tag=TutorialGasCanister}
+  G distro | tutorial-job-atmospheric-technician-goal-distro
+    vent{InteractTargetTag|tag=TutorialDistroVent}; scrubber{InteractTargetTag|tag=TutorialWasteScrubber}; distro-tip{Acknowledge}
+  G waste | tutorial-job-atmospheric-technician-goal-waste
+    hold-wrench{HoldItem|e=Wrench}; filter{InteractTargetTag|tag=TutorialGasFilter}; filter-tip{Acknowledge}
+  G teg | tutorial-job-atmospheric-technician-goal-teg
+    teg{InteractTargetTag|tag=TutorialTeg}; circulator{InteractTargetTag|tag=TutorialTegCirculator}; teg-tip{Acknowledge}; next-tip{Acknowledge}; walk{ReachMarker|m=atmos-pass}
+  G finish | tutorial-job-atmospheric-technician-goal-finish
+    done{Acknowledge}
+
+### ChiefEngineer
+id=TutorialChiefEngineer | room=TutorialRoomEngineering | guidebook=Engineering
+goals=5 subGoals=14 | interactivity ACK=4 ACTIVE=10 | score_hint=71% active
+practiceSpawns n=20 | machines[2]: LockerChiefEngineerFilled, TutorialComputerPowerMonitoring | engines[5]: AmeJar, TutorialAmeController, TutorialAmeShielding, TutorialSingularityGenerator, TutorialTegCenter | markers[1]: TutorialStepMarker | items=4
+progression: Eng track step 4/4; coordinate atmos on TEG
+  G welcome | tutorial-job-chief-engineer-goal-welcome
+    intro{Acknowledge}
+  G command | tutorial-job-chief-engineer-goal-command
+    hold-headset{HoldItem|e=ClothingHeadsetCommand}; hold-clipboard{HoldItem|e=BoxFolderClipboard}; hold-magboots{HoldItem|e=ClothingShoesBootsMagAdv}; use-magboots{UseInHand|e=ClothingShoesBootsMagAdv}
+  G oversee | tutorial-job-chief-engineer-goal-oversee
+    power-monitor{InteractTargetTag|tag=TutorialPowerMonitor}; hold-fuel{HoldItem|e=AmeJar}; ame-inject{AmeInjecting}; ame-tip{Acknowledge}
+  G lead | tutorial-job-chief-engineer-goal-lead
+    teg{InteractTargetTag|tag=TutorialTeg}; singulo{InteractTargetTag|tag=TutorialSinguloGen}; lead-tip{Acknowledge}; walk{ReachMarker|m=ce-pass}
+  G finish | tutorial-job-chief-engineer-goal-finish
+    done{Acknowledge}
+
+### StationEngineer
+id=TutorialStationEngineer | room=TutorialRoomEngineering | guidebook=Engineering
+goals=6 subGoals=18 | interactivity ACK=7 ACTIVE=11 | score_hint=61% active
+practiceSpawns n=17 | machines[2]: ClosetToolFilled, TutorialComputerPowerMonitoring | engines[7]: ClothingEyesGlassesMeson, RadiationCollectorNoTank, TeslaCoil, TutorialSingularityGenerator, TutorialSmesEmpty, TutorialSubstation, TutorialTeslaGenerator | vendors[1]: TutorialVendingMachineYouTool | markers[1]: TutorialStepMarker | items=6
+progression: Prereq: Technical Assistant; Next: Atmospheric Technician; then CE
+  G welcome | tutorial-job-station-engineer-goal-welcome
+    intro{Acknowledge}
+  G grid | tutorial-job-station-engineer-goal-grid
+    hold-mesons{HoldItem|e=ClothingEyesGlassesMeson}; hold-mv{HoldItem|e=CableMVStack10}; place-mv{MapHasEntity|e=CableMV}; substation{InteractTargetTag|tag=TutorialSubstation}
+  G smes | tutorial-job-station-engineer-goal-smes
+    hold-hv{HoldItem|e=CableHVStack10}; place-hv{MapHasEntity|e=CableHV}; smes{InteractTargetTag|tag=TutorialSmes}; smes-tip{Acknowledge}
+  G monitor | tutorial-job-station-engineer-goal-monitor
+    power-monitor{InteractTargetTag|tag=TutorialPowerMonitor}; monitor-tip{Acknowledge}
+  G engines | tutorial-job-station-engineer-goal-engines
+    singulo{InteractTargetTag|tag=TutorialSinguloGen}; singulo-tip{Acknowledge}; tesla{InteractTargetTag|tag=TutorialTeslaGen}; tesla-tip{Acknowledge}; next-tip{Acknowledge}; walk{ReachMarker|m=eng-pass}
+  G finish | tutorial-job-station-engineer-goal-finish
+    done{Acknowledge}
+
+### TechnicalAssistant
+id=TutorialTechnicalAssistant | room=TutorialRoomEngineering | guidebook=Engineering
+goals=5 subGoals=14 | interactivity ACK=5 ACTIVE=9 | score_hint=64% active
+practiceSpawns n=14 | machines[2]: ClosetToolFilled, TutorialHackAirlock | vendors[1]: TutorialVendingMachineYouTool | markers[1]: TutorialStepMarker | items=10
+progression: Next: Station Engineer (step 1/4 eng track)
+  G welcome | tutorial-job-technical-assistant-goal-welcome
+    intro{Acknowledge}
+  G hack | tutorial-job-technical-assistant-goal-hack
+    hold-screwdriver{HoldItem|e=Screwdriver}; open-panel{WiresPanelOpen|tag=TutorialHackDoor}; hold-multitool{HoldItem|e=Multitool}; wires-tip{Acknowledge}
+  G spacing | tutorial-job-technical-assistant-goal-spacing
+    hold-steel{HoldItem|e=SheetSteel10}; patch{InteractTargetTag|tag=TutorialSpacingBreach}; spacing-tip{Acknowledge}
+  G lv | tutorial-job-technical-assistant-goal-lv
+    hold-lv{HoldItem|e=CableApcStack10}; place-lv{MapHasEntity|e=CableApcExtension}; apc{InteractTargetTag|tag=TutorialApc}; next-tip{Acknowledge}; walk{ReachMarker|m=ta-pass}
+  G finish | tutorial-job-technical-assistant-goal-finish
+    done{Acknowledge}
+
+======== Cargo ========
+
+### CargoTechnician
+id=TutorialCargoTechnician | shuttleArena=TutorialArenaCargoShuttle | guidebook=Cargo
+goals=7 subGoals=14 | interactivity ACK=8 ACTIVE=6 | score_hint=43% active
+practiceSpawns n=0 | items=0
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-cargo-technician-goal-welcome
+    intro{Acknowledge}; look-around{Acknowledge}
+  G pilot | tutorial-job-cargo-technician-goal-pilot
+    open-console{PilotShuttle}; controls{Acknowledge}
+  G undock-bay | tutorial-job-cargo-technician-goal-undock-bay
+    undock-explain{Acknowledge}; undock-bay{UndockShuttle|m=cargo-bay}
+  G fly-ats | tutorial-job-cargo-technician-goal-fly-ats
+    throttle{ShuttleThrottle}; fly-tips{Acknowledge}
+  G dock-ats | tutorial-job-cargo-technician-goal-dock-ats
+    dock-ats-explain{Acknowledge}; dock-ats{DockShuttle|m=ats}
+  G return-bay | tutorial-job-cargo-technician-goal-return-bay
+    undock-ats{UndockShuttle|m=ats}; fly-home{Acknowledge}; dock-bay{DockShuttle|m=cargo-bay}
+  G finish | tutorial-job-cargo-technician-goal-finish
+    done{Acknowledge}
+
+### Quartermaster
+id=TutorialQuartermaster | room=TutorialRoomCargo | guidebook=Cargo
+goals=4 subGoals=11 | interactivity ACK=4 ACTIVE=7 | score_hint=64% active
+practiceSpawns n=10 | machines[2]: LockerQuarterMasterFilled, TutorialComputerCargoOrders | engines[1]: CrateGenericSteel | vendors[1]: TutorialVendingMachineCart | markers[1]: TutorialStepMarker | items=5
+progression: Point Cargo Techs at Cargo Tech tutorial for piloting
+  G welcome | tutorial-job-quartermaster-goal-welcome
+    intro{Acknowledge}
+  G lead | tutorial-job-quartermaster-goal-lead
+    hold-headset{HoldItem|e=ClothingHeadsetCommand}; hold-clipboard{HoldItem|e=BoxFolderClipboard}; hold-appraise{HoldItem|e=AppraisalTool}; use-appraise{UseInHand|e=AppraisalTool}
+  G floor | tutorial-job-quartermaster-goal-floor
+    orders{InteractTargetTag|tag=TutorialCargoOrders}; priority-tip{Acknowledge}; shuttle-tip{Acknowledge}; hold-manifest{HoldItem|e=PaperCargoBountyManifest}; walk{ReachMarker|m=qm-pass}
+  G finish | tutorial-job-quartermaster-goal-finish
+    done{Acknowledge}
+
+### SalvageSpecialist
+id=TutorialSalvageSpecialist | room=TutorialRoomSalvage | guidebook=Cargo
+goals=4 subGoals=10 | interactivity ACK=3 ACTIVE=7 | score_hint=70% active
+practiceSpawns n=8 | machines[2]: LockerSalvageSpecialistFilled, OreBag | markers[1]: TutorialStepMarker | items=5
+progression: Cargo Techs pilot the shuttle for magnets/expeditions
+  G welcome | tutorial-job-salvage-specialist-goal-welcome
+    intro{Acknowledge}
+  G eva | tutorial-job-salvage-specialist-goal-eva
+    hold-magboots{HoldItem|e=ClothingShoesBootsMag}; use-magboots{UseInHand|e=ClothingShoesBootsMag}; hold-pka{HoldItem|e=WeaponProtoKineticAccelerator}; hold-pickaxe{HoldItem|e=Pickaxe}
+  G haul | tutorial-job-salvage-specialist-goal-haul
+    hold-orebag{HoldItem|e=OreBag}; walk{ReachMarker|m=salvage-pass}; hold-ore{HoldItem|e=SteelOre1}; magnet-tip{Acknowledge}
+  G finish | tutorial-job-salvage-specialist-goal-finish
+    done{Acknowledge}
+
+======== CentComm ========
+
+### CentralCommandOfficial
+id=TutorialCentralCommandOfficial | room=TutorialRoomCentComm | guidebook=Command
+goals=4 subGoals=8 | interactivity ACK=2 ACTIVE=6 | score_hint=75% active
+practiceSpawns n=7 | markers[1]: TutorialStepMarker | items=6
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-job-central-command-official-goal-welcome
+    intro{Acknowledge}
+  G credentials | tutorial-job-central-command-official-goal-credentials
+    hold-stamp{HoldItem|e=RubberStampCentcom}; hold-pen{HoldItem|e=PenCentcom}; hold-headset{HoldItem|e=ClothingHeadsetCentCom}
+  G paperwork | tutorial-job-central-command-official-goal-paperwork
+    hold-paper{HoldTag|tag=Paper}; hold-clipboard{HoldItem|e=BoxFolderClipboard}; walk{ReachMarker|m=centcom-pass}
+  G finish | tutorial-job-central-command-official-goal-finish
+    done{Acknowledge}
+
+======== Antagonist ========
+
+### Traitor [antag job=Passenger]
+id=TutorialTraitor | room=TutorialRoomAntag | guidebook=
+goals=4 subGoals=8 | interactivity ACK=3 ACTIVE=5 | score_hint=62% active
+practiceSpawns n=7 | markers[1]: TutorialStepMarker | items=6
+progression: (none explicit beyond /ghost respawn)
+  G welcome | tutorial-antag-traitor-goal-welcome
+    intro{Acknowledge}
+  G objectives | tutorial-antag-traitor-goal-objectives
+    review{Acknowledge}; hold-radio{HoldItem|e=RadioHandheld}
+  G gear | tutorial-antag-traitor-goal-gear
+    hold-emag{HoldItem|e=Emag}; hold-headset{HoldItem|e=ClothingHeadsetAltSyndicate}; hold-key{HoldItem|e=EncryptionKeySyndie}; walk{ReachMarker|m=syndie-pass}
+  G finish | tutorial-antag-traitor-goal-finish
+    done{Acknowledge}
+
+======== STUBS in tutorial_roles.yml ========
+Crew jobs (60): Lawyer, Lawyer, Lawyer, Librarian, Librarian, Librarian, Musician, Musician, Musician, Reporter, Reporter, Reporter, Visitor, Visitor, Visitor, ServiceWorker, ServiceWorker, ServiceWorker, MedicalIntern, MedicalIntern, MedicalIntern, Psychologist, Psychologist, Psychologist, SecurityCadet, SecurityCadet, SecurityCadet, ResearchAssistant, ResearchAssistant, ResearchAssistant, Borg, Borg, Borg, StationAi, StationAi, StationAi, CBURN, CBURN, CBURN, ERTLeader, ERTLeader, ERTLeader, ERTChaplain, ERTChaplain, ERTChaplain, ERTJanitor, ERTJanitor, ERTJanitor, ERTMedical, ERTMedical, ERTMedical, ERTSecurity, ERTSecurity, ERTSecurity, ERTEngineer, ERTEngineer, ERTEngineer, DeathSquad, DeathSquad, DeathSquad
+Antags (64): Changeling, Changeling, Changeling, Dragon, Dragon, Dragon, GenericAntagonist, GenericAntagonist, GenericAntagonist, GenericFreeAgent, GenericFreeAgent, GenericFreeAgent, GenericSiliconAntagonist, GenericSiliconAntagonist, GenericSiliconAntagonist, GenericTeamAntagonist, GenericTeamAntagonist, GenericTeamAntagonist, HeadRev, HeadRev, HeadRev, InitialInfected, InitialInfected, InitialInfected, MothershipCore, MothershipCore, MothershipCore, Nukeops, Nukeops, Nukeops, NukeopsCommander, NukeopsCommander, NukeopsCommander, NukeopsMedic, NukeopsMedic, NukeopsMedic, ParadoxClone, ParadoxClone, ParadoxClone, Rev, Rev, Rev, SpaceNinja, SpaceNinja, SpaceNinja, SubvertedSilicon, SubvertedSilicon, SubvertedSilicon, Survivor, Survivor, Survivor, Thief, Thief, Thief, Wizard, Wizard, Wizard, Xenoborg, Xenoborg, Xenoborg, Zombie, Zombie, Zombie, Zombie
+
+======== RANKING BY ACTIVE SUBGOALS ========
+AtmosphericTechnician    goals= 6 subs=18 ack= 6 act=12 pct= 67% spawn=15
+Scientist                goals= 5 subs=15 ack= 4 act=11 pct= 73% spawn=12
+Chef                     goals= 5 subs=13 ack= 2 act=11 pct= 85% spawn=16
+StationEngineer          goals= 6 subs=18 ack= 7 act=11 pct= 61% spawn=17
+ResearchDirector         goals= 5 subs=14 ack= 4 act=10 pct= 71% spawn=11
+Passenger                goals= 7 subs=12 ack= 2 act=10 pct= 83% spawn=11
+ChiefEngineer            goals= 5 subs=14 ack= 4 act=10 pct= 71% spawn=20
+TechnicalAssistant       goals= 5 subs=14 ack= 5 act= 9 pct= 64% spawn=14
+ChiefMedicalOfficer      goals= 4 subs=11 ack= 3 act= 8 pct= 73% spawn=10
+Janitor                  goals= 5 subs=11 ack= 3 act= 8 pct= 73% spawn=12
+Chemist                  goals= 5 subs=11 ack= 3 act= 8 pct= 73% spawn= 8
+SecurityOfficer          goals= 4 subs=11 ack= 3 act= 8 pct= 73% spawn=10
+SalvageSpecialist        goals= 4 subs=10 ack= 3 act= 7 pct= 70% spawn= 8
+Warden                   goals= 4 subs=10 ack= 3 act= 7 pct= 70% spawn=11
+Quartermaster            goals= 4 subs=11 ack= 4 act= 7 pct= 64% spawn=10
+HeadOfPersonnel          goals= 4 subs=10 ack= 3 act= 7 pct= 70% spawn= 8
+Bartender                goals= 5 subs=10 ack= 3 act= 7 pct= 70% spawn= 8
+HeadOfSecurity           goals= 4 subs=10 ack= 3 act= 7 pct= 70% spawn= 9
+CentralCommandOfficial   goals= 4 subs= 8 ack= 2 act= 6 pct= 75% spawn= 7
+CargoTechnician          goals= 7 subs=14 ack= 8 act= 6 pct= 43% spawn= 0
+Captain                  goals= 4 subs= 9 ack= 3 act= 6 pct= 67% spawn= 8
+Clown                    goals= 4 subs=10 ack= 4 act= 6 pct= 60% spawn= 7
+MedicalDoctor            goals= 4 subs= 9 ack= 3 act= 6 pct= 67% spawn= 8
+Detective                goals= 4 subs= 9 ack= 3 act= 6 pct= 67% spawn= 8
+Traitor                  goals= 4 subs= 8 ack= 3 act= 5 pct= 62% spawn= 7
+Botanist                 goals= 5 subs= 8 ack= 3 act= 5 pct= 62% spawn= 9
+Paramedic                goals= 4 subs= 9 ack= 4 act= 5 pct= 56% spawn=11
+Chaplain                 goals= 4 subs= 7 ack= 2 act= 5 pct= 71% spawn= 5
+Mime                     goals= 4 subs= 8 ack= 4 act= 4 pct= 50% spawn= 6
+

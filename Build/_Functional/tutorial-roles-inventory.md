@@ -1,0 +1,666 @@
+﻿# Tutorial Role Inventory
+Generated from 29 role YAML files
+
+## 
+
+### Passenger ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Civilian; room=TutorialRoomCivilian; guidebook=Jobs
+- counts: goals=7; subGoals=12; interactivity: Acknowledge=2 / active=10
+- practiceSpawns: n=11 (machine=1, marker=1, item=9); notable: ClosetToolFilled, TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-passenger-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - move | tutorial-job-passenger-goal-move | subs=1
+    - walk: complete=ReachMarker; marker=basics-pass
+  - pickup | tutorial-job-passenger-goal-pickup | subs=2
+    - hold-crowbar: complete=HoldItem; entity=Crowbar
+    - hold-light: complete=HoldItem; entity=FlashlightLantern
+  - inventory | tutorial-job-passenger-goal-inventory | subs=3
+    - stow-light: complete=StowItem; entity=FlashlightLantern
+    - hold-light-again: complete=HoldItem; entity=FlashlightLantern
+    - use-light: complete=UseInHand; entity=FlashlightLantern
+  - drink | tutorial-job-passenger-goal-drink | subs=2
+    - hold-water: complete=HoldItem; entity=DrinkWaterBottleFull
+    - drink-water: complete=UseInHand; entity=DrinkWaterBottleFull
+  - crowbar-door | tutorial-job-passenger-goal-crowbar | subs=2
+    - hold-crowbar-door: complete=HoldTag; tag=Crowbar
+    - pry-door: complete=InteractTag; tag=Crowbar
+  - finish | tutorial-job-passenger-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: done=tutorial-job-passenger-sg-done
+
+### Quartermaster ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Cargo; room=TutorialRoomCargo; guidebook=Cargo
+- counts: goals=4; subGoals=11; interactivity: Acknowledge=4 / active=7
+- practiceSpawns: n=10 (machine=2, engine=1, vendor=1, marker=1, item=5); notable: CrateGenericSteel, LockerQuarterMasterFilled, TutorialComputerCargoOrders, TutorialStepMarker, TutorialVendingMachineCart
+- goals:
+  - welcome | tutorial-job-quartermaster-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - lead | tutorial-job-quartermaster-goal-lead | subs=4
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetCommand
+    - hold-clipboard: complete=HoldItem; entity=BoxFolderClipboard
+    - hold-appraise: complete=HoldItem; entity=AppraisalTool
+    - use-appraise: complete=UseInHand; entity=AppraisalTool
+  - floor | tutorial-job-quartermaster-goal-floor | subs=5
+    - orders: complete=InteractTargetTag; tag=TutorialCargoOrders
+    - priority-tip: complete=Acknowledge
+    - shuttle-tip: complete=Acknowledge
+    - hold-manifest: complete=HoldItem; entity=PaperCargoBountyManifest
+    - walk: complete=ReachMarker; marker=qm-pass
+  - finish | tutorial-job-quartermaster-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: priority-tip=tutorial-job-quartermaster-sg-priority-tip; shuttle-tip=tutorial-job-quartermaster-sg-shuttle-tip; done=tutorial-job-quartermaster-sg-done
+
+### ResearchDirector ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Science; room=TutorialRoomScience; guidebook=Science
+- counts: goals=5; subGoals=14; interactivity: Acknowledge=4 / active=10
+- practiceSpawns: n=11 (machine=6, vendor=1, marker=1, item=3); notable: AnomalyScanner, LockerResearchDirectorFilled, NodeScanner, TutorialAnomalySpawnPad, TutorialMachineAPE, TutorialStepMarker, TutorialVendingMachineYouTool
+- goals:
+  - welcome | tutorial-job-research-director-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - command | tutorial-job-research-director-goal-command | subs=2
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetCommand
+    - hold-clipboard: complete=HoldItem; entity=BoxFolderClipboard
+  - anomaly | tutorial-job-research-director-goal-anomaly | subs=7
+    - hold-anomaly: complete=HoldItem; entity=AnomalyScanner
+    - spawn-explain: complete=Acknowledge
+    - spawn-anomaly: complete=SpawnAnomaly
+    - scan-anomaly: complete=ScanAnomaly
+    - hold-chimp: complete=HoldItem; entity=TutorialWeaponPistolCHIMP
+    - stabilize-anomaly: complete=StabilizeAnomaly
+    - remove-anomaly: complete=RemoveAnomaly
+  - lab | tutorial-job-research-director-goal-lab | subs=3
+    - lead-tip: complete=Acknowledge
+    - tool-vend: complete=InteractTargetTag; tag=TutorialVending
+    - walk: complete=ReachMarker; marker=rd-pass
+  - finish | tutorial-job-research-director-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: lead-tip=tutorial-job-research-director-sg-lead-tip; done=tutorial-job-research-director-sg-done
+
+### Paramedic ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Medical; room=TutorialRoomMedical; guidebook=Medical
+- counts: goals=4; subGoals=9; interactivity: Acknowledge=4 / active=5
+- practiceSpawns: n=11 (machine=1, mob=2, engine=1, marker=1, item=6); notable: BodyBagFolded, LockerParamedicFilled, RollerBedSpawnFolded, TutorialPracticeMobCrit, TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-paramedic-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - gear | tutorial-job-paramedic-goal-gear | subs=3
+    - hold-bed: complete=HoldItem; entity=RollerBedSpawnFolded
+    - hold-epi: complete=HoldItem; entity=ChemistryBottleEpinephrine
+    - hold-gauze: complete=HoldItem; entity=Gauze
+  - rescue | tutorial-job-paramedic-goal-rescue | subs=4
+    - heal-dummy: complete=PracticeMobDamageBelow; maxDamage=40
+    - walk: complete=ReachMarker; marker=para-pass
+    - bodybag-tip: complete=Acknowledge
+    - externals-tip: complete=Acknowledge
+  - finish | tutorial-job-paramedic-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: bodybag-tip=tutorial-job-paramedic-sg-bodybag-tip; externals-tip=tutorial-job-paramedic-sg-externals-tip; done=tutorial-job-paramedic-sg-done
+
+### Janitor ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Service; room=TutorialRoomJanitor; guidebook=Janitorial
+- counts: goals=5; subGoals=11; interactivity: Acknowledge=3 / active=8
+- practiceSpawns: n=12 (machine=3, mob=1, marker=1, item=7); notable: ClosetJanitorFilled, CrateJanitorialSupplies, TutorialPracticePuddleBlood, TutorialStepMarker, WaterTankFull
+- goals:
+  - welcome | tutorial-job-janitor-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - kit | tutorial-job-janitor-goal-kit | subs=3
+    - hold-mop: complete=HoldTag; tag=Mop
+    - hold-bucket: complete=HoldItem; entity=Bucket
+    - hold-galoshes: complete=HoldItem; entity=ClothingShoesGaloshes
+  - mop | tutorial-job-janitor-goal-mop | subs=2
+    - clear-puddle: complete=PuddleCleared; marker=blood-puddle
+    - drain: complete=InteractTargetTag; tag=TutorialDrain
+  - clean | tutorial-job-janitor-goal-clean | subs=4
+    - hold-spray: complete=HoldItem; entity=SprayBottleSpaceCleaner
+    - potassium-tip: complete=Acknowledge
+    - hold-bag: complete=HoldItem; entity=TrashBag
+    - walk: complete=ReachMarker; marker=clean-pass
+  - finish | tutorial-job-janitor-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: potassium-tip=tutorial-job-janitor-sg-potassium-tip; done=tutorial-job-janitor-sg-done
+
+### MedicalDoctor ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Medical; room=TutorialRoomMedical; guidebook=Medical
+- counts: goals=4; subGoals=9; interactivity: Acknowledge=3 / active=6
+- practiceSpawns: n=8 (machine=1, mob=1, vendor=1, marker=1, item=4); notable: LockerMedicalFilled, TutorialPracticeMobDamaged, TutorialStepMarker, TutorialVendingMachineMedical
+- goals:
+  - welcome | tutorial-job-medical-doctor-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - diagnose | tutorial-job-medical-doctor-goal-diagnose | subs=2
+    - hold-analyzer: complete=HoldItem; entity=HandheldHealthAnalyzer
+    - med-vend: complete=InteractTargetTag; tag=TutorialVending
+  - treat | tutorial-job-medical-doctor-goal-treat | subs=5
+    - get-brute: complete=ObtainItem; entity=Brutepack
+    - get-burn: complete=ObtainItem; entity=Ointment
+    - heal-dummy: complete=PracticeMobDamageBelow; maxDamage=5
+    - crit-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=med-pass
+  - finish | tutorial-job-medical-doctor-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: crit-tip=tutorial-job-medical-doctor-sg-crit-tip; done=tutorial-job-medical-doctor-sg-done
+
+### Mime ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Service; room=TutorialRoomService; guidebook=Service
+- counts: goals=4; subGoals=8; interactivity: Acknowledge=4 / active=4
+- practiceSpawns: n=6 (marker=1, item=5); notable: TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-mime-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - vows | tutorial-job-mime-goal-vows | subs=3
+    - silence: complete=Acknowledge
+    - hold-pen: complete=HoldItem; entity=Pen
+    - wall-tip: complete=Acknowledge
+  - art | tutorial-job-mime-goal-art | subs=3
+    - hold-crayon: complete=HoldItem; entity=CrayonMime
+    - hold-paper: complete=HoldTag; tag=Paper
+    - walk: complete=ReachMarker; marker=mime-pass
+  - finish | tutorial-job-mime-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: wall-tip=tutorial-job-mime-sg-wall-tip; done=tutorial-job-mime-sg-done
+
+### TechnicalAssistant ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Engineering; room=TutorialRoomEngineering; guidebook=Engineering
+- counts: goals=5; subGoals=14; interactivity: Acknowledge=5 / active=9
+- practiceSpawns: n=14 (machine=2, engine=3, vendor=1, marker=1, item=7); notable: CableApcStack10, ClosetToolFilled, TutorialApc, TutorialHackAirlock, TutorialStepMarker, TutorialVendingMachineYouTool
+- goals:
+  - welcome | tutorial-job-technical-assistant-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - hack | tutorial-job-technical-assistant-goal-hack | subs=4
+    - hold-screwdriver: complete=HoldItem; entity=Screwdriver
+    - open-panel: complete=WiresPanelOpen; tag=TutorialHackDoor
+    - hold-multitool: complete=HoldItem; entity=Multitool
+    - wires-tip: complete=Acknowledge
+  - spacing | tutorial-job-technical-assistant-goal-spacing | subs=3
+    - hold-steel: complete=HoldItem; entity=SheetSteel10
+    - patch: complete=InteractTargetTag; tag=TutorialSpacingBreach
+    - spacing-tip: complete=Acknowledge
+  - lv | tutorial-job-technical-assistant-goal-lv | subs=5
+    - hold-lv: complete=HoldItem; entity=CableApcStack10
+    - place-lv: complete=MapHasEntity; entity=CableApcExtension
+    - apc: complete=InteractTargetTag; tag=TutorialApc
+    - next-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=ta-pass
+  - finish | tutorial-job-technical-assistant-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: wires-tip=tutorial-job-technical-assistant-sg-wires-tip; spacing-tip=tutorial-job-technical-assistant-sg-spacing-tip; next-tip=tutorial-job-technical-assistant-sg-next-tip; done=tutorial-job-technical-assistant-sg-done
+
+### Passenger ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Antagonist; room=TutorialRoomAntag; guidebook=
+- counts: goals=4; subGoals=8; interactivity: Acknowledge=3 / active=5
+- practiceSpawns: n=7 (mob=1, marker=1, item=5); notable: ClothingHeadsetAltSyndicate, TutorialStepMarker
+- goals:
+  - welcome | tutorial-antag-traitor-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - objectives | tutorial-antag-traitor-goal-objectives | subs=2
+    - review: complete=Acknowledge
+    - hold-radio: complete=HoldItem; entity=RadioHandheld
+  - gear | tutorial-antag-traitor-goal-gear | subs=4
+    - hold-emag: complete=HoldItem; entity=Emag
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetAltSyndicate
+    - hold-key: complete=HoldItem; entity=EncryptionKeySyndie
+    - walk: complete=ReachMarker; marker=syndie-pass
+  - finish | tutorial-antag-traitor-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: done=tutorial-antag-traitor-sg-done
+
+### Warden ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Security; room=TutorialRoomSecurity; guidebook=Security
+- counts: goals=4; subGoals=10; interactivity: Acknowledge=3 / active=7
+- practiceSpawns: n=11 (machine=1, mob=1, vendor=1, marker=1, item=7); notable: LockerWardenFilled, TutorialPracticeMob, TutorialStepMarker, TutorialVendingMachineSec
+- goals:
+  - welcome | tutorial-job-warden-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - brig | tutorial-job-warden-goal-brig | subs=4
+    - hold-stamp: complete=HoldItem; entity=RubberStampWarden
+    - hold-clipboard: complete=HoldItem; entity=BoxFolderClipboard
+    - hold-cuffs: complete=HoldItem; entity=Handcuffs
+    - cuff-dummy: complete=PracticeMobCuffed
+  - armory | tutorial-job-warden-goal-armory | subs=4
+    - brig-timer: complete=InteractTargetTag; tag=TutorialBrigTimer
+    - gun-safe: complete=InteractTargetTag; tag=TutorialSecLocker
+    - armory-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=warden-pass
+  - finish | tutorial-job-warden-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: armory-tip=tutorial-job-warden-sg-armory-tip; done=tutorial-job-warden-sg-done
+
+### StationEngineer ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Engineering; room=TutorialRoomEngineering; guidebook=Engineering
+- counts: goals=6; subGoals=18; interactivity: Acknowledge=7 / active=11
+- practiceSpawns: n=17 (machine=2, engine=7, vendor=1, marker=1, item=6); notable: ClosetToolFilled, ClothingEyesGlassesMeson, RadiationCollectorNoTank, TeslaCoil, TutorialComputerPowerMonitoring, TutorialSingularityGenerator, TutorialSmesEmpty, TutorialStepMarker, TutorialSubstation, TutorialTeslaGenerator, TutorialVendingMachineYouTool
+- goals:
+  - welcome | tutorial-job-station-engineer-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - grid | tutorial-job-station-engineer-goal-grid | subs=4
+    - hold-mesons: complete=HoldItem; entity=ClothingEyesGlassesMeson
+    - hold-mv: complete=HoldItem; entity=CableMVStack10
+    - place-mv: complete=MapHasEntity; entity=CableMV
+    - substation: complete=InteractTargetTag; tag=TutorialSubstation
+  - smes | tutorial-job-station-engineer-goal-smes | subs=4
+    - hold-hv: complete=HoldItem; entity=CableHVStack10
+    - place-hv: complete=MapHasEntity; entity=CableHV
+    - smes: complete=InteractTargetTag; tag=TutorialSmes
+    - smes-tip: complete=Acknowledge
+  - monitor | tutorial-job-station-engineer-goal-monitor | subs=2
+    - power-monitor: complete=InteractTargetTag; tag=TutorialPowerMonitor
+    - monitor-tip: complete=Acknowledge
+  - engines | tutorial-job-station-engineer-goal-engines | subs=6
+    - singulo: complete=InteractTargetTag; tag=TutorialSinguloGen
+    - singulo-tip: complete=Acknowledge
+    - tesla: complete=InteractTargetTag; tag=TutorialTeslaGen
+    - tesla-tip: complete=Acknowledge
+    - next-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=eng-pass
+  - finish | tutorial-job-station-engineer-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: smes-tip=tutorial-job-station-engineer-sg-smes-tip; monitor-tip=tutorial-job-station-engineer-sg-monitor-tip; singulo-tip=tutorial-job-station-engineer-sg-singulo-tip; tesla-tip=tutorial-job-station-engineer-sg-tesla-tip; next-tip=tutorial-job-station-engineer-sg-next-tip; done=tutorial-job-station-engineer-sg-done
+
+### SalvageSpecialist ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Cargo; room=TutorialRoomSalvage; guidebook=Cargo
+- counts: goals=4; subGoals=10; interactivity: Acknowledge=3 / active=7
+- practiceSpawns: n=8 (machine=4, marker=1, item=3); notable: GoldOre1, LockerSalvageSpecialistFilled, OreBag, SteelOre1, TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-salvage-specialist-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - eva | tutorial-job-salvage-specialist-goal-eva | subs=4
+    - hold-magboots: complete=HoldItem; entity=ClothingShoesBootsMag
+    - use-magboots: complete=UseInHand; entity=ClothingShoesBootsMag
+    - hold-pka: complete=HoldItem; entity=WeaponProtoKineticAccelerator
+    - hold-pickaxe: complete=HoldItem; entity=Pickaxe
+  - haul | tutorial-job-salvage-specialist-goal-haul | subs=4
+    - hold-orebag: complete=HoldItem; entity=OreBag
+    - walk: complete=ReachMarker; marker=salvage-pass
+    - hold-ore: complete=HoldItem; entity=SteelOre1
+    - magnet-tip: complete=Acknowledge
+  - finish | tutorial-job-salvage-specialist-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: magnet-tip=tutorial-job-salvage-specialist-sg-magnet-tip; done=tutorial-job-salvage-specialist-sg-done
+
+### Scientist ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Science; room=TutorialRoomScience; guidebook=Science
+- counts: goals=5; subGoals=15; interactivity: Acknowledge=4 / active=11
+- practiceSpawns: n=12 (machine=6, vendor=1, marker=1, item=4); notable: AnomalyScanner, LockerScienceFilled, NodeScanner, TutorialAnomalySpawnPad, TutorialMachineAPE, TutorialStepMarker, TutorialVendingMachineYouTool
+- goals:
+  - welcome | tutorial-job-scientist-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - scanners | tutorial-job-scientist-goal-scanners | subs=3
+    - hold-anomaly: complete=HoldItem; entity=AnomalyScanner
+    - hold-node: complete=HoldItem; entity=NodeScanner
+    - hold-beaker: complete=HoldItem; entity=Beaker
+  - anomaly | tutorial-job-scientist-goal-anomaly | subs=7
+    - spawn-explain: complete=Acknowledge
+    - spawn-anomaly: complete=SpawnAnomaly
+    - scan-anomaly: complete=ScanAnomaly
+    - contain-explain: complete=Acknowledge
+    - hold-chimp: complete=HoldItem; entity=TutorialWeaponPistolCHIMP
+    - stabilize-anomaly: complete=StabilizeAnomaly
+    - remove-anomaly: complete=RemoveAnomaly
+  - tools | tutorial-job-scientist-goal-tools | subs=3
+    - tool-vend: complete=InteractTargetTag; tag=TutorialVending
+    - hold-multitool: complete=HoldItem; entity=Multitool
+    - walk: complete=ReachMarker; marker=sci-pass
+  - finish | tutorial-job-scientist-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: done=tutorial-job-scientist-sg-done
+
+### SecurityOfficer ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Security; room=TutorialRoomSecurity; guidebook=Security
+- counts: goals=4; subGoals=11; interactivity: Acknowledge=3 / active=8
+- practiceSpawns: n=10 (machine=1, mob=1, vendor=1, marker=1, item=6); notable: LockerSecurityFilled, TutorialPracticeMob, TutorialStepMarker, TutorialVendingMachineSec
+- goals:
+  - welcome | tutorial-job-security-officer-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - tools | tutorial-job-security-officer-goal-tools | subs=4
+    - hold-baton: complete=HoldItem; entity=Stunbaton
+    - hold-disabler: complete=HoldItem; entity=WeaponDisabler
+    - hold-flash: complete=HoldItem; entity=Flash
+    - use-seclite: complete=UseInHand; entity=FlashlightSeclite
+  - arrest | tutorial-job-security-officer-goal-arrest | subs=5
+    - hold-cuffs: complete=HoldItem; entity=Handcuffs
+    - cuff-dummy: complete=PracticeMobCuffed
+    - sec-vend: complete=InteractTargetTag; tag=TutorialVending
+    - law-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=sec-pass
+  - finish | tutorial-job-security-officer-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: law-tip=tutorial-job-security-officer-sg-law-tip; done=tutorial-job-security-officer-sg-done
+
+### HeadOfSecurity ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Security; room=TutorialRoomSecurity; guidebook=Security
+- counts: goals=4; subGoals=10; interactivity: Acknowledge=3 / active=7
+- practiceSpawns: n=9 (machine=1, mob=1, vendor=1, marker=1, item=5); notable: LockerHeadOfSecurityFilled, TutorialPracticeMob, TutorialStepMarker, TutorialVendingMachineSec
+- goals:
+  - welcome | tutorial-job-head-of-security-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - command | tutorial-job-head-of-security-goal-command | subs=3
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetCommand
+    - hold-stamp: complete=HoldItem; entity=RubberStampHos
+    - law-tip: complete=Acknowledge
+  - gear | tutorial-job-head-of-security-goal-gear | subs=5
+    - hold-cuffs: complete=HoldItem; entity=Handcuffs
+    - cuff-dummy: complete=PracticeMobCuffed
+    - hold-baton: complete=HoldItem; entity=Stunbaton
+    - sec-vend: complete=InteractTargetTag; tag=TutorialVending
+    - walk: complete=ReachMarker; marker=hos-pass
+  - finish | tutorial-job-head-of-security-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: law-tip=tutorial-job-head-of-security-sg-law-tip; done=tutorial-job-head-of-security-sg-done
+
+### CargoTechnician ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Cargo; shuttleArena=TutorialArenaCargoShuttle; guidebook=Cargo
+- counts: goals=7; subGoals=14; interactivity: Acknowledge=8 / active=6
+- practiceSpawns: n=0 (); notable: 
+- goals:
+  - welcome | tutorial-job-cargo-technician-goal-welcome | subs=2
+    - intro: complete=Acknowledge
+    - look-around: complete=Acknowledge
+  - pilot | tutorial-job-cargo-technician-goal-pilot | subs=2
+    - open-console: complete=PilotShuttle
+    - controls: complete=Acknowledge
+  - undock-bay | tutorial-job-cargo-technician-goal-undock-bay | subs=2
+    - undock-explain: complete=Acknowledge
+    - undock-bay: complete=UndockShuttle; marker=cargo-bay
+  - fly-ats | tutorial-job-cargo-technician-goal-fly-ats | subs=2
+    - throttle: complete=ShuttleThrottle
+    - fly-tips: complete=Acknowledge
+  - dock-ats | tutorial-job-cargo-technician-goal-dock-ats | subs=2
+    - dock-ats-explain: complete=Acknowledge
+    - dock-ats: complete=DockShuttle; marker=ats
+  - return-bay | tutorial-job-cargo-technician-goal-return-bay | subs=3
+    - undock-ats: complete=UndockShuttle; marker=ats
+    - fly-home: complete=Acknowledge
+    - dock-bay: complete=DockShuttle; marker=cargo-bay
+  - finish | tutorial-job-cargo-technician-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: fly-tips=tutorial-job-cargo-technician-sg-fly-ats; done=tutorial-job-cargo-technician-sg-done
+
+### CentralCommandOfficial ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=CentComm; room=TutorialRoomCentComm; guidebook=Command
+- counts: goals=4; subGoals=8; interactivity: Acknowledge=2 / active=6
+- practiceSpawns: n=7 (marker=1, item=6); notable: TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-central-command-official-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - credentials | tutorial-job-central-command-official-goal-credentials | subs=3
+    - hold-stamp: complete=HoldItem; entity=RubberStampCentcom
+    - hold-pen: complete=HoldItem; entity=PenCentcom
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetCentCom
+  - paperwork | tutorial-job-central-command-official-goal-paperwork | subs=3
+    - hold-paper: complete=HoldTag; tag=Paper
+    - hold-clipboard: complete=HoldItem; entity=BoxFolderClipboard
+    - walk: complete=ReachMarker; marker=centcom-pass
+  - finish | tutorial-job-central-command-official-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: done=tutorial-job-central-command-official-sg-done
+
+### Chaplain ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Service; room=TutorialRoomChapel; guidebook=Service
+- counts: goals=4; subGoals=7; interactivity: Acknowledge=2 / active=5
+- practiceSpawns: n=5 (machine=2, marker=1, item=2); notable: AltarNanotrasen, Bible, TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-chaplain-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - sacred | tutorial-job-chaplain-goal-sacred | subs=3
+    - hold-bible: complete=HoldItem; entity=Bible
+    - hold-bible-ready: complete=HoldItem; entity=Bible
+    - hold-book: complete=HoldItem; entity=BookRandom
+  - floor | tutorial-job-chaplain-goal-floor | subs=2
+    - walk: complete=ReachMarker; marker=chapel-pass
+    - hold-wine: complete=HoldItem; entity=DrinkBottleNTCahors
+  - finish | tutorial-job-chaplain-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: done=tutorial-job-chaplain-sg-done
+
+### Captain ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Command; room=TutorialRoomCommand; guidebook=Command
+- counts: goals=4; subGoals=9; interactivity: Acknowledge=3 / active=6
+- practiceSpawns: n=8 (machine=1, marker=1, item=6); notable: LockerCaptainFilled, TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-captain-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - command | tutorial-job-captain-goal-command | subs=3
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetCommand
+    - hold-stamp: complete=HoldItem; entity=RubberStampCaptain
+    - hold-pen: complete=HoldItem; entity=PenCap
+  - disk | tutorial-job-captain-goal-disk | subs=4
+    - hold-disk: complete=HoldItem; entity=NukeDiskFake
+    - hold-clipboard: complete=HoldItem; entity=BoxFolderClipboard
+    - shuttle-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=bridge-pass
+  - finish | tutorial-job-captain-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: shuttle-tip=tutorial-job-captain-sg-shuttle-tip; done=tutorial-job-captain-sg-done
+
+### AtmosphericTechnician ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Engineering; room=TutorialRoomEngineering; guidebook=Engineering
+- counts: goals=6; subGoals=18; interactivity: Acknowledge=6 / active=12
+- practiceSpawns: n=15 (machine=5, engine=3, marker=1, item=6); notable: GasPressurePump, LockerAtmosphericsFilled, TutorialGasCanisterOxygen, TutorialGasVentPump, TutorialGasVentScrubber, TutorialStepMarker, TutorialTegCenter, TutorialTegCirculator
+- goals:
+  - welcome | tutorial-job-atmospheric-technician-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - kit | tutorial-job-atmospheric-technician-goal-kit | subs=5
+    - hold-suit: complete=HoldItem; entity=ClothingOuterHardsuitAtmos
+    - hold-magboots: complete=HoldItem; entity=ClothingShoesBootsMag
+    - use-magboots: complete=UseInHand; entity=ClothingShoesBootsMag
+    - hold-analyzer: complete=HoldItem; entity=GasAnalyzer
+    - scan-canister: complete=InteractTargetTag; tag=TutorialGasCanister
+  - distro | tutorial-job-atmospheric-technician-goal-distro | subs=3
+    - vent: complete=InteractTargetTag; tag=TutorialDistroVent
+    - scrubber: complete=InteractTargetTag; tag=TutorialWasteScrubber
+    - distro-tip: complete=Acknowledge
+  - waste | tutorial-job-atmospheric-technician-goal-waste | subs=3
+    - hold-wrench: complete=HoldItem; entity=Wrench
+    - filter: complete=InteractTargetTag; tag=TutorialGasFilter
+    - filter-tip: complete=Acknowledge
+  - teg | tutorial-job-atmospheric-technician-goal-teg | subs=5
+    - teg: complete=InteractTargetTag; tag=TutorialTeg
+    - circulator: complete=InteractTargetTag; tag=TutorialTegCirculator
+    - teg-tip: complete=Acknowledge
+    - next-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=atmos-pass
+  - finish | tutorial-job-atmospheric-technician-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: distro-tip=tutorial-job-atmospheric-technician-sg-distro-tip; filter-tip=tutorial-job-atmospheric-technician-sg-filter-tip; teg-tip=tutorial-job-atmospheric-technician-sg-teg-tip; next-tip=tutorial-job-atmospheric-technician-sg-next-tip; done=tutorial-job-atmospheric-technician-sg-done
+
+### Bartender ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Service; room=TutorialRoomBar; guidebook=Bartender
+- counts: goals=5; subGoals=10; interactivity: Acknowledge=3 / active=7
+- practiceSpawns: n=8 (machine=1, vendor=1, marker=1, item=5); notable: LockerBoozeFilled, TutorialStepMarker, TutorialVendingMachineBooze
+- goals:
+  - welcome | tutorial-job-bartender-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - stock | tutorial-job-bartender-goal-stock | subs=2
+    - booze-vend: complete=InteractTargetTag; tag=TutorialVending
+    - hold-glass: complete=HoldItem; entity=DrinkGlass
+  - mix | tutorial-job-bartender-goal-mix | subs=4
+    - hold-shaker: complete=HoldItem; entity=DrinkShaker
+    - hold-vodka: complete=HoldItem; entity=DrinkBottleVodka
+    - hold-orange: complete=HoldItem; entity=DrinkJuiceOrangeCarton
+    - screwdriver: complete=SolutionContains; reagent=ScrewdriverCocktail; minAmount=1
+  - floor | tutorial-job-bartender-goal-floor | subs=2
+    - exits-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=bar-pass
+  - finish | tutorial-job-bartender-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: exits-tip=tutorial-job-bartender-sg-exits-tip; done=tutorial-job-bartender-sg-done
+
+### Botanist ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Service; room=TutorialRoomBotany; guidebook=Botany
+- counts: goals=5; subGoals=8; interactivity: Acknowledge=3 / active=5
+- practiceSpawns: n=9 (machine=5, marker=1, item=3); notable: CrateHydroponicsSeeds, LockerBotanistFilled, TutorialHydroponicsTray, TutorialStepMarker, WaterTankFull
+- goals:
+  - welcome | tutorial-job-botanist-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - seeds | tutorial-job-botanist-goal-seeds | subs=2
+    - hold-seeds: complete=HoldItem; entity=WheatSeeds
+    - tray: complete=InteractTargetTag; tag=TutorialHydroTray
+  - harvest | tutorial-job-botanist-goal-harvest | subs=3
+    - hold-bucket: complete=HoldItem; entity=Bucket
+    - harvest-wheat: complete=HydroHarvest; entity=WheatBushel
+    - handoff-tip: complete=Acknowledge
+  - floor | tutorial-job-botanist-goal-floor | subs=1
+    - walk: complete=ReachMarker; marker=hydro-pass
+  - finish | tutorial-job-botanist-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: handoff-tip=tutorial-job-botanist-sg-handoff-tip; done=tutorial-job-botanist-sg-done
+
+### Clown ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Service; room=TutorialRoomService; guidebook=Service
+- counts: goals=4; subGoals=10; interactivity: Acknowledge=4 / active=6
+- practiceSpawns: n=7 (marker=1, item=6); notable: TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-clown-goal-welcome | subs=2
+    - intro: complete=Acknowledge
+    - conduct: complete=Acknowledge
+  - honk | tutorial-job-clown-goal-honk | subs=2
+    - hold-horn: complete=HoldItem; entity=BikeHorn
+    - use-horn: complete=UseInHand; entity=BikeHorn
+  - pranks | tutorial-job-clown-goal-pranks | subs=5
+    - hold-soap: complete=HoldItem; entity=Soap
+    - hold-peel: complete=HoldItem; entity=TrashBananaPeel
+    - slip-tip: complete=Acknowledge
+    - hold-crayon: complete=HoldTag; tag=Crayon
+    - walk: complete=ReachMarker; marker=clown-pass
+  - finish | tutorial-job-clown-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: slip-tip=tutorial-job-clown-sg-slip-tip; done=tutorial-job-clown-sg-done
+
+### Detective ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Security; room=TutorialRoomSecurity; guidebook=Security
+- counts: goals=4; subGoals=9; interactivity: Acknowledge=3 / active=6
+- practiceSpawns: n=8 (machine=4, mob=1, marker=1, item=2); notable: ForensicPad, ForensicScanner, LockerDetectiveFilled, TutorialForensicsEvidence, TutorialPracticeMob, TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-detective-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - forensics | tutorial-job-detective-goal-forensics | subs=4
+    - hold-scanner: complete=HoldItem; entity=ForensicScanner
+    - scan-evidence: complete=InteractTargetTag; tag=TutorialForensicsEvidence
+    - hold-pad: complete=HoldItem; entity=ForensicPad
+    - fiber-tip: complete=Acknowledge
+  - detain | tutorial-job-detective-goal-detain | subs=3
+    - hold-cuffs: complete=HoldItem; entity=Handcuffs
+    - cuff-dummy: complete=PracticeMobCuffed
+    - walk: complete=ReachMarker; marker=det-pass
+  - finish | tutorial-job-detective-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: fiber-tip=tutorial-job-detective-sg-fiber-tip; done=tutorial-job-detective-sg-done
+
+### HeadOfPersonnel ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Command; room=TutorialRoomCommand; guidebook=Command
+- counts: goals=4; subGoals=10; interactivity: Acknowledge=3 / active=7
+- practiceSpawns: n=8 (machine=2, marker=1, item=5); notable: LockerHeadOfPersonnelFilled, TutorialComputerId, TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-head-of-personnel-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - office | tutorial-job-head-of-personnel-goal-office | subs=3
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetCommand
+    - hold-stamp: complete=HoldItem; entity=RubberStampHop
+    - hold-pen: complete=HoldItem; entity=PenHop
+  - ids | tutorial-job-head-of-personnel-goal-ids | subs=5
+    - id-console: complete=InteractTargetTag; tag=TutorialIdConsole
+    - hold-clipboard: complete=HoldItem; entity=BoxFolderClipboard
+    - hold-paper: complete=HoldTag; tag=Paper
+    - access-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=hop-pass
+  - finish | tutorial-job-head-of-personnel-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: access-tip=tutorial-job-head-of-personnel-sg-access-tip; done=tutorial-job-head-of-personnel-sg-done
+
+### ChiefMedicalOfficer ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Medical; room=TutorialRoomMedical; guidebook=Medical
+- counts: goals=4; subGoals=11; interactivity: Acknowledge=3 / active=8
+- practiceSpawns: n=10 (machine=1, mob=1, vendor=1, marker=1, item=6); notable: LockerChiefMedicalOfficerFilled, TutorialPracticeMobDamaged, TutorialStepMarker, TutorialVendingMachineMedical
+- goals:
+  - welcome | tutorial-job-chief-medical-officer-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - command | tutorial-job-chief-medical-officer-goal-command | subs=2
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetCommand
+    - hold-clipboard: complete=HoldItem; entity=BoxFolderClipboard
+  - clinic | tutorial-job-chief-medical-officer-goal-clinic | subs=7
+    - hold-analyzer: complete=HoldItem; entity=HandheldHealthAnalyzer
+    - hold-hypo: complete=HoldItem; entity=Hypospray
+    - use-hypo: complete=UseInHand; entity=Hypospray
+    - get-brute: complete=ObtainItem; entity=Brutepack
+    - heal-dummy: complete=PracticeMobDamageBelow; maxDamage=5
+    - coord-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=cmo-pass
+  - finish | tutorial-job-chief-medical-officer-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: coord-tip=tutorial-job-chief-medical-officer-sg-coord-tip; done=tutorial-job-chief-medical-officer-sg-done
+
+### Chef ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Service; room=TutorialRoomKitchen; guidebook=Chef
+- counts: goals=5; subGoals=13; interactivity: Acknowledge=2 / active=11
+- practiceSpawns: n=16 (machine=4, vendor=3, marker=1, item=8); notable: ClosetChefFilled, CrateFreezer, TutorialKitchenElectricGrill, TutorialKitchenMicrowave, TutorialStepMarker, TutorialVendingMachineChefvend, TutorialVendingMachineCondiments, TutorialVendingMachineDinnerware
+- goals:
+  - welcome | tutorial-job-chef-goal-welcome | subs=2
+    - intro: complete=Acknowledge
+    - look-around: complete=ReachMarker; marker=chef-pass
+  - tools | tutorial-job-chef-goal-tools | subs=3
+    - knife: complete=HoldItem; entity=KitchenKnife
+    - eggs: complete=HoldItem; entity=FoodEgg
+    - dinnerware: complete=InteractTargetTag; tag=TutorialVending
+  - burger | tutorial-job-chef-goal-burger | subs=4
+    - meat: complete=HoldItem; entity=FoodMeat
+    - bun: complete=HoldItem; entity=FoodBreadBun
+    - microwave: complete=InteractTargetTag; tag=TutorialMicrowave
+    - burger-done: complete=HoldItem; entity=FoodBurgerPlain
+  - cake | tutorial-job-chef-goal-cake | subs=3
+    - batter: complete=HoldItem; entity=FoodCakeBatter
+    - bake: complete=InteractTargetTag; tag=TutorialMicrowave
+    - cake-done: complete=HoldItem; entity=FoodCakePlain
+  - finish | tutorial-job-chef-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: done=tutorial-job-chef-sg-done
+
+### Chemist ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Medical; room=TutorialRoomMedical; guidebook=Medical
+- counts: goals=5; subGoals=11; interactivity: Acknowledge=3 / active=8
+- practiceSpawns: n=8 (machine=3, marker=1, item=4); notable: TutorialChemDispenser, TutorialChemMaster, TutorialKitchenReagentGrinder, TutorialStepMarker
+- goals:
+  - welcome | tutorial-job-chemist-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - glassware | tutorial-job-chemist-goal-glassware | subs=2
+    - hold-beaker: complete=HoldItem; entity=Beaker
+    - hold-large: complete=HoldItem; entity=LargeBeaker
+  - mix | tutorial-job-chemist-goal-mix | subs=3
+    - dispenser: complete=InteractTargetTag; tag=TutorialChemDispenser
+    - inaprovaline: complete=SolutionContains; reagent=Inaprovaline; minAmount=1
+    - chemmaster: complete=InteractTargetTag; tag=TutorialChemMaster
+  - grind | tutorial-job-chemist-goal-grind | subs=4
+    - hold-produce: complete=HoldItem; entity=FoodApple
+    - grinder: complete=InteractTargetTag; tag=TutorialGrinder
+    - tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=chem-pass
+  - finish | tutorial-job-chemist-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: tip=tutorial-job-chemist-sg-deliver-tip; done=tutorial-job-chemist-sg-done
+
+### ChiefEngineer ($(System.Collections.Specialized.OrderedDictionary.id))
+- meta: category=Engineering; room=TutorialRoomEngineering; guidebook=Engineering
+- counts: goals=5; subGoals=14; interactivity: Acknowledge=4 / active=10
+- practiceSpawns: n=20 (machine=1, engine=14, marker=1, item=4); notable: AmeJar, LockerChiefEngineerFilled, TutorialAmeController, TutorialAmeShielding, TutorialComputerPowerMonitoring, TutorialSingularityGenerator, TutorialStepMarker, TutorialTegCenter
+- goals:
+  - welcome | tutorial-job-chief-engineer-goal-welcome | subs=1
+    - intro: complete=Acknowledge
+  - command | tutorial-job-chief-engineer-goal-command | subs=4
+    - hold-headset: complete=HoldItem; entity=ClothingHeadsetCommand
+    - hold-clipboard: complete=HoldItem; entity=BoxFolderClipboard
+    - hold-magboots: complete=HoldItem; entity=ClothingShoesBootsMagAdv
+    - use-magboots: complete=UseInHand; entity=ClothingShoesBootsMagAdv
+  - oversee | tutorial-job-chief-engineer-goal-oversee | subs=4
+    - power-monitor: complete=InteractTargetTag; tag=TutorialPowerMonitor
+    - hold-fuel: complete=HoldItem; entity=AmeJar
+    - ame-inject: complete=AmeInjecting
+    - ame-tip: complete=Acknowledge
+  - lead | tutorial-job-chief-engineer-goal-lead | subs=4
+    - teg: complete=InteractTargetTag; tag=TutorialTeg
+    - singulo: complete=InteractTargetTag; tag=TutorialSinguloGen
+    - lead-tip: complete=Acknowledge
+    - walk: complete=ReachMarker; marker=ce-pass
+  - finish | tutorial-job-chief-engineer-goal-finish | subs=1
+    - done: complete=Acknowledge
+- tip/outro locale keys: ame-tip=tutorial-job-chief-engineer-sg-ame-tip; lead-tip=tutorial-job-chief-engineer-sg-lead-tip; done=tutorial-job-chief-engineer-sg-done
+
+

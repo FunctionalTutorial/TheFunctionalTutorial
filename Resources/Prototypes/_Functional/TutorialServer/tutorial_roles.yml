@@ -1,0 +1,161 @@
+﻿# TutorialRole prototypes — Functional Tutorial Server (stubs only)
+# Non-stub deep curricula live under roles/*.yml
+
+- type: tutorialRole
+  id: TutorialLawyer
+  job: Lawyer
+  stub: true
+  category: Stub
+  map: /Maps/_Functional/TutorialServer/StubPractice.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+- type: tutorialRole
+  id: TutorialLibrarian
+  job: Librarian
+  stub: true
+  category: Stub
+  map: /Maps/_Functional/TutorialServer/StubPractice.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+- type: tutorialRole
+  id: TutorialMusician
+  job: Musician
+  stub: true
+  category: Stub
+  map: /Maps/_Functional/TutorialServer/StubPractice.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+- type: tutorialRole
+  id: TutorialReporter
+  job: Reporter
+  stub: true
+  category: Stub
+  map: /Maps/_Functional/TutorialServer/StubPractice.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+- type: tutorialRole
+  id: TutorialVisitor
+  job: Visitor
+  stub: true
+  category: Stub
+  map: /Maps/_Functional/TutorialServer/StubPractice.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+- type: tutorialRole
+  id: TutorialMedicalIntern
+  job: MedicalIntern
+  stub: true
+  category: Stub
+  map: /Maps/_Functional/TutorialServer/StubPractice.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+- type: tutorialRole
+  id: TutorialPsychologist
+  job: Psychologist
+  stub: true
+  category: Stub
+  map: /Maps/_Functional/TutorialServer/StubPractice.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+# Deep Security Cadet tutorial lives in roles/security_cadet.yml
+# Deep Service Worker tutorial lives in roles/service_worker.yml
+
+# Deep Borg (+ Subverted Silicon) tutorial lives in roles/borg.yml
+
+- type: tutorialRole
+  id: TutorialStationAi
+  job: StationAi
+  stub: true
+  category: Stub
+  map: /Maps/_Functional/TutorialServer/StubPractice.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+# Deep Changeling tutorial lives in roles/changeling.yml
+
+- type: tutorialRole
+  id: TutorialAntagDragon
+  job: Passenger
+  antag: Dragon
+  stub: true
+  category: Wizden antagonists
+  map: /Maps/_Functional/TutorialServer/Antag_Dragon.yml
+  steps:
+  - id: explore
+    text: tutorial-stub-explore-gear
+    complete: Acknowledge
+  - id: done
+    text: tutorial-stub-ghost-when-done
+    complete: Acknowledge
+
+
+# Deep HeadRev (+ Rev) tutorial lives in roles/revolutionary.yml
+# Deep Zombie (+ Initial Infected) tutorial lives in roles/zombie.yml
+
+# Deep Mothership Core tutorial lives in roles/mothership_core.yml
+# Deep Vampire tutorial lives in roles/vampire.yml
+# Paradox Clone and Survivor have no tutorials (removed from picker)
+
+# Deep Nukeops / Medic / Commander tutorials live in roles/nukeops*.yml
+# Deep Space Ninja tutorial lives in roles/space_ninja.yml
+# Deep Thief tutorial lives in roles/thief.yml
+# Deep Wizard tutorial lives in roles/wizard.yml
+
+# Subverted Silicon is covered by the deep Borg tutorial (roles/borg.yml)
+
+# Deep Xenoborg tutorial lives in roles/xenoborg.yml

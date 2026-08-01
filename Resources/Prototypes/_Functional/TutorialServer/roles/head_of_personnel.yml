@@ -1,0 +1,94 @@
+- type: tutorialRole
+  id: TutorialHeadOfPersonnel
+  job: HeadOfPersonnel
+  stub: false
+  category: Command
+  map: /Maps/_Functional/TutorialServer/Roles/HeadOfPersonnel.yml
+  roomTemplate: TutorialSectionCommand
+  guidebook: Command
+  practiceSpawns:
+  - id: LockerHeadOfPersonnelFilled
+    room: 0
+    offset: -2, 1
+  - id: ClothingHeadsetCommand
+    room: 0
+    offset: 0.5, 0
+  - id: RubberStampHop
+    room: 0
+    offset: 0.8, 0
+  - id: TutorialComputerId
+    room: 0
+    offset: 1.5, 1
+  - id: TableWood
+    room: 0
+    offset: 0.5, 1
+  - id: TutorialHoPVisitorBotany
+    room: 0
+    offset: -1.5, 0
+  - id: TutorialHoPVisitorChef
+    room: 0
+    offset: -1.5, -0.8
+  - id: TutorialHoPVisitorJanitor
+    room: 0
+    offset: -1.5, -1.6
+  - id: TutorialStepMarker
+    room: 0
+    offset: 0, -1.5
+    marker: hop-pass
+  goals:
+  - id: welcome
+    title: tutorial-job-head-of-personnel-goal-welcome
+    subGoals:
+    - id: intro
+      text: tutorial-job-head-of-personnel-sg-intro
+      complete: Acknowledge
+  - id: office
+    title: tutorial-job-head-of-personnel-goal-office
+    subGoals:
+    - id: hold-headset
+      text: tutorial-job-head-of-personnel-sg-headset
+      complete: HoldItem
+      entity: ClothingHeadsetCommand
+    - id: hold-stamp
+      text: tutorial-job-head-of-personnel-sg-stamp
+      complete: HoldItem
+      entity: RubberStampHop
+  - id: ids
+    title: tutorial-job-head-of-personnel-goal-ids
+    subGoals:
+    - id: id-console
+      text: tutorial-job-head-of-personnel-sg-id-console
+      complete: InteractTargetTag
+      tag: TutorialIdConsole
+    - id: write-tip
+      text: tutorial-job-head-of-personnel-sg-write-tip
+      complete: Acknowledge
+    - id: hold-id-botany
+      text: tutorial-job-head-of-personnel-sg-hold-id-botany
+      complete: HoldItem
+      entity: PassengerIDCard
+    - id: write-botany
+      text: tutorial-job-head-of-personnel-sg-write-botany
+      complete: IdCardHasJob
+      job: Botanist
+    - id: write-chef
+      text: tutorial-job-head-of-personnel-sg-write-chef
+      complete: IdCardHasJob
+      job: Chef
+    - id: write-janitor
+      text: tutorial-job-head-of-personnel-sg-write-janitor
+      complete: IdCardHasJob
+      job: Janitor
+    - id: stamp-tip
+      text: tutorial-job-head-of-personnel-sg-stamp-tip
+      complete: Acknowledge
+    - id: walk
+      text: tutorial-job-head-of-personnel-sg-walk
+      complete: ReachMarker
+      marker: hop-pass
+  - id: finish
+    title: tutorial-job-head-of-personnel-goal-finish
+    subGoals:
+    - id: done
+      text: tutorial-job-head-of-personnel-sg-done
+      complete: Acknowledge

@@ -1,0 +1,18 @@
+- type: antag
+  id: Vampire
+  name: roles-antag-vampire-name
+  antagonist: true
+  setPreference: false
+  objective: roles-antag-vampire-objective
+
+- type: antagSpecifier
+  parent: RestrictedAntag
+  id: Vampire
+  prefRoles: [ Vampire ]
+  briefing:
+    text: vampire-role-greeting
+    color: DarkRed
+  components:
+  - type: Vampire
+  mindRoles:
+  - MindRoleVampire

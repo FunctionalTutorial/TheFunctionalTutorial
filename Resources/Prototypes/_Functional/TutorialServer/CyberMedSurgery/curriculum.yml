@@ -1,0 +1,63 @@
+# BPL CyberMed facade curriculum: open Skin → Tissue → insert cyber heart → close.
+
+- type: tutorialCyberMedCurriculum
+  id: TutorialCyberMedHeartImplant
+  part: Torso
+  skinOpen:
+  - id: create-incision
+    name: Create Incision
+    description: Hold a scalpel (SurgeryCut) and open the skin.
+    tool: Scalpel
+  - id: clamp-vessels
+    name: Clamp Vessels
+    description: Hold a hemostat to clamp vessels.
+    tool: Hemostat
+  - id: retract-skin
+    name: Retract Skin
+    description: Hold a retractor to hold the skin open.
+    tool: Retractor
+  tissueOpen:
+  - id: cut-bone
+    name: Cut Bone
+    description: Hold a bone saw to cut into the ribcage.
+    tool: Saw
+  - id: marrow-bleeding
+    name: Seal Marrow Bleeding
+    description: Hold a cautery to seal marrow bleeding.
+    tool: Cautery
+  - id: retract-tissue
+    name: Retract Tissue
+    description: Hold a retractor to open the tissue layer.
+    tool: Retractor
+  organ:
+  - id: insert-organ
+    name: Insert Organ
+    description: Hold the cybernetic heart and insert it.
+    tool: CyberHeart
+    duration: 1.2
+  tissueClose:
+  - id: maintain-alignment
+    name: Maintain Alignment
+    description: Hold a retractor while closing tissue.
+    tool: Retractor
+  - id: seal-bleed-points
+    name: Seal Bleed Points
+    description: Hold a cautery to seal bleed points.
+    tool: Cautery
+  - id: repair-bone
+    name: Repair Bone Section
+    description: Hold a bone saw quality tool while aligning the close (tutorial uses Saw).
+    tool: Saw
+  skinClose:
+  - id: release-retractor
+    name: Release Retractor
+    description: Hold a retractor to release skin retraction.
+    tool: Retractor
+  - id: reconnect-vessels
+    name: Reconnect Vessels
+    description: Hold a hemostat to reconnect vessels.
+    tool: Hemostat
+  - id: seal-skin
+    name: Seal Skin
+    description: Hold a cautery to seal the skin closed.
+    tool: Cautery

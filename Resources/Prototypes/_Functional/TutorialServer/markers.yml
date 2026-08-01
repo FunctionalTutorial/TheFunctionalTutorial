@@ -1,0 +1,21 @@
+# Mapper markers for station-section tutorial room templates.
+
+- type: entity
+  parent: MarkerBase
+  id: TutorialZoneOrigin
+  name: tutorial zone origin
+  description: Marks the practice-spawn chamber center on a tutorial room template.
+  suffix: Tutorial, Marker
+  categories: [ HideSpawnMenu ]
+  components:
+  - type: TutorialZoneOrigin
+  - type: Sprite
+    state: green
+
+- type: entity
+  parent: SpawnPointLatejoin
+  id: TutorialRoomSpawnPoint
+  name: tutorial room spawn
+  suffix: Tutorial, Marker
+  components:
+  - type: TutorialSpawnPoint

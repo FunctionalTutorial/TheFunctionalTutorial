@@ -1,0 +1,99 @@
+# Tutorial-only BPL CyberMed analyzer, tools, cyber heart, and patient.
+
+# Standalone analyzer — does NOT parent HandheldHealthAnalyzer, so the stock
+# health-analyzer Bound UI cannot appear outside this CyberMed tutorial.
+- type: entity
+  parent: BaseItem
+  id: TutorialCyberMedAnalyzer
+  name: CyberMed analyzer
+  description: A BPL-style health analyzer with CyberMed surgery mode for tutorials.
+  suffix: Tutorial CyberMed
+  components:
+  - type: Sprite
+    sprite: Objects/Specific/Medical/healthanalyzer.rsi
+    layers:
+    - state: icon
+    - state: analyzer
+      shader: unshaded
+  - type: Item
+    heldPrefix: analyzer
+    storedRotation: -90
+  - type: TutorialCyberMedAnalyzer
+  - type: UserInterface
+    interfaces:
+      enum.TutorialCyberMedUiKey.Key:
+        type: TutorialCyberMedBoundUserInterface
+  - type: Tag
+    tags:
+    - TutorialCyberMedAnalyzer
+
+- type: entity
+  parent: Scalpel
+  id: TutorialCyberMedScalpel
+  suffix: Tutorial CyberMed
+  components:
+  - type: TutorialCyberMedTool
+    toolType: Scalpel
+
+- type: entity
+  parent: Hemostat
+  id: TutorialCyberMedHemostat
+  suffix: Tutorial CyberMed
+  components:
+  - type: TutorialCyberMedTool
+    toolType: Hemostat
+
+- type: entity
+  parent: Retractor
+  id: TutorialCyberMedRetractor
+  suffix: Tutorial CyberMed
+  components:
+  - type: TutorialCyberMedTool
+    toolType: Retractor
+
+- type: entity
+  parent: Saw
+  id: TutorialCyberMedSaw
+  suffix: Tutorial CyberMed
+  components:
+  - type: TutorialCyberMedTool
+    toolType: Saw
+
+- type: entity
+  parent: Cautery
+  id: TutorialCyberMedCautery
+  suffix: Tutorial CyberMed
+  components:
+  - type: TutorialCyberMedTool
+    toolType: Cautery
+
+- type: entity
+  parent: BaseItem
+  id: TutorialCyberMedCyberHeart
+  name: cybernetic heart
+  description: A BPL CyberMed practice heart for organ insertion surgery.
+  suffix: Tutorial CyberMed
+  components:
+  - type: Sprite
+    sprite: Mobs/Species/Human/organs.rsi
+    state: heart-on
+  - type: Item
+    size: Small
+  - type: TutorialCyberMedTool
+    toolType: CyberHeart
+  - type: TutorialCyberMedCyberHeart
+
+- type: entity
+  parent: [TutorialPracticeMob, TutorialPracticeMobSpeakingBase]
+  id: TutorialPracticeMobCyberMedSurgery
+  name: Urist McPatient
+  description: A cooperative practice patient for BPL CyberMed surgery.
+  suffix: Tutorial, CyberMed Surgery
+  components:
+  - type: DatasetVocalizer
+    dataset: TutorialPracticeMobPatientAds
+  - type: TutorialCyberMedSurgeryTarget
+  - type: Tag
+    tags:
+    - TutorialPracticeMob
+    - TutorialCyberMedSurgeryPatient

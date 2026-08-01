@@ -187,6 +187,20 @@ public sealed partial class AnomalyComponent : Component
     [DataField, AutoNetworkedField]
     public AnomalousParticleType TransformationParticleType;
 
+    //Wizden - Begin: tutorial-stable particle / behavior locks
+    /// <summary>
+    /// When true, MapInit keeps the YAML particle type assignments instead of shuffling them.
+    /// </summary>
+    [DataField]
+    public bool LockParticles;
+
+    /// <summary>
+    /// When true, MapInit keeps <see cref="CurrentBehavior"/> (and Continuity stays 0) instead of rolling a random behavior.
+    /// </summary>
+    [DataField]
+    public bool LockBehavior;
+    //Wizden - End
+
     #region Points and Vessels
     /// <summary>
     /// The vessel that the anomaly is connceted to. Stored so that multiple

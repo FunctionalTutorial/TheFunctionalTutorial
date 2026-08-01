@@ -1,0 +1,46 @@
+using Robust.Shared.Serialization;
+using Content.Shared.Eui;
+
+namespace Content.Shared._Functional.TutorialServer;
+
+[Serializable, NetSerializable]
+public sealed class TutorialRolePickerEuiState : EuiStateBase
+{
+    public List<TutorialRolePickerEntry> Roles { get; }
+
+    public TutorialRolePickerEuiState(List<TutorialRolePickerEntry> roles)
+    {
+        Roles = roles;
+    }
+}
+
+[Serializable, NetSerializable]
+public sealed class TutorialRolePickerEntry
+{
+    public string RoleId { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string? SubCategory { get; set; }
+    public bool Stub { get; set; }
+}
+
+[Serializable, NetSerializable]
+public sealed class TutorialSelectRoleMessage : EuiMessageBase
+{
+    public string RoleId { get; }
+    public bool ConfirmedStub { get; }
+
+    public TutorialSelectRoleMessage(string roleId, bool confirmedStub)
+    {
+        RoleId = roleId;
+        ConfirmedStub = confirmedStub;
+    }
+}
+
+[Serializable, NetSerializable]
+public sealed class TutorialQuitPickerMessage : EuiMessageBase;
+
+[Serializable, NetSerializable]
+public sealed class TutorialAcknowledgeStepMessage : EntityEventArgs
+{
+}

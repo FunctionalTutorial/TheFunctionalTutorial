@@ -1,0 +1,31 @@
+<controls:TutorialCyberMedSurgeryWindow
+    xmlns="https://spacestation14.io"
+    xmlns:controls="clr-namespace:Content.Client._Functional.TutorialServer.CyberMedSurgery"
+    MinSize="360 420"
+    SetSize="380 480">
+    <BoxContainer Orientation="Vertical" Margin="8">
+        <BoxContainer Orientation="Horizontal" Margin="0 0 0 5">
+            <Button Name="HealthModeButton" Text="Health" Disabled="True" />
+            <Button Name="SurgeryModeButton" Text="Surgery" ToggleMode="True" Pressed="True" />
+        </BoxContainer>
+
+        <RichTextLabel Name="PatientLabel" Margin="0 0 0 5" MaxWidth="350" HorizontalExpand="True" />
+
+        <Label Text="Body part:" StyleClasses="LabelSubText" />
+        <BoxContainer Name="PartButtons" Orientation="Horizontal" Margin="0 2 0 8" />
+
+        <PanelContainer StyleClasses="LowDivider" />
+
+        <Label Name="LayerLabel" Text="Layer:" Margin="0 8 0 0" />
+        <BoxContainer Orientation="Horizontal" Margin="0 2 0 5">
+            <Button Name="SkinLayerButton" Text="Skin" ToggleMode="True" />
+            <Button Name="TissueLayerButton" Text="Tissue" ToggleMode="True" />
+            <Button Name="OrganLayerButton" Text="Organ" ToggleMode="True" />
+        </BoxContainer>
+
+        <Label Text="Steps:" />
+        <ScrollContainer VerticalExpand="True" HScrollEnabled="False">
+            <BoxContainer Name="StepsList" Orientation="Vertical" Margin="0 2 0 0" HorizontalExpand="True" />
+        </ScrollContainer>
+    </BoxContainer>
+</controls:TutorialCyberMedSurgeryWindow>

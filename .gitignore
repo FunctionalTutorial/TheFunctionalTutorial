@@ -271,6 +271,11 @@ __pycache__/
 !.vscode/launch.json
 !.vscode/tasks.json
 
+# Cursor IDE (local agent config, rules, skills)
+.cursor/
+.cursorrules
+**/.cursor/rules/
+
 # Release package files go here:
 release/
 

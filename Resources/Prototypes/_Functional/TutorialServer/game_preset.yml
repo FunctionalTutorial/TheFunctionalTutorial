@@ -1,0 +1,51 @@
+- type: gameMapPool
+  id: TutorialServerMapPool
+  maps:
+  - TutorialLobby
+
+- type: gameMap
+  id: TutorialLobby
+  mapName: Tutorial Lobby
+  mapPath: /Maps/Test/empty.yml
+  minPlayers: 0
+  stations:
+    Empty:
+      stationProto: TutorialLobbyStation
+      components:
+      - type: StationNameSetup
+        mapNameTemplate: "Tutorial Lobby"
+      - type: StationJobs
+        availableJobs:
+          Passenger: [ -1, -1 ]
+
+- type: gamePreset
+  id: TutorialServer
+  alias:
+  - tutorial
+  - functional-tutorial
+  name: tutorial-server-preset-title
+  description: tutorial-server-preset-description
+  showInVote: false
+  supportedMaps: TutorialServerMapPool
+  rules:
+  - TutorialServer
+  - MaxTimeRestartTutorial
+
+- type: entity
+  parent: BaseGameRule
+  id: TutorialServer
+  components:
+  - type: TutorialServerRule
+  - type: RespawnDeadRule
+    alwaysRespawnDead: true
+  - type: RespawnTracker
+    respawnDelay: 3
+    deleteBody: true
+
+- type: entity
+  parent: MaxTimeRestart
+  id: MaxTimeRestartTutorial
+  components:
+  - type: MaxTimeRestartRule
+    roundMaxTime: 86400
+    roundEndDelay: 10

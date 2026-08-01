@@ -1,0 +1,40 @@
+- type: entity
+  parent: BaseItem
+  id: TutorialGuide
+  name: Tutorial
+  description: Opens your current tutorial stage prompts. Use Back/Next to review completed steps.
+  components:
+  - type: Sprite
+    sprite: Objects/Devices/tablets.rsi
+    layers:
+    - state: tablet
+    - state: generic
+      shader: unshaded
+  - type: Item
+    size: Small
+    sprite: Objects/Devices/tablets.rsi
+  - type: TutorialGuide
+  - type: ActivatableUI
+    key: enum.TutorialPromptUiKey.Key
+    inHandsOnly: true
+    singleUser: true
+    requireActiveHand: true
+  - type: UserInterface
+    interfaces:
+      enum.TutorialPromptUiKey.Key:
+        type: TutorialPromptBoundUserInterface
+
+# Action bar button to open the role picker (granted on tutorial spawn and ghosts).
+- type: entity
+  parent: BaseMentalAction
+  id: ActionTutorialChooseRole
+  name: Choose a tutorial
+  description: Open the Tutorial Server role picker.
+  components:
+  - type: Action
+    checkCanInteract: false
+  - type: Sprite
+    layers:
+    - texture: Interface/Actions/shop.png
+  - type: InstantAction
+    event: !type:TutorialChooseRoleActionEvent

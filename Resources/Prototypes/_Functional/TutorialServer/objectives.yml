@@ -1,0 +1,48 @@
+- type: objectiveIssuer
+  id: TutorialSyndicate
+  name: tutorial-server-objective-issuer
+
+- type: entity
+  parent: BaseObjective
+  id: TutorialTraitorKillPlaceholder
+  name: Assassinate John Doe
+  description: Placeholder traitor kill objective for practice. No real target exists.
+  components:
+  - type: Objective
+    difficulty: 1
+    issuer: TutorialSyndicate
+    unique: false
+    icon:
+      sprite: Objects/Weapons/Guns/Pistols/viper.rsi
+      state: icon
+  - type: TutorialPlaceholderCondition
+
+- type: entity
+  parent: BaseObjective
+  id: TutorialTraitorStealPlaceholder
+  name: Steal the captain's antique laser gun
+  description: Placeholder steal objective for practice. No real item is required.
+  components:
+  - type: Objective
+    difficulty: 1
+    issuer: TutorialSyndicate
+    unique: false
+    icon:
+      sprite: Objects/Weapons/Guns/Battery/antiquelasergun.rsi
+      state: base
+  - type: TutorialPlaceholderCondition
+
+- type: entity
+  parent: BaseObjective
+  id: TutorialTraitorEscapePlaceholder
+  name: Escape to CentComm alive and unrestrained
+  description: Placeholder escape objective for practice.
+  components:
+  - type: Objective
+    difficulty: 1
+    issuer: TutorialSyndicate
+    unique: false
+    icon:
+      sprite: Structures/Furniture/chairs.rsi
+      state: shuttle
+  - type: TutorialPlaceholderCondition

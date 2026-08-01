@@ -21,8 +21,10 @@ All **new** Wizden code and assets belong under Wizden folder structures, mirror
 | Shared components, events, systems | `Content.Shared/Wizden/` or `Content.Shared/_Wizden/` |
 | Client systems, UI | `Content.Client/Wizden/` or `Content.Client/_Wizden/` |
 | YAML prototypes | `Resources/Prototypes/_Wizden/` |
-| Maps | `Resources/Maps/**/Wizden/` |
-| Textures / audio | `Resources/Textures/**/Wizden/`, `Resources/Audio/**/Wizden/` as appropriate |
+| Locale (Fluent) | `Resources/Locale/en-US/_Wizden/` |
+| Maps | `Resources/Maps/**/Wizden/` or `Resources/Maps/_Wizden/` |
+| Textures / audio | `Resources/Textures/**/Wizden/`, `Resources/Audio/**/Wizden/` (or `_Wizden/`) as appropriate |
+| Integration tests | `Content.IntegrationTests/Tests/<System>/` |
 
 Organize by feature (e.g. `Content.Server/Wizden/Example/ExampleSystem.cs`, `Content.Shared/Wizden/Example/ExampleComponent.cs`). Use file-scoped namespaces matching the folder path (e.g. `namespace Content.Server.Wizden.Example;`).
 
@@ -146,3 +148,22 @@ public sealed class FooSystem : EntitySystem
     }
 }
 ```
+
+---
+
+## Project layout (quick ref)
+
+| Project | Role |
+|---------|------|
+| `Content.Shared` | Components, shared systems, events, prediction. **Only references Shared.** |
+| `Content.Server` | Authoritative simulation. |
+| `Content.Client` | UI, rendering, input, client prediction. |
+| `Content.IntegrationTests` | Full server/client NUnit tests. |
+| `Content.Tests` | Faster unit tests (no full game boot). |
+| `Resources/` | YAML prototypes, textures, audio, Fluent locale. |
+
+**Do not edit `RobustToolbox/`.** Prefer new types in Wizden folders over patching upstream when feasible.
+
+Docs: [ECS](https://docs.spacestation14.com/en/robust-toolbox/ecs.html) · [Conventions](https://docs.spacestation14.com/en/general-development/codebase-info/conventions.html) · [PR guidelines](https://docs.spacestation14.com/en/general-development/codebase-info/pull-request-guidelines.html)
+
+New gameplay features need integration tests (see `ss14-integration-tests-required`). After meaningful Content/Resources changes, prefer the `ss14-smoke-test` skill when verifying boot/connect.

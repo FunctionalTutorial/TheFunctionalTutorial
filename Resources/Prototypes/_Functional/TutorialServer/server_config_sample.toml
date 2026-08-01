@@ -1,0 +1,14 @@
+# Sample configuration for The Functional Tutorial Server.
+# Copy values into your instance server_config.toml / secrets as appropriate.
+
+[game]
+hostname = "The Functional Tutorial Server"
+defaultpreset = "TutorialServer"
+
+[chat]
+motd = "Join as any job to play a tutorial. Type /ghost and respawn to try a new tutorial"
+# ooc.enabled / looc.enabled are also forced off by the TutorialServer rule at runtime.
+
+[server]
+rules_file = "TutorialServerRules"
+uptime_restart_minutes = 1440
