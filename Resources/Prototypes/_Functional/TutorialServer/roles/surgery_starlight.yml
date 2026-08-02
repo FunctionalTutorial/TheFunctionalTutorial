@@ -1,7 +1,7 @@
 - type: tutorialRole
   id: TutorialSurgeryStarlight
   job: MedicalDoctor
-  stub: false
+  stub: true # temporarily greyed pending manual test
   simplifiedEnvironment: true
   category: Server specific
   subCategory: Starlight

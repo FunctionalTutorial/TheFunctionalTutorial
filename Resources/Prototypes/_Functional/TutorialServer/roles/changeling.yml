@@ -2,9 +2,10 @@
   id: TutorialAntagChangeling
   job: Passenger
   antag: Changeling
-  stub: false
+  stub: true # temporarily greyed pending manual test
   simplifiedEnvironment: true
-  category: Wizden antagonists
+  category: Server specific
+  subCategory: Starlight
   name: tutorial-antag-changeling-name
   roomTemplate: TutorialSectionMaintAntag
   guidebook: Changelings

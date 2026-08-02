@@ -450,7 +450,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(botany, "get-wheat").Entity, Is.EqualTo(new EntProtoId("WheatBushel")));
 
             var surgery = proto.Index<TutorialRolePrototype>("TutorialSurgeryStarlight");
-            Assert.That(surgery.Stub, Is.False);
+            Assert.That(surgery.Stub, Is.True); //Wizden: temporarily greyed pending manual test
             Assert.That(surgery.Category, Is.EqualTo("Server specific"));
             Assert.That(surgery.SubCategory, Is.EqualTo("Starlight"));
             Assert.That(surgery.Name, Is.EqualTo("tutorial-job-surgery-starlight-name"));
@@ -461,7 +461,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(surgery.PracticeSpawns.Any(p => p.Id == "TutorialStarlightEyeImplantWelding"));
 
             var cyberMed = proto.Index<TutorialRolePrototype>("TutorialSurgeryCyberMed");
-            Assert.That(cyberMed.Stub, Is.False);
+            Assert.That(cyberMed.Stub, Is.True); //Wizden: temporarily greyed pending manual test
             Assert.That(cyberMed.Category, Is.EqualTo("Server specific"));
             Assert.That(cyberMed.SubCategory, Is.EqualTo("BPL14"));
             Assert.That(cyberMed.Name, Is.EqualTo("tutorial-job-surgery-cybermed-name"));
@@ -830,10 +830,11 @@ public sealed class TutorialServerTests : GameTest
 
             var serverSpecific = entries.Where(e => e.Category == "Server specific").ToList();
             Assert.That(serverSpecific, Is.Not.Empty);
-            Assert.That(serverSpecific.Select(e => e.SubCategory), Is.EquivalentTo(new[] { "BPL14", "Starlight", "Starlight" }));
+            Assert.That(serverSpecific.Select(e => e.SubCategory), Is.EquivalentTo(new[] { "BPL14", "Starlight", "Starlight", "Starlight" }));
             Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialSurgeryCyberMed").DisplayName, Is.EqualTo("Surgery"));
             Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialSurgeryStarlight").DisplayName, Is.EqualTo("Surgery"));
             Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialAntagVampire").SubCategory, Is.EqualTo("Starlight"));
+            Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialAntagChangeling").SubCategory, Is.EqualTo("Starlight"));
             Assert.That(entries.All(e => e.Category != "Antagonist"), Is.True);
         });
     }
@@ -1665,7 +1666,9 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(proto.TryIndex<TutorialRolePrototype>("TutorialAntagSurvivor", out _), Is.False);
 
             var ling = proto.Index<TutorialRolePrototype>("TutorialAntagChangeling");
-            Assert.That(ling.Stub, Is.False);
+            Assert.That(ling.Stub, Is.True); //Wizden: temporarily greyed pending manual test
+            Assert.That(ling.Category, Is.EqualTo("Server specific"));
+            Assert.That(ling.SubCategory, Is.EqualTo("Starlight"));
             Assert.That(ling.Antag, Is.EqualTo(new ProtoId<AntagPrototype>("Changeling")));
             Assert.That(Sub(ling, "kill-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDead));
             Assert.That(Sub(ling, "sting-dummy").Complete, Is.EqualTo(TutorialStepComplete.ChangelingStung));
@@ -1709,7 +1712,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(arena.ShuttleMap, Is.EqualTo(new Robust.Shared.Utility.ResPath("/Maps/Shuttles/mothership.yml")));
 
             var vamp = proto.Index<TutorialRolePrototype>("TutorialAntagVampire");
-            Assert.That(vamp.Stub, Is.False);
+            Assert.That(vamp.Stub, Is.True); //Wizden: temporarily greyed pending manual test
             Assert.That(vamp.Category, Is.EqualTo("Server specific"));
             Assert.That(vamp.SubCategory, Is.EqualTo("Starlight"));
             Assert.That(vamp.Antag, Is.EqualTo(new ProtoId<AntagPrototype>("Vampire")));
@@ -2704,7 +2707,7 @@ public sealed class TutorialServerTests : GameTest
         await server.WaitPost(() =>
         {
             server.System<TutorialServerRuleSystem>()
-                .TrySelectRole(pair.Player!, "TutorialSurgeryStarlight", confirmedStub: false);
+                .TrySelectRole(pair.Player!, "TutorialSurgeryStarlight", confirmedStub: true); //Wizden: stub greyed pending manual test
         });
         await pair.RunTicksSync(60);
 

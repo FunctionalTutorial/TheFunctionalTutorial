@@ -2,7 +2,7 @@
   id: TutorialAntagVampire
   job: Passenger
   antag: Vampire
-  stub: false
+  stub: true # temporarily greyed pending manual test
   simplifiedEnvironment: true
   category: Server specific
   subCategory: Starlight

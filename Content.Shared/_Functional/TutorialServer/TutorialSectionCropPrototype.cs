@@ -6,7 +6,7 @@ namespace Content.Shared._Functional.TutorialServer;
 /// <summary>
 /// Hand-tuned AABB crop of a station map into a tutorial room section template.
 /// </summary>
-[Prototype("tutorialSectionCrop")]
+[Prototype] //Wizden: drop redundant type (RA0042)
 public sealed partial class TutorialSectionCropPrototype : IPrototype
 {
     [IdDataField]

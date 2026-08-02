@@ -3,7 +3,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared._Starlight.Antags.Vampires.Prototypes;
 
-[Prototype("vampireClass")]
+[Prototype] //Wizden: drop redundant type (RA0042)
 public sealed partial class VampireClassPrototype : IPrototype
 {
     [IdDataField]

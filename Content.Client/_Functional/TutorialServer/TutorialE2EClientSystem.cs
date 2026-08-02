@@ -10,12 +10,12 @@ namespace Content.Client._Functional.TutorialServer;
 /// <summary>
 /// E2E helper: auto-ready in lobby when <see cref="TutorialCVars.E2EAutoReady"/> is enabled.
 /// </summary>
-public sealed class TutorialE2EClientSystem : EntitySystem
+public sealed partial class TutorialE2EClientSystem : EntitySystem
 {
-    [Dependency] private readonly IClientConsoleHost _console = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IStateManager _state = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IClientConsoleHost _console = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IStateManager _state = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private bool _readySent;
     private TimeSpan _nextAttempt;

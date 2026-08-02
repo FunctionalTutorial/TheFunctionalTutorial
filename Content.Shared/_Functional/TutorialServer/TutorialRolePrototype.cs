@@ -13,7 +13,7 @@ namespace Content.Shared._Functional.TutorialServer;
 /// <summary>
 /// Defines a selectable tutorial package for the Functional Tutorial Server.
 /// </summary>
-[Prototype("tutorialRole")]
+[Prototype] //Wizden: drop redundant type (RA0042)
 public sealed partial class TutorialRolePrototype : IPrototype
 {
     [IdDataField]
