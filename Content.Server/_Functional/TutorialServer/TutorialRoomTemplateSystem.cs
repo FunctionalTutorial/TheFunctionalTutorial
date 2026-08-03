@@ -227,9 +227,11 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
 
         _map.SetTiles(gridUid, destGrid, fill);
 
+        var chamberOrigins = new List<Vector2i>(copyCount);
         for (var i = 0; i < copyCount; i++)
         {
             var origin = GetChamberOrigin(i, width, height, copyCount, stampDirection);
+            chamberOrigins.Add(origin);
             CopyTemplate(templateGrid, srcGridComp, min, max, gridUid, destGrid, origin);
 
             if (i < copyCount - 1)
@@ -250,6 +252,9 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
         // Practice offsets keep single-chamber kit paths open (R&D, bar, etc.).
         SealSuperfluousDoorsAndEnsurePaths(gridUid, destGrid, width, height, copyCount, stampDirection,
             gateLateral, layout, practicePathTargets);
+
+        // Station crop fixtures are AP-powered and often stay dark; guarantee wall lights.
+        _rooms.PlaceChamberPerimeterLights(gridUid, chamberOrigins, width, height);
 
         PlaceSpawnPoint(gridUid, layout.ChamberCenters[0]);
         _rooms.EnsureGridSupport(gridUid);

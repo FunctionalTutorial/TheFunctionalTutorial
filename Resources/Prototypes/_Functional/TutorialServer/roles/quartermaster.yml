@@ -10,9 +10,6 @@
   - id: LockerQuarterMasterFilled
     room: 0
     offset: -2, 1
-  - id: ClothingHeadsetCommand
-    room: 0
-    offset: 0.5, 0
   - id: AppraisalTool
     room: 0
     offset: -0.5, 0
@@ -51,10 +48,6 @@
   - id: lead
     title: tutorial-job-quartermaster-goal-lead
     subGoals:
-    - id: hold-headset
-      text: tutorial-job-quartermaster-sg-headset
-      complete: HoldItem
-      entity: ClothingHeadsetCommand
     - id: hold-appraise
       text: tutorial-job-quartermaster-sg-appraise
       complete: HoldItem

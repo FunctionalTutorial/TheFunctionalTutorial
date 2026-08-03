@@ -1,3 +1,4 @@
+# Command crop zone origin sits in Cap quarters; HoP kit uses Saltern HoP-office offsets.
 - type: tutorialRole
   id: TutorialHeadOfPersonnel
   job: HeadOfPersonnel
@@ -7,34 +8,34 @@
   map: /Maps/_Functional/TutorialServer/Roles/HeadOfPersonnel.yml
   roomTemplate: TutorialSectionCommand
   guidebook: Command
+  # Spawn on Saltern HoP spawn tile (inside office) — desk/windoor is not a walk-in door.
+  spawnOffset: 1, -6
   practiceSpawns:
+  # Locker already exists on the crop at ~(+2,-5); restock a filled one on that tile.
   - id: LockerHeadOfPersonnelFilled
     room: 0
-    offset: -2, 1
-  - id: ClothingHeadsetCommand
-    room: 0
-    offset: 0.5, 0
+    offset: 2, -5
+  # Desk stamps live on the HoP tables (~y 1.5 crop-local).
   - id: RubberStampHop
     room: 0
-    offset: 0.8, 0
+    offset: 0.2, -7
+  # Saltern ComputerId was at crop (9.5, 3.5) → offset (0, -5) from zone origin.
   - id: TutorialComputerId
     room: 0
-    offset: 1.5, 1
-  - id: TableWood
-    room: 0
-    offset: 0.5, 1
+    offset: 0, -5
+  # HoP line west of the windoor — deskDropOffset on visitors targets TableGlass (7.5, 3.5).
   - id: TutorialHoPVisitorBotany
     room: 0
-    offset: -1.5, 0
+    offset: -4, -6
   - id: TutorialHoPVisitorChef
     room: 0
-    offset: -1.5, -0.8
+    offset: -4, -6.5
   - id: TutorialHoPVisitorJanitor
     room: 0
-    offset: -1.5, -1.6
+    offset: -4, -7
   - id: TutorialStepMarker
     room: 0
-    offset: 0, -1.5
+    offset: 1, -6
     marker: hop-pass
   goals:
   - id: welcome
@@ -46,10 +47,6 @@
   - id: office
     title: tutorial-job-head-of-personnel-goal-office
     subGoals:
-    - id: hold-headset
-      text: tutorial-job-head-of-personnel-sg-headset
-      complete: HoldItem
-      entity: ClothingHeadsetCommand
     - id: hold-stamp
       text: tutorial-job-head-of-personnel-sg-stamp
       complete: HoldItem

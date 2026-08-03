@@ -51,10 +51,12 @@ using Content.Shared.Shuttles.Components;
 using Content.Shared.Actions;
 using Content.Shared.Actions.Components;
 using Content.Shared.Actions.Events;
+using Content.Shared.UserInterface;
 using Content.Shared.Changeling.Components;
 using Content.Shared.Changeling.Systems;
 using Content.Shared.Devour;
 using Content.Shared.Emag.Systems;
+using Content.Shared.Silicons.Borgs.Components;
 using Content.Shared.Humanoid;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -131,6 +133,8 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         SubscribeLocalEvent<TutorialParticipantComponent, UserInteractUsingEvent>(OnInteractUsing);
         SubscribeLocalEvent<TutorialParticipantComponent, UserInteractHandEvent>(OnInteractHand);
         SubscribeLocalEvent<TutorialParticipantComponent, UserActivateInWorldEvent>(OnActivateInWorld);
+        // ActivatableUI (chem dispenser / ChemMaster) handles ActivateInWorld; complete after open.
+        SubscribeLocalEvent<ActivatableUIComponent, AfterActivatableUIOpenEvent>(OnAfterActivatableUIOpen);
         // After OpenableSystem: opening a closed drink sets Handled, and we must not treat that
         // press as the UseInHand goal (deferred guide would pop open on bottle-open).
         SubscribeLocalEvent<TutorialSensorTargetComponent, UseInHandEvent>(
@@ -185,6 +189,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 case TutorialStepComplete.PilotShuttle:
                     if (HasComp<PilotComponent>(uid))
                         _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.UndockShuttle:
+                    // Covers early undock (before this goal was current) once dual docks are cleared.
+                    TryCompleteUndockShuttle(uid, xform, sub);
                     break;
                 case TutorialStepComplete.ShuttleThrottle:
                     if (TryComp<PilotComponent>(uid, out var pilot) && pilot.HeldButtons != ShuttleButtons.None)
@@ -343,8 +351,41 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                     if (_dragonDevoured.Contains(uid))
                         _tutorial.AdvanceSubGoal(uid);
                     break;
+                case TutorialStepComplete.BorgTypeSelected:
+                    if (IsBorgTypeSelected(uid, sub))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.BorgModuleSelected:
+                    if (IsBorgModuleSelected(uid, sub))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
             }
         }
+    }
+
+    private bool IsBorgTypeSelected(EntityUid uid, TutorialSubGoalData sub)
+    {
+        if (!TryComp<BorgSwitchableTypeComponent>(uid, out var switchable) ||
+            switchable.SelectedBorgType == null)
+            return false;
+
+        if (string.IsNullOrEmpty(sub.Marker))
+            return true;
+
+        return switchable.SelectedBorgType.Value.Id == sub.Marker;
+    }
+
+    private bool IsBorgModuleSelected(EntityUid uid, TutorialSubGoalData sub)
+    {
+        if (sub.Entity == null)
+            return false;
+
+        if (!TryComp<BorgChassisComponent>(uid, out var chassis) ||
+            chassis.SelectedModule is not { } module ||
+            Deleted(module))
+            return false;
+
+        return MetaData(module).EntityPrototype?.ID == sub.Entity.Value.Id;
     }
 
     private void OnActionPerformed(Entity<ActionComponent> ent, ref ActionPerformedEvent args)
@@ -807,10 +848,9 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         if (_undockCascade)
             return;
 
-        // Cargo (and similar) shuttles often have dual docks — undocking one fires this
-        // event while the other still holds the ship and keeps helm locked. Force-clear
-        // remaining docks between the pair before advancing UndockShuttle goals.
-        if (HasPendingUndockShuttleGoal(ev.GridAUid, ev.GridBUid))
+        // Tutorial arenas often dual-dock. Undocking one port leaves a weld that pins the
+        // shuttle so thrusters cannot move it — always clear the remaining pair docks.
+        if (IsTutorialDockPair(ev.GridAUid, ev.GridBUid))
         {
             _undockCascade = true;
             try
@@ -826,33 +866,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         AdvanceDockGoal(ev.GridAUid, ev.GridBUid, TutorialStepComplete.UndockShuttle);
     }
 
-    private bool HasPendingUndockShuttleGoal(EntityUid gridA, EntityUid gridB)
+    private bool IsTutorialDockPair(EntityUid gridA, EntityUid gridB)
     {
-        var query = EntityQueryEnumerator<TutorialParticipantComponent, TransformComponent>();
-        while (query.MoveNext(out var uid, out var part, out var xform))
-        {
-            if (!_tutorial.TryGetCurrentSubGoal(uid, part, out var sub))
-                continue;
-
-            if (sub.Complete != TutorialStepComplete.UndockShuttle)
-                continue;
-
-            var grid = xform.GridUid;
-            if (grid == null || (grid != gridA && grid != gridB))
-                continue;
-
-            if (!string.IsNullOrEmpty(sub.Marker))
-            {
-                var other = grid == gridA ? gridB : gridA;
-                if (!TryComp<TutorialDockStationComponent>(other, out var station) ||
-                    !string.Equals(station.StationId, sub.Marker, StringComparison.Ordinal))
-                    continue;
-            }
-
-            return true;
-        }
-
-        return false;
+        return HasComp<TutorialDockStationComponent>(gridA) ||
+               HasComp<TutorialDockStationComponent>(gridB);
     }
 
     private void UndockAllBetween(EntityUid gridA, EntityUid gridB)
@@ -867,6 +884,44 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
 
             _docking.Undock(dock);
         }
+    }
+
+    private void TryCompleteUndockShuttle(EntityUid uid, TransformComponent xform, TutorialSubGoalData sub)
+    {
+        if (xform.GridUid is not { } shuttle)
+            return;
+
+        if (IsDockedToTutorialStation(shuttle, sub.Marker))
+            return;
+
+        _tutorial.AdvanceSubGoal(uid);
+    }
+
+    /// <summary>
+    /// True when the shuttle still has a dock weld to a tutorial station matching <paramref name="marker"/>
+    /// (or any tutorial dock station when marker is null/empty).
+    /// </summary>
+    private bool IsDockedToTutorialStation(EntityUid shuttle, string? marker)
+    {
+        foreach (var dock in _docking.GetDocks(shuttle))
+        {
+            if (dock.Comp.DockedWith is not { } other)
+                continue;
+
+            if (Transform(other).GridUid is not { } otherGrid)
+                continue;
+
+            if (!TryComp<TutorialDockStationComponent>(otherGrid, out var station))
+                continue;
+
+            if (!string.IsNullOrEmpty(marker) &&
+                !string.Equals(station.StationId, marker, StringComparison.Ordinal))
+                continue;
+
+            return true;
+        }
+
+        return false;
     }
 
     private void AdvanceDockGoal(EntityUid gridA, EntityUid gridB, TutorialStepComplete complete)
@@ -968,6 +1023,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             if (string.IsNullOrEmpty(sub.Tag) || !_tags.HasTag(args.Target, (ProtoId<TagPrototype>) sub.Tag))
                 return;
 
+            // Let ActivatableUI / insert logic run; Bound-UI machines complete on open instead.
+            if (HasComp<ActivatableUIComponent>(args.Target))
+                return;
+
             args.Handled = true;
             _tutorial.AdvanceSubGoal(ent);
             return;
@@ -996,6 +1055,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         if (string.IsNullOrEmpty(sub.Tag) || !_tags.HasTag(args.Target, (ProtoId<TagPrototype>) sub.Tag))
             return;
 
+        // Do not handle — ActivatableUI opens on the subsequent ActivateInWorld.
+        if (HasComp<ActivatableUIComponent>(args.Target))
+            return;
+
         args.Handled = true;
         _tutorial.AdvanceSubGoal(ent);
     }
@@ -1014,8 +1077,28 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         if (string.IsNullOrEmpty(sub.Tag) || !_tags.HasTag(args.Target, (ProtoId<TagPrototype>) sub.Tag))
             return;
 
+        if (HasComp<ActivatableUIComponent>(args.Target))
+            return;
+
         args.Handled = true;
         _tutorial.AdvanceSubGoal(ent);
+    }
+
+    private void OnAfterActivatableUIOpen(Entity<ActivatableUIComponent> machine, ref AfterActivatableUIOpenEvent args)
+    {
+        if (!TryComp<TutorialParticipantComponent>(args.User, out var part))
+            return;
+
+        if (!_tutorial.TryGetCurrentSubGoal(args.User, part, out var sub))
+            return;
+
+        if (sub.Complete != TutorialStepComplete.InteractTargetTag)
+            return;
+
+        if (string.IsNullOrEmpty(sub.Tag) || !_tags.HasTag(machine.Owner, (ProtoId<TagPrototype>) sub.Tag))
+            return;
+
+        _tutorial.AdvanceSubGoal(args.User);
     }
 
     private void OnUseInHand(Entity<TutorialSensorTargetComponent> used, ref UseInHandEvent args)

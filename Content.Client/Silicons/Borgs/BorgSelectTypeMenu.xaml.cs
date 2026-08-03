@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using Content.Client.UserInterface.Controls;
-using Content.Client.UserInterface.Systems.Guidebook;
 using Content.Shared.Guidebook;
 using Content.Shared.Silicons.Borgs;
 using Content.Shared.Silicons.Borgs.Components;
@@ -32,9 +31,35 @@ public sealed partial class BorgSelectTypeMenu : FancyWindow
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
 
-        var group = new ButtonGroup();
-        foreach (var borgType in _prototypeManager.EnumeratePrototypes<BorgTypePrototype>().OrderBy(PrototypeName))
+        ConfirmTypeButton.OnPressed += ConfirmButtonPressed;
+        HelpGuidebookIds = GuidebookEntries;
+    }
+
+    /// <summary>
+    /// Rebuilds the type list. When <paramref name="available"/> is null or empty, every borg type is shown.
+    /// </summary>
+    public void Populate(IReadOnlyList<ProtoId<BorgTypePrototype>>? available)
+    {
+        SelectionsContainer.DisposeAllChildren();
+        _selectedBorgType = null;
+        InfoContents.Visible = false;
+        InfoPlaceholder.Visible = true;
+        ConfirmTypeButton.Disabled = true;
+
+        var types = _prototypeManager.EnumeratePrototypes<BorgTypePrototype>().OrderBy(PrototypeName);
+        if (available is { Count: > 0 })
         {
+            var allowed = available.ToHashSet();
+            types = types.Where(t => allowed.Contains(t.ID)).OrderBy(PrototypeName);
+        }
+
+        var group = new ButtonGroup();
+        var count = 0;
+        BorgTypePrototype? soleType = null;
+        foreach (var borgType in types)
+        {
+            count++;
+            soleType = borgType;
             var button = new Button
             {
                 Text = PrototypeName(borgType),
@@ -48,8 +73,9 @@ public sealed partial class BorgSelectTypeMenu : FancyWindow
             SelectionsContainer.AddChild(button);
         }
 
-        ConfirmTypeButton.OnPressed += ConfirmButtonPressed;
-        HelpGuidebookIds = GuidebookEntries;
+        // Tutorial / constrained spawns often expose a single chassis — pre-select it.
+        if (count == 1 && soleType != null)
+            UpdateInformation(soleType);
     }
 
     private void UpdateInformation(BorgTypePrototype prototype)

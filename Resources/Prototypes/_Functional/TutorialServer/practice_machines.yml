@@ -779,7 +779,8 @@
     activateOnSubGoal: hold-id-botany
     requestedJob: Botanist
     dialogue: tutorial-hop-visitor-botany
-    deskDropOffset: 2, 1
+    # Land on HoP desk/windoor tile so the player can grab from inside the office.
+    deskDropOffset: 3, 0
 
 - type: entity
   parent: TutorialPracticeMob
@@ -792,7 +793,7 @@
     activateOnSubGoal: write-chef
     requestedJob: Chef
     dialogue: tutorial-hop-visitor-chef
-    deskDropOffset: 2, 1.5
+    deskDropOffset: 3, 0.5
 
 - type: entity
   parent: TutorialPracticeMob
@@ -805,7 +806,7 @@
     activateOnSubGoal: write-janitor
     requestedJob: Janitor
     dialogue: tutorial-hop-visitor-janitor
-    deskDropOffset: 2, 2
+    deskDropOffset: 3, 1
 
 # Salvage practice arena machines.
 - type: entity

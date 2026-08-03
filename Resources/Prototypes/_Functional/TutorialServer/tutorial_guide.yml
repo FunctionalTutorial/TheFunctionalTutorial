@@ -29,7 +29,7 @@
   parent: BaseMentalAction
   id: ActionTutorialChooseRole
   name: Choose a tutorial
-  description: Open the Tutorial Server role picker.
+  description: Open the Tutorial Server role picker. Click the dollar sign at the top or side of the game window.
   components:
   - type: Action
     checkCanInteract: false

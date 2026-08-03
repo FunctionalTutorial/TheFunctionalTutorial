@@ -56,6 +56,11 @@
       text: tutorial-job-paramedic-sg-bed
       complete: HoldItem
       entity: RollerBedSpawnFolded
+    - id: rollerbed-tip
+      text: tutorial-job-paramedic-sg-rollerbed-tip
+      hint: tutorial-job-paramedic-sg-rollerbed-hint
+      stuckHint: tutorial-job-paramedic-sg-rollerbed-stuck
+      complete: Acknowledge
     - id: hold-epi
       text: tutorial-job-paramedic-sg-epi
       complete: HoldItem

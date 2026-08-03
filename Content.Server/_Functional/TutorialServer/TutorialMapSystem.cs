@@ -94,6 +94,11 @@ public sealed partial class TutorialMapSystem : EntitySystem
                 _rooms.EnsureApcsCharged(otherGrid);
             }
 
+            // Shuttle arenas need a powered helm/thrusters even when SimplifiedEnvironment is
+            // false (cargo keeps live atmos for undock/space practice).
+            if (role.ShuttleArena != null)
+                ForcePowerMap(mapUid);
+
             // Role flag is authoritative over crop-stamped TutorialForcePowerGridComponent.
             if (role.SimplifiedEnvironment)
                 ApplySimplifiedEnvironment(mapUid);
@@ -110,6 +115,26 @@ public sealed partial class TutorialMapSystem : EntitySystem
         if (!Exists(mapUid) || TerminatingOrDeleted(mapUid))
             return;
 
+        ForcePowerMap(mapUid);
+
+        var gridQuery = EntityQueryEnumerator<MapGridComponent, TransformComponent>();
+        while (gridQuery.MoveNext(out var gridUid, out _, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            FreezeGridAtmosphere(gridUid);
+        }
+    }
+
+    /// <summary>
+    /// Force-power every APC receiver on all grids of a tutorial map (does not freeze atmos).
+    /// </summary>
+    public void ForcePowerMap(EntityUid mapUid)
+    {
+        if (!Exists(mapUid) || TerminatingOrDeleted(mapUid))
+            return;
+
         var gridQuery = EntityQueryEnumerator<MapGridComponent, TransformComponent>();
         while (gridQuery.MoveNext(out var gridUid, out _, out var xform))
         {
@@ -117,7 +142,6 @@ public sealed partial class TutorialMapSystem : EntitySystem
                 continue;
 
             ForcePowerGrid(gridUid);
-            FreezeGridAtmosphere(gridUid);
         }
     }
 

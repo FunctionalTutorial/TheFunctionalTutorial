@@ -8,12 +8,11 @@
   roomTemplate: TutorialSectionAtmos
   guidebook: Engineering
   practiceSpawns:
-  - id: LockerAtmosphericsFilled
+  # FilledHardsuit includes ClothingOuterHardsuitAtmos (plain Filled does not).
+  # Offset clear of the crop AtmosDrobe at chamber-relative (~-2,1).
+  - id: LockerAtmosphericsFilledHardsuit
     room: 0
-    offset: -2, 1
-  - id: ClothingOuterHardsuitAtmos
-    room: 0
-    offset: 0.5, 0
+    offset: 2, -1
   - id: ClothingShoesBootsMag
     room: 0
     offset: 0.8, 0
@@ -69,16 +68,18 @@
     subGoals:
     - id: hold-suit
       text: tutorial-job-atmospheric-technician-sg-suit
-      complete: HoldItem
+      # ObtainItem: Z/Use quick-equips clothing without staying in-hand.
+      complete: ObtainItem
       entity: ClothingOuterHardsuitAtmos
     - id: hold-magboots
       text: tutorial-job-atmospheric-technician-sg-magboots
-      complete: HoldItem
+      complete: ObtainItem
       entity: ClothingShoesBootsMag
     - id: use-magboots
       text: tutorial-job-atmospheric-technician-sg-use-magboots
-      complete: UseInHand
-      entity: ClothingShoesBootsMag
+      # Z/Use quick-equips clothing (boot swap); toggle is the item action.
+      complete: ActionUsed
+      entity: ActionToggleMagboots
     - id: hold-analyzer
       text: tutorial-job-atmospheric-technician-sg-analyzer
       complete: HoldItem

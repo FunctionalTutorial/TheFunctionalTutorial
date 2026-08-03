@@ -23,8 +23,9 @@
       entity: ClothingShoesBootsMag
     - id: use-magboots
       text: tutorial-job-salvage-specialist-sg-use-magboots
-      complete: UseInHand
-      entity: ClothingShoesBootsMag
+      # Z/Use quick-equips clothing (boot swap); toggle is the item action.
+      complete: ActionUsed
+      entity: ActionToggleMagboots
     - id: hold-pka
       text: tutorial-job-salvage-specialist-sg-pka
       complete: HoldItem

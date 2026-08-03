@@ -30,16 +30,25 @@ using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
+using Content.Shared.Inventory;
 using Content.Shared.Item;
 using Content.Shared.Maps;
 using Content.Shared.Mind;
 using Content.Shared.Nutrition.EntitySystems;
+using Content.Shared.Physics;
 using Content.Shared.Preferences.Loadouts;
 using Content.Shared.Roles;
+using Content.Shared.Silicons.Borgs;
+using Content.Shared.Silicons.Borgs.Components;
+using Content.Shared.Storage;
+using Content.Shared.Tag;
+using Content.Server.Silicons.Borgs;
+using Content.Shared.UserInterface;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
 using Robust.Server.GameObjects;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -227,6 +236,8 @@ public sealed class TutorialServerTests : GameTest
 
             var chemist = proto.Index<TutorialRolePrototype>("TutorialChemist");
             Assert.That(chemist.RoomTemplate, Is.EqualTo(new ProtoId<TutorialRoomTemplatePrototype>("TutorialSectionChem")));
+            Assert.That(Sub(chemist, "dispenser").Complete, Is.EqualTo(TutorialStepComplete.InteractTargetTag));
+            Assert.That(Sub(chemist, "dispenser").Tag, Is.EqualTo("TutorialChemDispenser"));
             Assert.That(Sub(chemist, "inaprovaline").Complete, Is.EqualTo(TutorialStepComplete.SolutionContains));
             Assert.That(Sub(chemist, "inaprovaline").Reagent, Is.EqualTo(new ProtoId<Content.Shared.Chemistry.Reagent.ReagentPrototype>("Inaprovaline")));
             Assert.That(Sub(chemist, "dylovene").Complete, Is.EqualTo(TutorialStepComplete.SolutionContains));
@@ -234,8 +245,14 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(chemist, "pills").Complete, Is.EqualTo(TutorialStepComplete.ObtainItem));
             Assert.That(Sub(chemist, "pills").Entity, Is.EqualTo(new EntProtoId("PillCanister")));
             Assert.That(Sub(chemist, "pills").MinCount, Is.EqualTo(1));
-            Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "TutorialChemDispenser"));
+            // Machines come from the Saltern crop (tagged by TutorialChemBootstrapSystem).
+            Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "TutorialChemDispenser"), Is.False);
+            Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "TutorialChemMaster"), Is.False);
+            Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "TutorialKitchenReagentGrinder"), Is.False);
             Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "PillCanister"));
+            // Glassware stays off the north machine row / drain tile.
+            Assert.That(chemist.PracticeSpawns.All(p => p.Offset.Y < 0.75f),
+                "Chemist practice spawns must stay south of the crop machine row (y+1)");
 
             var janitor = proto.Index<TutorialRolePrototype>("TutorialJanitor");
             Assert.That(Sub(janitor, "clear-puddle").Complete, Is.EqualTo(TutorialStepComplete.PuddleCleared));
@@ -243,6 +260,10 @@ public sealed class TutorialServerTests : GameTest
 
             var ta = proto.Index<TutorialRolePrototype>("TutorialTechnicalAssistant");
             Assert.That(ta.Stub, Is.False);
+            Assert.That(Sub(ta, "hold-screwdriver").Complete, Is.EqualTo(TutorialStepComplete.HoldTag));
+            Assert.That(Sub(ta, "hold-screwdriver").Tag, Is.EqualTo("Screwdriver"));
+            Assert.That(Sub(ta, "hold-multitool").Complete, Is.EqualTo(TutorialStepComplete.HoldTag));
+            Assert.That(Sub(ta, "hold-multitool").Tag, Is.EqualTo("Multitool"));
             Assert.That(Sub(ta, "open-panel").Complete, Is.EqualTo(TutorialStepComplete.WiresPanelOpen));
             Assert.That(Sub(ta, "place-lv").Complete, Is.EqualTo(TutorialStepComplete.MapHasEntity));
             Assert.That(Sub(ta, "place-lv").Entity, Is.EqualTo(new EntProtoId("CableApcExtension")));
@@ -294,6 +315,9 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(ce, "open-comms").Complete, Is.EqualTo(TutorialStepComplete.InteractTargetTag));
             Assert.That(Sub(ce, "open-comms").Tag, Is.EqualTo("TutorialCommsConsole"));
             Assert.That(Sub(ce, "lead-tip").Complete, Is.EqualTo(TutorialStepComplete.Acknowledge));
+            // Magboots: Z/Use equips clothing; toggle is ActionToggleMagboots.
+            Assert.That(Sub(ce, "use-magboots").Complete, Is.EqualTo(TutorialStepComplete.ActionUsed));
+            Assert.That(Sub(ce, "use-magboots").Entity, Is.EqualTo(new EntProtoId("ActionToggleMagboots")));
             Assert.That(ce.RoomTemplate, Is.EqualTo(new ProtoId<TutorialRoomTemplatePrototype>("TutorialSectionEngineering")));
             Assert.That(ce.PracticeSpawns.Any(p => p.Id == "TutorialComputerComms"));
             Assert.That(ce.Goals.SelectMany(g => g.SubGoals).Any(s => s.Id is "teg" or "singulo"), Is.False);
@@ -322,6 +346,16 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(atmos, "place-pipes").Complete, Is.EqualTo(TutorialStepComplete.MapHasEntity));
             Assert.That(Sub(atmos, "place-pipes").Entity, Is.EqualTo(new EntProtoId("GasPipeStraight")));
             Assert.That(Sub(atmos, "place-pipes").MinCount, Is.EqualTo(2));
+            Assert.That(Sub(atmos, "hold-suit").Complete, Is.EqualTo(TutorialStepComplete.ObtainItem),
+                "Hardsuit Z/Use equips — ObtainItem must accept worn suits");
+            Assert.That(Sub(atmos, "hold-suit").Entity, Is.EqualTo(new EntProtoId("ClothingOuterHardsuitAtmos")));
+            Assert.That(Sub(atmos, "hold-magboots").Complete, Is.EqualTo(TutorialStepComplete.ObtainItem));
+            Assert.That(Sub(atmos, "use-magboots").Complete, Is.EqualTo(TutorialStepComplete.ActionUsed));
+            Assert.That(Sub(atmos, "use-magboots").Entity, Is.EqualTo(new EntProtoId("ActionToggleMagboots")));
+            Assert.That(atmos.PracticeSpawns.Any(p => p.Id == "LockerAtmosphericsFilledHardsuit"),
+                "Practice locker must include the atmos hardsuit fill");
+            Assert.That(atmos.PracticeSpawns.Any(p => p.Id == "ClothingOuterHardsuitAtmos"), Is.False,
+                "Floor suit spawn removed — suit comes from the hardsuit locker");
             Assert.That(atmos.PracticeSpawns.Any(p => p.Id == "TutorialTegCenter"));
             Assert.That(atmos.PracticeSpawns.Any(p => p.Id == "SheetSteel10"));
             // Interact gate must precede TegProducingPower in curriculum order.
@@ -334,6 +368,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(salvage.SalvageArena,
                 Is.EqualTo(new ProtoId<TutorialSalvageArenaPrototype>("TutorialArenaSalvageBay")));
             Assert.That(salvage.Room, Is.Null);
+            Assert.That(Sub(salvage, "use-magboots").Complete, Is.EqualTo(TutorialStepComplete.ActionUsed));
+            Assert.That(Sub(salvage, "use-magboots").Entity, Is.EqualTo(new EntProtoId("ActionToggleMagboots")));
             Assert.That(Sub(salvage, "activate-magnet").Tag, Is.EqualTo("TutorialSalvageMagnet"));
             Assert.That(Sub(salvage, "stuff-locker").Complete, Is.EqualTo(TutorialStepComplete.ContainerHasEntityCount));
             Assert.That(Sub(salvage, "stuff-locker").MinCount, Is.EqualTo(3));
@@ -346,6 +382,14 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(hop, "write-janitor").Job, Is.EqualTo(new ProtoId<JobPrototype>("Janitor")));
             Assert.That(hop.PracticeSpawns.Any(p => p.Id == "TutorialHoPVisitorBotany"));
             Assert.That(hop.PracticeSpawns.Any(p => p.Id == "TutorialComputerId"));
+            // Command crop zone origin is Cap quarters; ID console must sit on Saltern HoP desk (0,-5).
+            var hopIdConsole = hop.PracticeSpawns.First(p => p.Id == "TutorialComputerId");
+            Assert.That(hopIdConsole.Offset, Is.EqualTo(new Vector2(0f, -5f)));
+            // Player must start inside HoP (desk/windoor is not a walk door).
+            Assert.That(hop.SpawnOffset, Is.EqualTo(new Vector2(1f, -6f)));
+            Assert.That((hopIdConsole.Offset - hop.SpawnOffset).Length(),
+                Is.LessThanOrEqualTo(SharedInteractionSystem.InteractionRange),
+                "HoP spawn must be within interact range of the ID console");
 
             var detective = proto.Index<TutorialRolePrototype>("TutorialDetective");
             Assert.That(detective.Stub, Is.False);
@@ -430,6 +474,7 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(Sub(para, "buckle-patient").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobBuckled));
             Assert.That(Sub(para, "heal-dummy").MaxDamage, Is.EqualTo(25f));
+            Assert.That(Sub(para, "rollerbed-tip").Complete, Is.EqualTo(TutorialStepComplete.Acknowledge));
             Assert.That(para.PracticeSpawns.Any(p => p.Id == "TutorialRollerBed"));
 
             var hos = proto.Index<TutorialRolePrototype>("TutorialHeadOfSecurity");
@@ -992,6 +1037,13 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(completes, Does.Contain(TutorialStepComplete.UndockShuttle));
             Assert.That(completes, Does.Contain(TutorialStepComplete.DockShuttle));
 
+            // Dock welds pin the ship — undock must be taught before throttle/flight keys.
+            var undockIdx = Array.IndexOf(completes, TutorialStepComplete.UndockShuttle);
+            var throttleIdx = Array.IndexOf(completes, TutorialStepComplete.ShuttleThrottle);
+            Assert.That(undockIdx, Is.GreaterThanOrEqualTo(0));
+            Assert.That(throttleIdx, Is.GreaterThan(undockIdx),
+                "Cargo tutorial must undock before teaching shuttle throttle");
+
             var markers = cargo.Goals.SelectMany(g => g.SubGoals)
                 .Where(s => s.Complete is TutorialStepComplete.DockShuttle or TutorialStepComplete.UndockShuttle)
                 .Select(s => s.Marker)
@@ -1093,6 +1145,114 @@ public sealed class TutorialServerTests : GameTest
         });
     }
 
+    /// <summary>
+    /// Magboots Z/Use quick-equips (boot swap) and must not finish the toggle step;
+    /// ActionToggleMagboots does.
+    /// </summary>
+    [Test]
+    public async Task TutorialSalvage_MagbootsToggleUsesActionNotUseInHand()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var actions = server.System<SharedActionsSystem>();
+        var hands = server.System<SharedHandsSystem>();
+        var interaction = server.System<SharedInteractionSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialSalvageSpecialist", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        EntityUid magboots = default;
+        EntityUid mob = default;
+
+        await server.WaitAssertion(() =>
+        {
+            mob = pair.Player!.AttachedEntity!.Value;
+
+            // welcome.intro → eva.hold-magboots
+            tutorial.AdvanceSubGoal(mob);
+
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.GoalIndex, Is.EqualTo(1));
+            Assert.That(part.SubGoalIndex, Is.EqualTo(0));
+            Assert.That(part.StepComplete, Is.EqualTo(TutorialStepComplete.HoldItem));
+
+            var mapUid = entMan.GetComponent<TransformComponent>(mob).MapUid;
+            var query = entMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out var meta, out var xform))
+            {
+                if (xform.MapUid != mapUid)
+                    continue;
+                if (meta.EntityPrototype?.ID != "ClothingShoesBootsMag")
+                    continue;
+                magboots = uid;
+                break;
+            }
+
+            Assert.That(magboots, Is.Not.EqualTo(EntityUid.Invalid), "Arena foyer must spawn magboots");
+            Assert.That(hands.TryPickupAnyHand(mob, magboots, checkActionBlocker: false, animate: false), Is.True);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.GoalIndex, Is.EqualTo(1));
+            Assert.That(part.SubGoalIndex, Is.EqualTo(1), "Holding magboots should advance to use-magboots");
+            Assert.That(part.StepComplete, Is.EqualTo(TutorialStepComplete.ActionUsed));
+
+            // Z/Use equips clothing — must not complete ActionUsed.
+            Assert.That(interaction.UseInHandInteraction(mob, magboots), Is.True);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.SubGoalIndex, Is.EqualTo(1),
+                "Use-in-hand (equip/swap boots) must not finish the magboots toggle step");
+            Assert.That(part.StepComplete, Is.EqualTo(TutorialStepComplete.ActionUsed));
+
+            // After equip, magboots may be worn; action still comes from the item.
+            EntityUid? toggleAction = null;
+            foreach (var (actionUid, _) in actions.GetActions(mob))
+            {
+                if (entMan.GetComponent<MetaDataComponent>(actionUid).EntityPrototype?.ID ==
+                    "ActionToggleMagboots")
+                {
+                    toggleAction = actionUid;
+                    break;
+                }
+            }
+
+            Assert.That(toggleAction, Is.Not.Null, "Toggle Magboots action must be available when held or worn");
+            actions.PerformAction(mob, (toggleAction.Value, entMan.GetComponent<ActionComponent>(toggleAction.Value)));
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.GoalIndex, Is.EqualTo(1));
+            Assert.That(part.SubGoalIndex, Is.EqualTo(2),
+                "Performing ActionToggleMagboots must advance to hold-pka");
+            Assert.That(part.StepComplete, Is.EqualTo(TutorialStepComplete.HoldItem));
+        });
+    }
+
     [Test]
     public async Task TutorialShuttleArena_BuildsFlyableDockableShuttle()
     {
@@ -1113,14 +1273,21 @@ public sealed class TutorialServerTests : GameTest
         await server.WaitAssertion(() =>
         {
             var cargo = proto.Index<TutorialRolePrototype>("TutorialCargoTechnician");
+            Assert.That(cargo.SimplifiedEnvironment, Is.False,
+                "Cargo keeps live atmos; shuttle arenas must force-power without SimplifiedEnvironment");
             Assert.That(maps.TryLoadTutorialMap(cargo, out var mapUid, out var shuttleUid, out var spawn), Is.True);
             Assert.That(server.EntMan.HasComponent<Content.Server.Shuttles.Components.ShuttleComponent>(shuttleUid));
             Assert.That(server.EntMan.HasComponent<Content.Shared.Cargo.Components.CargoShuttleComponent>(shuttleUid));
             Assert.That(spawn.EntityId, Is.EqualTo(shuttleUid));
 
+            Assert.That(server.EntMan.TryGetComponent<GridAtmosphereComponent>(shuttleUid, out var shuttleAtmos), Is.True);
+            Assert.That(shuttleAtmos!.Simulated, Is.True,
+                "Cargo shuttle should keep live atmos (not SimplifiedEnvironment freeze)");
+
             var dockCount = 0;
             var consoleCount = 0;
             var thrusterCount = 0;
+            var poweredHelm = false;
             var cargoBay = false;
             var ats = false;
             var mapXform = server.EntMan.GetComponent<TransformComponent>(mapUid);
@@ -1134,7 +1301,16 @@ public sealed class TutorialServerTests : GameTest
                 if (id is "AirlockShuttle" or "AirlockGlassShuttle")
                     dockCount++;
                 if (id == "ComputerShuttle")
+                {
                     consoleCount++;
+                    if (xform.GridUid == shuttleUid &&
+                        server.EntMan.TryGetComponent<ApcPowerReceiverComponent>(uid, out var receiver) &&
+                        !receiver.NeedsPower)
+                    {
+                        poweredHelm = true;
+                    }
+                }
+
                 if (id is "Thruster" or "ThrusterLarge")
                     thrusterCount++;
 
@@ -1149,6 +1325,8 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(dockCount, Is.GreaterThanOrEqualTo(6), "Need shuttle docks + bay + ATS");
             Assert.That(consoleCount, Is.GreaterThanOrEqualTo(1));
+            Assert.That(poweredHelm, Is.True,
+                "Cargo shuttle helm must be force-powered so TryPilot can grant control");
             Assert.That(thrusterCount, Is.GreaterThanOrEqualTo(1));
             Assert.That(cargoBay, Is.True, "Cargo bay mini-station missing");
             Assert.That(ats, Is.True, "ATS mini-station missing");
@@ -1337,7 +1515,77 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(maps.TryLoadTutorialMap(atmosRole, out var atmosMap, out var atmosGrid, out _), Is.True);
             Assert.That(server.EntMan.TryGetComponent<GridAtmosphereComponent>(atmosGrid, out var liveAtmos), Is.True);
             Assert.That(liveAtmos!.Simulated, Is.True, "Engineering atmos tutorial must keep live simulation");
+
+            // Section crops ship dark AP-powered fixtures; stamps add AlwaysPoweredWallLight.
+            var wallLights = 0;
+            var lightQuery = server.EntMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            while (lightQuery.MoveNext(out _, out var meta, out var xform))
+            {
+                if (xform.GridUid != atmosGrid)
+                    continue;
+                if (meta.EntityPrototype?.ID == "AlwaysPoweredWallLight")
+                    wallLights++;
+            }
+
+            Assert.That(wallLights, Is.GreaterThanOrEqualTo(6),
+                "Atmos section stamp should place always-powered wall lights around chambers");
             maps.UnloadTutorialMap(atmosMap);
+        });
+    }
+
+    /// <summary>
+    /// Atmos hardsuit Z/Use quick-equips; ObtainItem must complete when the suit is worn
+    /// (HoldItem would leave the player stuck).
+    /// </summary>
+    [Test]
+    public async Task TutorialAtmos_HardsuitObtainAcceptsEquippedSuit()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var inventory = server.System<InventorySystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialAtmosphericTechnician", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            tutorial.AdvanceSubGoal(mob); // welcome.intro → kit.hold-suit
+
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.ObtainItem));
+            Assert.That(part.SubGoalIndex, Is.EqualTo(0));
+
+            // Equip without leaving the suit in-hand — mirrors Z/Use quick-equip.
+            inventory.TryUnequip(mob, "outerClothing", force: true, silent: true);
+            var suit = entMan.SpawnEntity("ClothingOuterHardsuitAtmos",
+                entMan.GetComponent<TransformComponent>(mob).Coordinates);
+            Assert.That(inventory.TryEquip(mob, suit, "outerClothing", force: true, silent: true), Is.True,
+                "Forced equip of atmos hardsuit onto empty outerClothing slot");
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.GoalIndex, Is.EqualTo(1));
+            Assert.That(part.SubGoalIndex, Is.EqualTo(1),
+                "Wearing the atmos hardsuit must advance past hold-suit onto magboots");
         });
     }
 
@@ -1640,13 +1888,29 @@ public sealed class TutorialServerTests : GameTest
             var borg = proto.Index<TutorialRolePrototype>("TutorialBorg");
             Assert.That(borg.Stub, Is.False);
             Assert.That(borg.Job, Is.EqualTo(new ProtoId<JobPrototype>("Borg")));
+            Assert.That(borg.SpawnEntity, Is.EqualTo(new EntProtoId("TutorialPlayerBorg")));
             Assert.That(borg.Category, Is.EqualTo("Science"));
             Assert.That(borg.Name, Is.EqualTo("tutorial-job-borg-name"));
             Assert.That(Loc.GetString(borg.Name!), Is.EqualTo("Cyborg"));
+            Assert.That(borg.Goals.Any(g => g.Id == "chassis"));
+            Assert.That(Sub(borg, "select-chassis").Complete, Is.EqualTo(TutorialStepComplete.BorgTypeSelected));
+            Assert.That(Sub(borg, "select-chassis").Marker, Is.EqualTo("generic"));
+            Assert.That(Sub(borg, "select-tool-module").Complete, Is.EqualTo(TutorialStepComplete.BorgModuleSelected));
+            Assert.That(Sub(borg, "select-tool-module").Entity, Is.EqualTo(new EntProtoId("BorgModuleTool")));
+            Assert.That(Sub(borg, "select-inflatable-module").Complete, Is.EqualTo(TutorialStepComplete.BorgModuleSelected));
+            Assert.That(Sub(borg, "select-inflatable-module").Entity, Is.EqualTo(new EntProtoId("BorgModuleInflatable")));
             Assert.That(Sub(borg, "panel-open").Complete, Is.EqualTo(TutorialStepComplete.PlayerWiresPanelOpen));
             Assert.That(Sub(borg, "emagged").Complete, Is.EqualTo(TutorialStepComplete.SiliconSubverted));
             Assert.That(borg.Goals.Any(g => g.Id == "modules"));
             Assert.That(borg.Goals.Any(g => g.Id == "subversion"));
+
+            Assert.That(proto.TryIndex<EntityPrototype>("TutorialPlayerBorg", out var tutorialBorgBody), Is.True);
+            var switchableName = server.ResolveDependency<IComponentFactory>().GetComponentName<BorgSwitchableTypeComponent>();
+            Assert.That(tutorialBorgBody!.Components.TryGetComponent(switchableName, out var switchableComp), Is.True);
+            var switchable = (BorgSwitchableTypeComponent)switchableComp!;
+            Assert.That(switchable.AvailableBorgTypes, Is.Not.Null);
+            Assert.That(switchable.AvailableBorgTypes!, Has.Count.EqualTo(1));
+            Assert.That(switchable.AvailableBorgTypes![0].Id, Is.EqualTo("generic"));
         });
     }
 
@@ -3265,6 +3529,237 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
+    public async Task TutorialPracticeSpawns_ScatterStackedFloorItems()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialChemist", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            var mobXform = entMan.GetComponent<TransformComponent>(mob);
+            var mapUid = mobXform.MapUid;
+            var gridUid = mobXform.GridUid;
+            var containers = server.System<SharedContainerSystem>();
+            var factory = server.ResolveDependency<IComponentFactory>();
+            Assert.That(server.ProtoMan.Index<EntityPrototype>("Beaker").TryGetComponent<ItemComponent>(out _, factory),
+                Is.True,
+                "Beaker prototype must expose Item for practice-pile scatter");
+
+            var beakers = new List<(EntityUid Uid, Vector2 Local, EntityUid Parent)>();
+            var query = entMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out var meta, out var xform))
+            {
+                if (xform.MapUid != mapUid)
+                    continue;
+                if (meta.EntityPrototype?.ID != "Beaker")
+                    continue;
+                // Floor practice spawns only — skip loadout / storage (same transform as parent).
+                if (containers.IsEntityInContainer(uid))
+                    continue;
+                // Prefer grid-parented loose items (tables/mobs reparent without always using containers).
+                if (gridUid != null && xform.ParentUid != gridUid)
+                    continue;
+                beakers.Add((uid, xform.LocalPosition, xform.ParentUid));
+            }
+
+            Assert.That(beakers.Count, Is.GreaterThanOrEqualTo(2),
+                $"Chemist practice kit includes two floor beakers (found {beakers.Count})");
+
+            for (var i = 0; i < beakers.Count; i++)
+            for (var j = i + 1; j < beakers.Count; j++)
+            {
+                var delta = beakers[i].Local - beakers[j].Local;
+                Assert.That(delta.Length(), Is.GreaterThan(0.05f),
+                    $"Practice beakers must be visually offset, not stacked exactly " +
+                    $"(local {beakers[i].Local} vs {beakers[j].Local}, parents {beakers[i].Parent}/{beakers[j].Parent})");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TutorialChemist_TagsCropMachinesAndGlasswareSpawnsAreWalkable()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var rooms = server.System<TutorialPracticeRoomSystem>();
+        var tags = server.System<TagSystem>();
+        var entMan = server.EntMan;
+        var proto = server.ProtoMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialChemist", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            var gridUid = entMan.GetComponent<TransformComponent>(mob).GridUid;
+            Assert.That(gridUid, Is.Not.Null);
+
+            var taggedDispenser = false;
+            var taggedMaster = false;
+            var taggedGrinder = false;
+            var query = entMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out var meta, out var xform))
+            {
+                if (xform.GridUid != gridUid)
+                    continue;
+
+                if (meta.EntityPrototype?.ID == "ChemDispenser" &&
+                    tags.HasTag(uid, new ProtoId<TagPrototype>("TutorialChemDispenser")))
+                    taggedDispenser = true;
+                if (meta.EntityPrototype?.ID == "ChemMaster" &&
+                    tags.HasTag(uid, new ProtoId<TagPrototype>("TutorialChemMaster")))
+                    taggedMaster = true;
+                if (meta.EntityPrototype?.ID == "KitchenReagentGrinder" &&
+                    tags.HasTag(uid, new ProtoId<TagPrototype>("TutorialGrinder")))
+                    taggedGrinder = true;
+            }
+
+            Assert.That(taggedDispenser, Is.True, "Crop ChemDispenser must be tagged for the open-UI step");
+            Assert.That(taggedMaster, Is.True, "Crop ChemMaster must be tagged");
+            Assert.That(taggedGrinder, Is.True, "Crop reagent grinder must be tagged");
+
+            var chemist = proto.Index<TutorialRolePrototype>("TutorialChemist");
+            Assert.That(entMan.TryGetComponent<TutorialRoomLayoutComponent>(gridUid!.Value, out var layout));
+            Assert.That(layout!.ChamberCenters.Count, Is.GreaterThan(0));
+
+            foreach (var spawn in chemist.PracticeSpawns)
+            {
+                var coords = rooms.GetChamberCoords(gridUid.Value, spawn.Room, spawn.Offset);
+                var tile = new Vector2i((int) MathF.Floor(coords.Position.X), (int) MathF.Floor(coords.Position.Y));
+                var wallOnTile = false;
+                var wallQuery = entMan.AllEntityQueryEnumerator<TransformComponent, MetaDataComponent>();
+                while (wallQuery.MoveNext(out _, out var xform, out var meta))
+                {
+                    if (xform.GridUid != gridUid)
+                        continue;
+                    if (meta.EntityPrototype?.ID is not ("WallReinforced" or "WallSolid" or "WallReinforcedDiagonal"))
+                        continue;
+                    var wallTile = new Vector2i(
+                        (int) MathF.Floor(xform.LocalPosition.X),
+                        (int) MathF.Floor(xform.LocalPosition.Y));
+                    if (wallTile == tile)
+                    {
+                        wallOnTile = true;
+                        break;
+                    }
+                }
+
+                Assert.That(wallOnTile, Is.False,
+                    $"Practice spawn {spawn.Id} at offset {spawn.Offset} lands in a wall tile {tile}");
+            }
+        });
+    }
+
+    [Test]
+    public async Task TutorialChemist_OpeningDispenserAdvancesGoal()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var tags = server.System<TagSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialChemist", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        EntityUid dispenser = default;
+        EntityUid mob = default;
+
+        await server.WaitAssertion(() =>
+        {
+            mob = pair.Player!.AttachedEntity!.Value;
+
+            // welcome → glassware hold-beaker → hold-large → mix.dispenser
+            tutorial.AdvanceSubGoal(mob);
+            tutorial.AdvanceSubGoal(mob);
+            tutorial.AdvanceSubGoal(mob);
+
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.InteractTargetTag));
+            Assert.That(part.GoalIndex, Is.EqualTo(2));
+            Assert.That(part.SubGoalIndex, Is.EqualTo(0));
+
+            var mapUid = entMan.GetComponent<TransformComponent>(mob).MapUid;
+            var query = entMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out var meta, out var xform))
+            {
+                if (xform.MapUid != mapUid)
+                    continue;
+                if (meta.EntityPrototype?.ID != "ChemDispenser")
+                    continue;
+                if (!tags.HasTag(uid, new ProtoId<TagPrototype>("TutorialChemDispenser")))
+                    continue;
+                dispenser = uid;
+                break;
+            }
+
+            Assert.That(dispenser, Is.Not.EqualTo(EntityUid.Invalid));
+        });
+
+        await server.WaitPost(() =>
+        {
+            // Raise the same event ActivatableUISystem fires after a successful open.
+            // Full InteractionActivate hits Bound-UI range asserts in pooled tests.
+            var ev = new AfterActivatableUIOpenEvent(mob);
+            entMan.EventBus.RaiseLocalEvent(dispenser, ev);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.GoalIndex, Is.EqualTo(2));
+            Assert.That(part.SubGoalIndex, Is.EqualTo(1),
+                "Opening the chem dispenser Bound UI must advance past the dispenser step");
+            Assert.That(part.StepComplete, Is.EqualTo(TutorialStepComplete.SolutionContains));
+        });
+    }
+
+    [Test]
     public async Task TutorialEngineeringStamp_KeepsEastAndVaultsCeOffice()
     {
         await AssertSectionStampAxisAndForbiddenDoors(
@@ -3590,6 +4085,156 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
+    public async Task TutorialHeadOfPersonnel_IdConsoleNotInWall()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var maps = server.System<TutorialMapSystem>();
+        var proto = server.ProtoMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var hop = proto.Index<TutorialRolePrototype>("TutorialHeadOfPersonnel");
+            Assert.That(maps.TryLoadTutorialMap(hop, out var mapUid, out var gridUid, out _), Is.True);
+            Assert.That(server.EntMan.TryGetComponent<TutorialRoomLayoutComponent>(gridUid, out var layout));
+            var center = layout!.ChamberCenters[0];
+            var grid = server.EntMan.GetComponent<MapGridComponent>(gridUid);
+            var mapSys = server.System<MapSystem>();
+            var turf = server.System<TurfSystem>();
+
+            foreach (var practice in hop.PracticeSpawns)
+            {
+                var goal = center + practice.Offset;
+                var tile = new Vector2i((int) MathF.Floor(goal.X), (int) MathF.Floor(goal.Y));
+                foreach (var ent in mapSys.GetAnchoredEntities(gridUid, grid, tile))
+                {
+                    var id = server.EntMan.GetComponent<MetaDataComponent>(ent).EntityPrototype?.ID;
+                    Assert.That(id is "WallSolid" or "WallReinforced" or "Girder", Is.False,
+                        $"HoP practice {practice.Id} at {practice.Offset} must not land in {id}");
+                    Assert.That(id, Is.Not.EqualTo("TutorialVaultDoor"),
+                        $"HoP practice {practice.Id} at {practice.Offset} must not be vaulted");
+                }
+            }
+
+            // Spawn tile (inside office) must be walkable so the player is not stuck in Cap.
+            var spawnPos = center + hop.SpawnOffset;
+            var spawnTile = new Vector2i((int) MathF.Floor(spawnPos.X), (int) MathF.Floor(spawnPos.Y));
+            Assert.That(turf.IsTileBlocked(gridUid, spawnTile, CollisionGroup.MobMask), Is.False,
+                "HoP spawnOffset must land on a walkable office tile");
+
+            maps.UnloadTutorialMap(mapUid);
+        });
+    }
+
+    /// <summary>
+    /// Dual-dock welds pin the cargo shuttle. Undocking one port during an early Acknowledge
+    /// step (before UndockShuttle is current) must still clear the remaining bay docks.
+    /// </summary>
+    [Test]
+    public async Task TutorialCargoUndock_EarlyUndockClearsDualDocks()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var docking = server.System<DockingSystem>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialCargoTechnician", confirmedStub: false);
+        });
+        await pair.RunTicksSync(15);
+
+        await server.WaitPost(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(server.EntMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+
+            // Stop on undock-explain (Acknowledge) — before UndockShuttle is current.
+            for (var i = 0; i < 20; i++)
+            {
+                if (!tutorial.TryGetCurrentSubGoal(mob, part!, out var sub))
+                    break;
+                if (sub.Complete == TutorialStepComplete.Acknowledge &&
+                    sub.Id == "undock-explain")
+                    break;
+                if (sub.Complete is TutorialStepComplete.Acknowledge or TutorialStepComplete.PilotShuttle)
+                    tutorial.AdvanceSubGoal(mob);
+                else
+                    break;
+            }
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(server.EntMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, part!, out var sub));
+            Assert.That(sub.Complete, Is.EqualTo(TutorialStepComplete.Acknowledge));
+            Assert.That(sub.Id, Is.EqualTo("undock-explain"));
+
+            var shuttle = server.EntMan.GetComponent<TransformComponent>(mob).GridUid;
+            Assert.That(shuttle, Is.Not.Null);
+
+            EntityUid? oneDock = null;
+            foreach (var dock in docking.GetDocks(shuttle.Value))
+            {
+                if (dock.Comp.DockedWith is not { } other)
+                    continue;
+                var otherGrid = server.EntMan.GetComponent<TransformComponent>(other).GridUid;
+                if (otherGrid == null ||
+                    !server.EntMan.TryGetComponent<TutorialDockStationComponent>(otherGrid.Value, out var station) ||
+                    station.StationId != TutorialShuttleArenaSystem.CargoBayStationId)
+                    continue;
+                oneDock = dock.Owner;
+                break;
+            }
+
+            Assert.That(oneDock, Is.Not.Null, "Expected a dock to the cargo bay before undock");
+            var dockComp = server.EntMan.GetComponent<DockingComponent>(oneDock.Value);
+            docking.Undock(new Entity<DockingComponent>(oneDock.Value, dockComp));
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            var shuttle = server.EntMan.GetComponent<TransformComponent>(mob).GridUid!.Value;
+
+            foreach (var dock in docking.GetDocks(shuttle))
+            {
+                if (dock.Comp.DockedWith is not { } other)
+                    continue;
+                var otherGrid = server.EntMan.GetComponent<TransformComponent>(other).GridUid;
+                if (otherGrid != null &&
+                    server.EntMan.TryGetComponent<TutorialDockStationComponent>(otherGrid.Value, out var station) &&
+                    station.StationId == TutorialShuttleArenaSystem.CargoBayStationId)
+                {
+                    Assert.Fail("Early undock must cascade-clear remaining cargo-bay docks");
+                }
+            }
+        });
+    }
+
+    [Test]
     public async Task TutorialCargoUndock_ClearsAllDocksToHomeBay()
     {
         var pair = Pair;
@@ -3739,6 +4384,121 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
+    public async Task TutorialTechnicalAssistant_ScrewdriverHold_BeltAndFloor()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var hands = server.System<SharedHandsSystem>();
+        var inventory = server.System<InventorySystem>();
+        var tags = server.System<TagSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        // Belt screwdriver: starting-gear tool must be sensor-tagged and complete HoldTag.
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
+            tutorial.AdvanceSubGoal(mob);
+
+            Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
+                Is.EqualTo(TutorialStepComplete.HoldTag));
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var sub));
+            Assert.That(sub.Tag, Is.EqualTo("Screwdriver"));
+
+            Assert.That(inventory.TryGetSlotEntity(mob, "belt", out var belt), Is.True);
+            Assert.That(entMan.TryGetComponent<StorageComponent>(belt!.Value, out var storage), Is.True);
+
+            EntityUid? beltScrewdriver = null;
+            foreach (var item in storage!.Container.ContainedEntities)
+            {
+                if (tags.HasTag(item, (ProtoId<TagPrototype>) "Screwdriver"))
+                {
+                    beltScrewdriver = item;
+                    break;
+                }
+            }
+
+            Assert.That(beltScrewdriver, Is.Not.Null, "TA belt should contain a screwdriver");
+            Assert.That(entMan.HasComponent<TutorialSensorTargetComponent>(beltScrewdriver!.Value), Is.True,
+                "Belt screwdriver must be tagged as a tutorial sensor target");
+            Assert.That(hands.TryPickupAnyHand(mob, beltScrewdriver.Value, checkActionBlocker: false, animate: false),
+                Is.True);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
+                Is.EqualTo(TutorialStepComplete.WiresPanelOpen),
+                "Holding the belt screwdriver should advance hold-screwdriver");
+        });
+
+        // Floor screwdriver: practice-spawned tool on a fresh TA session.
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            tutorial.AdvanceSubGoal(mob);
+            Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
+                Is.EqualTo(TutorialStepComplete.HoldTag));
+
+            var containers = server.System<SharedContainerSystem>();
+            var mobXform = entMan.GetComponent<TransformComponent>(mob);
+            EntityUid? floorScrewdriver = null;
+            var query = entMan.EntityQueryEnumerator<TutorialSensorTargetComponent, MetaDataComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out _, out var meta, out var xform))
+            {
+                if (xform.MapUid != mobXform.MapUid)
+                    continue;
+                if (meta.EntityPrototype?.ID != "Screwdriver")
+                    continue;
+                // Practice-spawned floor tool only — skip belt / closet contents.
+                if (containers.IsEntityInContainer(uid))
+                    continue;
+                floorScrewdriver = uid;
+                break;
+            }
+
+            Assert.That(floorScrewdriver, Is.Not.Null, "TA map should practice-spawn a floor screwdriver");
+            Assert.That(tags.HasTag(floorScrewdriver!.Value, (ProtoId<TagPrototype>) "Screwdriver"), Is.True);
+            Assert.That(hands.TryPickupAnyHand(mob, floorScrewdriver.Value, checkActionBlocker: false, animate: false),
+                Is.True);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
+                Is.EqualTo(TutorialStepComplete.WiresPanelOpen),
+                "Holding the floor screwdriver should advance hold-screwdriver");
+        });
+    }
+
+    [Test]
     public async Task TutorialXenoborg_SpawnsOnMothershipArena()
     {
         var pair = Pair;
@@ -3776,5 +4536,79 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(hasConsole, Is.True);
             maps.UnloadTutorialMap(mapUid);
         });
+    }
+
+    [Test]
+    public async Task TutorialBorg_ForcesGenericChassisAndModuleSwap()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var entMan = server.EntMan;
+        var switchableSys = server.System<BorgSwitchableTypeSystem>();
+        var borgSys = server.System<BorgSystem>();
+        EntityUid borg = default;
+
+        await server.WaitPost(() =>
+        {
+            borg = entMan.Spawn("TutorialPlayerBorg");
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.TryGetComponent<BorgSwitchableTypeComponent>(borg, out var switchable), Is.True);
+            Assert.That(switchable!.AvailableBorgTypes, Is.Not.Null);
+            Assert.That(switchable.AvailableBorgTypes!, Has.Count.EqualTo(1));
+            Assert.That(switchable.AvailableBorgTypes![0].Id, Is.EqualTo("generic"));
+            Assert.That(switchable.SelectedBorgType, Is.Null,
+                "Tutorial borg must pick a chassis before modules/hands exist");
+
+            Assert.That(switchableSys.TrySelectBorgType(borg, "engineering"), Is.False,
+                "Non-generic chassis must be rejected during the tutorial");
+            Assert.That(entMan.GetComponent<BorgSwitchableTypeComponent>(borg).SelectedBorgType, Is.Null);
+
+            Assert.That(entMan.TryGetComponent<HandsComponent>(borg, out var handsBefore), Is.True);
+            Assert.That(handsBefore!.Count, Is.EqualTo(0),
+                "Cyborgs have no hand slots until a chassis type and module are active");
+
+            Assert.That(switchableSys.TrySelectBorgType(borg, "generic"), Is.True);
+            Assert.That(entMan.GetComponent<BorgSwitchableTypeComponent>(borg).SelectedBorgType?.Id,
+                Is.EqualTo("generic"));
+
+            Assert.That(entMan.TryGetComponent<BorgChassisComponent>(borg, out var chassis), Is.True);
+            Assert.That(chassis!.ModuleContainer.ContainedEntities.Count, Is.GreaterThanOrEqualTo(2));
+
+            // Modules only Install when the chassis is Active (brain/power path in a real round).
+            borgSys.SetActive((borg, chassis), true);
+
+            EntityUid? toolModule = null;
+            EntityUid? inflatableModule = null;
+            foreach (var moduleUid in chassis.ModuleContainer.ContainedEntities)
+            {
+                var id = entMan.GetComponent<MetaDataComponent>(moduleUid).EntityPrototype?.ID;
+                if (id == "BorgModuleTool")
+                    toolModule = moduleUid;
+                else if (id == "BorgModuleInflatable")
+                    inflatableModule = moduleUid;
+            }
+
+            Assert.That(toolModule, Is.Not.Null, "Generic chassis should install BorgModuleTool");
+            Assert.That(inflatableModule, Is.Not.Null, "Generic chassis should install BorgModuleInflatable");
+            Assert.That(entMan.GetComponent<BorgModuleComponent>(toolModule!.Value).Installed, Is.True);
+            Assert.That(entMan.GetComponent<BorgModuleComponent>(inflatableModule!.Value).Installed, Is.True);
+
+            // Activate installs modules; first selectable auto-selects. Swap between selectable modules.
+            borgSys.SelectModule(borg, toolModule.Value);
+            Assert.That(entMan.GetComponent<BorgChassisComponent>(borg).SelectedModule, Is.EqualTo(toolModule));
+
+            Assert.That(entMan.TryGetComponent<HandsComponent>(borg, out var hands), Is.True);
+            Assert.That(hands!.Count, Is.GreaterThan(0),
+                "Selecting a module should provide hand slots with tools");
+
+            borgSys.SelectModule(borg, inflatableModule.Value);
+            Assert.That(entMan.GetComponent<BorgChassisComponent>(borg).SelectedModule, Is.EqualTo(inflatableModule));
+        });
+
+        await server.WaitPost(() => entMan.DeleteEntity(borg));
     }
 }

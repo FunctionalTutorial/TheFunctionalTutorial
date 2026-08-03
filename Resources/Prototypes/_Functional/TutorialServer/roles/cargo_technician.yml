@@ -23,9 +23,6 @@
     - id: open-console
       text: tutorial-job-cargo-technician-sg-open-console
       complete: PilotShuttle
-    - id: controls
-      text: tutorial-job-cargo-technician-sg-controls
-      complete: Acknowledge
   - id: undock-bay
     title: tutorial-job-cargo-technician-goal-undock-bay
     subGoals:
@@ -39,6 +36,10 @@
   - id: fly-ats
     title: tutorial-job-cargo-technician-goal-fly-ats
     subGoals:
+    # Teach flight keys only after undock — dock welds pin the shuttle until then.
+    - id: controls
+      text: tutorial-job-cargo-technician-sg-controls
+      complete: Acknowledge
     - id: throttle
       text: tutorial-job-cargo-technician-sg-throttle
       complete: ShuttleThrottle

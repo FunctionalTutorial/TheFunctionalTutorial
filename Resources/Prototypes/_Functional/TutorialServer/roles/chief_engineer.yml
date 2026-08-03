@@ -11,9 +11,6 @@
   - id: LockerChiefEngineerFilled
     room: 0
     offset: -2, 1
-  - id: ClothingHeadsetCommand
-    room: 0
-    offset: 0.5, 0
   - id: BoxFolderClipboard
     room: 0
     offset: 0.8, 0
@@ -76,10 +73,6 @@
   - id: command
     title: tutorial-job-chief-engineer-goal-command
     subGoals:
-    - id: hold-headset
-      text: tutorial-job-chief-engineer-sg-headset
-      complete: HoldItem
-      entity: ClothingHeadsetCommand
     - id: hold-clipboard
       text: tutorial-job-chief-engineer-sg-clipboard
       complete: HoldItem
@@ -90,8 +83,9 @@
       entity: ClothingShoesBootsMagAdv
     - id: use-magboots
       text: tutorial-job-chief-engineer-sg-use-magboots
-      complete: UseInHand
-      entity: ClothingShoesBootsMagAdv
+      # Z/Use quick-equips clothing (boot swap); toggle is the item action.
+      complete: ActionUsed
+      entity: ActionToggleMagboots
   - id: oversee
     enterRoom: 1
     title: tutorial-job-chief-engineer-goal-oversee

@@ -135,6 +135,13 @@ public sealed partial class TutorialRolePrototype : IPrototype
     public List<TutorialPracticeSpawn> PracticeSpawns = new();
 
     /// <summary>
+    /// Optional offset from the chamber / zone-origin spawn point for the player body.
+    /// Use when the crop center is outside the practice room (e.g. Command crop centers on Cap).
+    /// </summary>
+    [DataField]
+    public Vector2 SpawnOffset;
+
+    /// <summary>
     /// Display name override locale id. Falls back to job/antag name.
     /// </summary>
     [DataField]
@@ -629,4 +636,16 @@ public enum TutorialStepComplete : byte
     /// <c>HumanoidProfile</c> target — grants Ichor healing for space dragons).
     /// </summary>
     DragonDevoured,
+
+    /// <summary>
+    /// Player selected a cyborg chassis type. When <see cref="TutorialSubGoalData.Marker"/>
+    /// is set, it must match the selected <c>borgType</c> prototype id (e.g. <c>generic</c>).
+    /// </summary>
+    BorgTypeSelected,
+
+    /// <summary>
+    /// Player's active borg module matches <see cref="TutorialSubGoalData.Entity"/>
+    /// (must differ from the chassis's initially auto-selected module — use after a tip).
+    /// </summary>
+    BorgModuleSelected,
 }

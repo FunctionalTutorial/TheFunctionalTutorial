@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Content.Server._Functional.TutorialServer.UI;
 using Content.Server.Chat.Managers;
 using Content.Server.EUI;
@@ -32,6 +34,8 @@ using Content.Shared.IdentityManagement;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Interaction.Components;
+using Content.Shared.Inventory;
+using Content.Shared.Item;
 using Content.Shared.Mind;
 using Content.Shared.Mind.Components;
 using Content.Shared.Mobs;
@@ -45,6 +49,7 @@ using Content.Shared.Verbs;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -52,6 +57,7 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using LookupFlags = Robust.Shared.GameObjects.LookupFlags;
 
 namespace Content.Server._Functional.TutorialServer;
 
@@ -82,9 +88,13 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly TutorialResearchBootstrapSystem _researchBootstrap = default!;
     [Dependency] private readonly TutorialCargoBootstrapSystem _cargoBootstrap = default!;
     [Dependency] private readonly TutorialCommandBootstrapSystem _commandBootstrap = default!;
+    [Dependency] private readonly TutorialChemBootstrapSystem _chemBootstrap = default!;
     [Dependency] private readonly TutorialAntagBootstrapSystem _antagBootstrap = default!;
     [Dependency] private readonly SharedActionsSystem _actions = default!;
+    [Dependency] private readonly SharedContainerSystem _containers = default!;
     [Dependency] private readonly SharedHandsSystem _hands = default!;
+    [Dependency] private readonly InventorySystem _inventory = default!;
+    [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly PopupSystem _popup = default!;
     [Dependency] private readonly StatusEffectsSystem _statusEffects = default!;
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
@@ -94,6 +104,26 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     private static readonly EntProtoId TutorialChooseRoleActionProto = "ActionTutorialChooseRole";
     private static readonly EntProtoId StatusEffectSsdSleepingProto = "StatusEffectSSDSleeping";
     private static readonly TimeSpan ProgressPopupCooldown = TimeSpan.FromSeconds(0.75);
+
+    /// <summary>
+    /// Sub-tile offsets so piled practice items stay visible (right-click still works; this
+    /// avoids exact Z-fighting stacks when multiple spawns share a tile).
+    /// </summary>
+    private static readonly Vector2[] PracticePileScatter =
+    [
+        Vector2.Zero,
+        new Vector2(0.18f, 0.06f),
+        new Vector2(-0.16f, 0.1f),
+        new Vector2(0.06f, -0.18f),
+        new Vector2(-0.14f, -0.12f),
+        new Vector2(0.2f, -0.08f),
+        new Vector2(-0.2f, 0.04f),
+        new Vector2(0.1f, 0.2f),
+        new Vector2(-0.08f, 0.18f),
+        new Vector2(0.16f, -0.16f),
+    ];
+
+    private const float PracticePileLookupRange = 0.35f;
 
     private readonly Dictionary<NetUserId, TutorialRolePickerEui> _openPickers = new();
     private readonly HashSet<EntityUid> _advancing = new();
@@ -587,6 +617,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             return false;
         }
 
+        // Role spawnOffset moves the body when the crop zone origin is outside the practice room.
+        if (roleProto.SpawnOffset != System.Numerics.Vector2.Zero)
+            spawnCoords = spawnCoords.Offset(roleProto.SpawnOffset);
+
         var mob = roleProto.SpawnEntity != null
             ? Spawn(roleProto.SpawnEntity.Value, spawnCoords)
             : roleProto.StartingGear != null
@@ -597,8 +631,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _mind.SetUserId(mindId, player.UserId);
         _mind.TransferTo(mindId, mob);
 
-        // Antag tutorials use StartingGear / SpawnEntity — do not attach Passenger job clothes/roles.
-        if (roleProto.SpawnEntity == null && roleProto.StartingGear == null && roleProto.Job != null)
+        // Antag tutorials use StartingGear — do not attach Passenger job clothes/roles.
+        // SpawnEntity + Job is allowed (e.g. TutorialBorg uses a constrained chassis body).
+        if (roleProto.StartingGear == null && roleProto.Job != null)
             _jobs.MindAddJob(mindId, roleProto.Job.Value);
 
         // Mind roles first so RoleRequirement placeholder objectives (e.g. dragon rifts) can attach.
@@ -614,6 +649,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         if (roleProto.Antag is { } antagId && antagId.Id == "Thief")
             _antagBootstrap.PrepareThiefPracticeMobs(gridUid);
+
+        // Starting-gear belt/pocket tools are not practiceSpawns — tag them too so
+        // UseInHand (and any future item sensors) accept belt or floor sources.
+        EnsureInventorySensorTargets(mob);
 
         var session = rule.Sessions.GetValueOrDefault(player.UserId) ?? new TutorialSessionData();
         session.State = TutorialSessionState.InTutorial;
@@ -765,14 +804,65 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         EntityUid gridUid,
         EntityCoordinates spawnCoords)
     {
-        foreach (var spawn in roleProto.PracticeSpawns)
+        // Precompute authored coords and cluster nearby loose items so piles get sub-tile offsets.
+        var authored = new EntityCoordinates[roleProto.PracticeSpawns.Count];
+        var scatterable = new bool[roleProto.PracticeSpawns.Count];
+        for (var i = 0; i < roleProto.PracticeSpawns.Count; i++)
         {
-            var coords = HasComp<TutorialRoomLayoutComponent>(gridUid)
+            var spawn = roleProto.PracticeSpawns[i];
+            authored[i] = HasComp<TutorialRoomLayoutComponent>(gridUid)
                 ? _tutorialRooms.GetChamberCoords(gridUid, spawn.Room, spawn.Offset)
                 : spawnCoords.Offset(spawn.Offset);
+            scatterable[i] = IsScatterablePracticeItem(spawn);
+        }
+
+        var scatterIdx = new int[roleProto.PracticeSpawns.Count];
+        Array.Fill(scatterIdx, -1);
+        const float pileRangeSq = PracticePileLookupRange * PracticePileLookupRange;
+        for (var i = 0; i < roleProto.PracticeSpawns.Count; i++)
+        {
+            if (!scatterable[i])
+                continue;
+
+            var piled = false;
+            var earlier = 0;
+            for (var j = 0; j < roleProto.PracticeSpawns.Count; j++)
+            {
+                if (i == j || !scatterable[j])
+                    continue;
+                if (roleProto.PracticeSpawns[i].Room != roleProto.PracticeSpawns[j].Room)
+                    continue;
+                if ((authored[i].Position - authored[j].Position).LengthSquared() > pileRangeSq)
+                    continue;
+                piled = true;
+                if (j < i)
+                    earlier++;
+            }
+
+            if (!piled)
+                continue;
+
+            var idx = earlier + CountNearbyLooseItems(authored[i]);
+            scatterIdx[i] = idx;
+        }
+
+        for (var i = 0; i < roleProto.PracticeSpawns.Count; i++)
+        {
+            var spawn = roleProto.PracticeSpawns[i];
+            var coords = authored[i];
+
+            if (scatterIdx[i] >= 0)
+            {
+                var idx = scatterIdx[i];
+                var scatter = PracticePileScatter[idx % PracticePileScatter.Length];
+                if (scatter == Vector2.Zero && idx > 0)
+                    scatter = PracticePileScatter[1];
+                coords = coords.Offset(scatter);
+            }
 
             var ent = Spawn(spawn.Id, coords);
-            EnsureComp<TutorialSensorTargetComponent>(ent);
+            // Include nested storage / entity-storage fills (closet tools, etc.).
+            EnsureSensorTargetsRecursive(ent);
 
             if (!string.IsNullOrEmpty(spawn.Marker))
             {
@@ -799,6 +889,66 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _researchBootstrap.TryConfigureOnGrid(gridUid);
         _cargoBootstrap.TryConfigureOnGrid(gridUid, roleProto);
         _commandBootstrap.TryConfigureOnGrid(gridUid, roleProto);
+        _chemBootstrap.TryConfigureOnGrid(gridUid, roleProto);
+    }
+
+    private bool IsScatterablePracticeItem(TutorialPracticeSpawn spawn)
+    {
+        if (!string.IsNullOrEmpty(spawn.Marker))
+            return false;
+
+        if (!_protos.TryIndex(spawn.Id, out EntityPrototype? proto))
+            return false;
+
+        // Prefer the component registry name so inherited Item on BaseItem / BaseBeaker is found.
+        return proto.Components.ContainsKey("Item");
+    }
+
+    private int CountNearbyLooseItems(EntityCoordinates coords)
+    {
+        var count = 0;
+        foreach (var other in _lookup.GetEntitiesInRange(
+                     coords,
+                     PracticePileLookupRange,
+                     LookupFlags.Dynamic | LookupFlags.Sundries | LookupFlags.Uncontained | LookupFlags.Approximate))
+        {
+            if (!HasComp<ItemComponent>(other))
+                continue;
+            if (Transform(other).Anchored)
+                continue;
+            count++;
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Marks starting-gear inventory (and nested belt/pocket storage) as tutorial sensor targets
+    /// so players can use either job-belt tools or floor practice spawns interchangeably.
+    /// </summary>
+    private void EnsureInventorySensorTargets(EntityUid mob)
+    {
+        var enumerator = _inventory.GetSlotEnumerator(mob);
+        while (enumerator.NextItem(out var item))
+            EnsureSensorTargetsRecursive(item);
+    }
+
+    /// <summary>
+    /// Adds <see cref="TutorialSensorTargetComponent"/> to an entity and every nested container
+    /// entity (utility-belt fills, tool closets, etc.).
+    /// </summary>
+    private void EnsureSensorTargetsRecursive(EntityUid uid)
+    {
+        EnsureComp<TutorialSensorTargetComponent>(uid);
+
+        if (!TryComp<ContainerManagerComponent>(uid, out var manager))
+            return;
+
+        foreach (var container in _containers.GetAllContainers(uid, manager))
+        {
+            foreach (var contained in container.ContainedEntities)
+                EnsureSensorTargetsRecursive(contained);
+        }
     }
 
     /// <summary>
@@ -849,7 +999,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     /// <summary>
     /// Chamber this goal unlocks/walks into, if any.
     /// Prefers explicit <see cref="TutorialGoalData.EnterRoom"/>; falls back to legacy
-    /// room-index == goal-index when practice spawns still use that convention.
+    /// room-index == goal-index only when no goal uses explicit chambers.
     /// </summary>
     private static int? ResolveGoalEnterRoom(TutorialRolePrototype role, int goalIndex)
     {
@@ -859,6 +1009,12 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         var goal = role.Goals[goalIndex];
         if (goal.EnterRoom is { } explicitRoom)
             return explicitRoom;
+
+        // Mixed curricula (e.g. Technical Assistant: hack stays in room 0, spacing uses
+        // enterRoom 1) must not infer room==goalIndex for goals without EnterRoom — that
+        // incorrectly inserts a chamber-pad step and blocks sensors like hold-screwdriver.
+        if (role.Goals.Any(g => g.EnterRoom != null))
+            return null;
 
         if (goalIndex > 0 && role.PracticeSpawns.Any(s => s.Room == goalIndex))
             return goalIndex;

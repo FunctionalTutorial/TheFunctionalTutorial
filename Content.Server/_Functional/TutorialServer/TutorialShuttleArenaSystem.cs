@@ -158,8 +158,8 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
 
     private void PrepareGrid(EntityUid gridUid)
     {
-        // Power/atmos simplification is applied from TutorialRolePrototype.SimplifiedEnvironment
-        // after load (cargo keeps live atmos for undock/space practice).
+        // Force-power is applied after load via TutorialMapSystem (shuttle arenas always;
+        // SimplifiedEnvironment also freezes atmos — cargo leaves that off for live space practice).
 
         var gravity = EnsureComp<GravityComponent>(gridUid);
         _gravity.EnableGravity(gridUid, gravity);

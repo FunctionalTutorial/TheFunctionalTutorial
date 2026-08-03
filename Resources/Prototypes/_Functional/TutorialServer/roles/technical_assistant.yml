@@ -59,20 +59,23 @@
       text: tutorial-job-technical-assistant-sg-intro
       complete: Acknowledge
   - id: hack
+    # Stay in spawn chamber (room 0). Explicit so legacy goalIndex==room does not steal this stage.
+    enterRoom: 0
     title: tutorial-job-technical-assistant-goal-hack
     subGoals:
     - id: hold-screwdriver
       text: tutorial-job-technical-assistant-sg-screwdriver
-      complete: HoldItem
-      entity: Screwdriver
+      # HoldTag so belt / floor / closet screwdrivers all count (same tag).
+      complete: HoldTag
+      tag: Screwdriver
     - id: open-panel
       text: tutorial-job-technical-assistant-sg-open-panel
       complete: WiresPanelOpen
       tag: TutorialHackDoor
     - id: hold-multitool
       text: tutorial-job-technical-assistant-sg-multitool
-      complete: HoldItem
-      entity: Multitool
+      complete: HoldTag
+      tag: Multitool
     - id: wires-tip
       text: tutorial-job-technical-assistant-sg-wires-tip
       complete: Acknowledge

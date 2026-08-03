@@ -1,6 +1,7 @@
 - type: tutorialRole
   id: TutorialBorg
   job: Borg
+  spawnEntity: TutorialPlayerBorg
   stub: false
   simplifiedEnvironment: true
   category: Science
@@ -8,12 +9,6 @@
   roomTemplate: TutorialSectionScience
   guidebook: Cyborgs
   practiceSpawns:
-  - id: BorgModuleTool
-    room: 0
-    offset: 0.5, 0
-  - id: BorgModuleCable
-    room: 0
-    offset: -0.5, 0
   - id: Screwdriver
     room: 0
     offset: 0.5, 0
@@ -37,19 +32,35 @@
     - id: laws-tip
       text: tutorial-job-borg-sg-laws
       complete: Acknowledge
+  - id: chassis
+    title: tutorial-job-borg-goal-chassis
+    subGoals:
+    - id: chassis-tip
+      text: tutorial-job-borg-sg-chassis-tip
+      complete: Acknowledge
+    - id: select-chassis
+      text: tutorial-job-borg-sg-select-chassis
+      hint: tutorial-job-borg-sg-select-chassis-hint
+      complete: BorgTypeSelected
+      marker: generic
   - id: modules
     title: tutorial-job-borg-goal-modules
     subGoals:
-    - id: hold-tool-module
-      text: tutorial-job-borg-sg-hold-tool-module
-      complete: HoldItem
+    - id: modules-tip
+      text: tutorial-job-borg-sg-modules-tip
+      complete: Acknowledge
+    - id: select-tool-module
+      text: tutorial-job-borg-sg-select-tool-module
+      hint: tutorial-job-borg-sg-select-module-hint
+      complete: BorgModuleSelected
       entity: BorgModuleTool
-    - id: hold-cable-module
-      text: tutorial-job-borg-sg-hold-cable-module
-      complete: HoldItem
-      entity: BorgModuleCable
-    - id: module-tip
-      text: tutorial-job-borg-sg-module-tip
+    - id: select-inflatable-module
+      text: tutorial-job-borg-sg-select-inflatable-module
+      hint: tutorial-job-borg-sg-select-module-hint
+      complete: BorgModuleSelected
+      entity: BorgModuleInflatable
+    - id: install-tip
+      text: tutorial-job-borg-sg-install-tip
       complete: Acknowledge
   - id: subversion
     title: tutorial-job-borg-goal-subversion

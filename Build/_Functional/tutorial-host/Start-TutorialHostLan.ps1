@@ -89,7 +89,8 @@ $argList = @(
     '--cvar', 'net.upnp=false',
     '--cvar', "net.port=$Port",
     '--cvar', "net.bindto=$BindHost",
-    '--cvar', "status.bind=${BindHost}:${Port}",
+    # Wildcard status Host so LAN + public-IP Direct Connect both work
+    '--cvar', "status.bind=*:${Port}",
     '--cvar', 'status.connectaddress=',
     '--cvar', 'config.preset_development=false',
     '--cvar', 'game.lobbyenabled=true',

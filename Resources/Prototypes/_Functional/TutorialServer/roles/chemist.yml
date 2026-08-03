@@ -1,3 +1,5 @@
+# Medical chemistry — Saltern chem crop already has dispenser / ChemMaster / grinder.
+# Practice spawns are glassware + apple only; machines are tagged by TutorialChemBootstrapSystem.
 - type: tutorialRole
   id: TutorialChemist
   job: Chemist
@@ -8,33 +10,27 @@
   roomTemplate: TutorialSectionChem
   guidebook: Medical
   practiceSpawns:
+  # Open floor band around zone origin (5.5, 5.5): y≈5 row and south-west clear tiles.
+  # Avoid north machine row (y+1), spawn tile (0,0), and floor drain (0,-1.5).
+  # Same-tile glassware is auto-scattered slightly so piles stay visible.
   - id: Beaker
     room: 0
     offset: 0.5, 0
   - id: Beaker
     room: 0
-    offset: 0.8, 0
+    offset: 0.55, 0
   - id: LargeBeaker
     room: 0
-    offset: -0.5, 0
+    offset: -1.5, 0
   - id: PillCanister
     room: 0
-    offset: -0.8, 0
-  - id: TutorialChemDispenser
-    room: 0
-    offset: 1.5, 1
-  - id: TutorialChemMaster
-    room: 0
-    offset: -1.5, 1
-  - id: TutorialKitchenReagentGrinder
-    room: 0
-    offset: 1, 1
+    offset: -1.0, -0.5
   - id: FoodApple
     room: 0
-    offset: 0, -0.5
+    offset: 0.5, -0.05
   - id: TutorialStepMarker
     room: 0
-    offset: 0, -1.5
+    offset: -1.5, -1.5
     marker: chem-pass
   goals:
   - id: welcome

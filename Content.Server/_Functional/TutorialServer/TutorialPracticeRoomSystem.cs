@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Gravity;
@@ -309,9 +310,68 @@ public sealed partial class TutorialPracticeRoomSystem : EntitySystem
 
     private void PlaceWallLight(EntProtoId proto, EntityUid gridUid, Vector2i tile)
     {
-        var uid = SpawnAnchored(proto, gridUid, tile);
         // Face south into the chamber (wallmounts hang on the north wall).
-        _xform.SetLocalRotation(uid, Angle.FromDegrees(180));
+        PlaceWallLight(proto, gridUid, tile, Angle.FromDegrees(180));
+    }
+
+    private void PlaceWallLight(EntProtoId proto, EntityUid gridUid, Vector2i tile, Angle rotation)
+    {
+        var uid = SpawnAnchored(proto, gridUid, tile);
+        _xform.SetLocalRotation(uid, rotation);
+        _power.SetNeedsPower(uid, false);
+    }
+
+    /// <summary>
+    /// Adds always-powered wall lights around each stamped chamber AABB so section crops
+    /// (which keep station fixtures that may stay dark) stay playable.
+    /// </summary>
+    public void PlaceChamberPerimeterLights(
+        EntityUid gridUid,
+        IReadOnlyList<Vector2i> chamberOrigins,
+        int chamberW,
+        int chamberH,
+        EntProtoId? light = null,
+        int spacing = 4)
+    {
+        var proto = light ?? new EntProtoId("AlwaysPoweredWallLight");
+        spacing = Math.Max(spacing, 3);
+
+        // PointLight offset is local (0, -0.5); rotate so the glow faces into the room.
+        var faceSouth = Angle.FromDegrees(180); // north wall
+        var faceNorth = Angle.FromDegrees(0); // south wall
+        var faceEast = Angle.FromDegrees(270); // west wall
+        var faceWest = Angle.FromDegrees(90); // east wall
+
+        foreach (var origin in chamberOrigins)
+        {
+            var minX = origin.X + 1;
+            var maxX = origin.X + chamberW - 2;
+            var minY = origin.Y + 1;
+            var maxY = origin.Y + chamberH - 2;
+
+            if (maxX < minX || maxY < minY)
+                continue;
+
+            // North + south walls
+            for (var x = minX; x <= maxX; x += spacing)
+            {
+                PlaceWallLight(proto, gridUid, new Vector2i(x, maxY), faceSouth);
+                PlaceWallLight(proto, gridUid, new Vector2i(x, minY), faceNorth);
+            }
+
+            if ((maxX - minX) % spacing != 0)
+            {
+                PlaceWallLight(proto, gridUid, new Vector2i(maxX, maxY), faceSouth);
+                PlaceWallLight(proto, gridUid, new Vector2i(maxX, minY), faceNorth);
+            }
+
+            // West + east walls (skip corners already covered)
+            for (var y = minY + spacing; y <= maxY - spacing; y += spacing)
+            {
+                PlaceWallLight(proto, gridUid, new Vector2i(minX, y), faceEast);
+                PlaceWallLight(proto, gridUid, new Vector2i(maxX, y), faceWest);
+            }
+        }
     }
 
     private void PlaceFurniture(EntityUid gridUid, TutorialRoomPrototype room, TutorialRoomLayoutComponent layout)

@@ -11,9 +11,6 @@
   - id: ClosetToolFilled
     room: 0
     offset: -2, 1
-  - id: ClothingEyesGlassesMeson
-    room: 0
-    offset: 0.5, 0
   - id: Multitool
     room: 0
     offset: 0.8, 0
@@ -77,10 +74,6 @@
   - id: grid
     title: tutorial-job-station-engineer-goal-grid
     subGoals:
-    - id: hold-mesons
-      text: tutorial-job-station-engineer-sg-mesons
-      complete: HoldItem
-      entity: ClothingEyesGlassesMeson
     - id: hold-mv
       text: tutorial-job-station-engineer-sg-mv
       complete: HoldItem
