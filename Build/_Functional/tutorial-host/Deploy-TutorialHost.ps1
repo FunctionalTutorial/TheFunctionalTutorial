@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Build Content.Server, package it with Resources, upload to the tutorial host FileShare.
+  Build Content.Server (+ Content.Client when present), package with Resources, upload to FileShare.
 
 .DESCRIPTION
   Local-only deploy helper for DESKTOP-7SCFTK4 (192.168.1.22).
@@ -52,7 +52,10 @@ if (-not $Token) {
 }
 
 $serverProj = Join-Path $RepoRoot "Content.Server\Content.Server.csproj"
+$clientProj = Join-Path $RepoRoot "Content.Client\Content.Client.csproj"
 $serverDll = Join-Path $RepoRoot "bin\Content.Server\Content.Server.dll"
+$clientDll = Join-Path $RepoRoot "bin\Content.Client\Content.Client.dll"
+$clientBinDir = Join-Path $RepoRoot "bin\Content.Client"
 $resourcesDir = Join-Path $RepoRoot "Resources"
 $workRoot = Join-Path $env:TEMP ("wizden-tutorial-host-" + [guid]::NewGuid().ToString("n"))
 $stageRoot = Join-Path $workRoot "stage"
@@ -64,7 +67,11 @@ try {
     if (-not $SkipBuild -and -not $ResourcesOnly) {
         Write-Step "Building Content.Server ($Configuration)"
         & dotnet build $serverProj -c $Configuration --nologo
-        if ($LASTEXITCODE -ne 0) { throw "dotnet build failed (exit $LASTEXITCODE)" }
+        if ($LASTEXITCODE -ne 0) { throw "dotnet build Content.Server failed (exit $LASTEXITCODE)" }
+
+        Write-Step "Building Content.Client ($Configuration)"
+        & dotnet build $clientProj -c $Configuration --nologo
+        if ($LASTEXITCODE -ne 0) { throw "dotnet build Content.Client failed (exit $LASTEXITCODE)" }
     }
 
     if (-not (Test-Path -LiteralPath $serverDll) -and -not $ResourcesOnly) {
@@ -79,7 +86,19 @@ try {
         $destBin = Join-Path $stageRoot "bin\Content.Server"
         New-Item -ItemType Directory -Path $destBin -Force | Out-Null
         & robocopy.exe (Join-Path $RepoRoot "bin\Content.Server") $destBin /E /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
-        if ($LASTEXITCODE -ge 8) { throw "robocopy bin failed (exit $LASTEXITCODE)" }
+        if ($LASTEXITCODE -ge 8) { throw "robocopy bin/Content.Server failed (exit $LASTEXITCODE)" }
+
+        # Magic ACZ / launcher fallback: live/bin/Content.Client next to Content.Server.
+        if (Test-Path -LiteralPath $clientDll) {
+            Write-Step "Staging bin/Content.Client"
+            $destClient = Join-Path $stageRoot "bin\Content.Client"
+            New-Item -ItemType Directory -Path $destClient -Force | Out-Null
+            & robocopy.exe $clientBinDir $destClient /E /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
+            if ($LASTEXITCODE -ge 8) { throw "robocopy bin/Content.Client failed (exit $LASTEXITCODE)" }
+        }
+        else {
+            Write-Warning "Missing $clientDll - package will not include bin/Content.Client"
+        }
     }
 
     if (-not $BinOnly) {
@@ -108,6 +127,8 @@ try {
         IncludesBin    = (-not $ResourcesOnly)
         IncludesResources = (-not $BinOnly)
         ServerDllExists = (Test-Path -LiteralPath (Join-Path $stageRoot "bin\Content.Server\Content.Server.dll"))
+        ClientDllExists = (Test-Path -LiteralPath (Join-Path $stageRoot "bin\Content.Client\Content.Client.dll"))
+        ClientZipExists = (Test-Path -LiteralPath (Join-Path $stageRoot "bin\Content.Server\Content.Client.zip"))
     }
     ($manifest | ConvertTo-Json) | Set-Content -LiteralPath (Join-Path $stageRoot "deploy-manifest.json") -Encoding UTF8
 
