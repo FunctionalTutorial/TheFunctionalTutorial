@@ -14,6 +14,7 @@
 
 - type: tutorialRole
   id: TutorialAntagWizard
+  mentorName: Urist McFwoosh
   job: Passenger
   antag: Wizard
   stub: false
@@ -25,7 +26,7 @@
   map: /Maps/Nonstations/wizardsden.yml
   guidebook: Wizard
   practiceSpawns:
-  # Magivend is at (-2.5, 12.5); spawn ~ (0.5, 0.5) â†’ offset â‰ˆ (-3, 12). Clear floor beside Magivend.
+  # Magivend is at (-2.5, 12.5); spawn ~ (0.5, 0.5) -> offset ~= (-3, 12). Clear floor beside Magivend.
   - id: ClothingOuterHardsuitWizard
     offset: -1.5, 12.5
   - id: ClothingHeadHelmetHardsuitWizard

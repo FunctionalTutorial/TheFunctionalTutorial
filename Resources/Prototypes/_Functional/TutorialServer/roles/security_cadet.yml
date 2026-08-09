@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialSecurityCadet
+  mentorName: Urist McRookie
   job: SecurityCadet
   stub: false
   simplifiedEnvironment: true

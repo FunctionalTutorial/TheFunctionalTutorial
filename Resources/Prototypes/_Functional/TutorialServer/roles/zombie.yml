@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialAntagZombie
+  mentorName: Urist McBrains
   job: Passenger
   antag: InitialInfected
   stub: false

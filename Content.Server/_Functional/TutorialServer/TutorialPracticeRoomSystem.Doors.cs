@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using Content.Server.Power.Components;
 using Content.Shared._Functional.TutorialServer;
@@ -6,6 +7,7 @@ using Content.Shared.Gravity;
 using Content.Shared.Power.Components;
 using Content.Shared.Power.EntitySystems;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._Functional.TutorialServer;
@@ -120,6 +122,58 @@ public sealed partial class TutorialPracticeRoomSystem
         PowerDoorWithApc(gridUid, tile);
 
         return door;
+    }
+
+    /// <summary>
+    /// Always-on APC + LV cable so a practice door stays powered until wires are pulsed/cut.
+    /// </summary>
+    public void PowerDoorWithApcPublic(EntityUid gridUid, Vector2i doorTile)
+        => PowerDoorWithApc(gridUid, doorTile);
+
+    /// <summary>
+    /// Clears leftover vault/crop doors on the tile, recenters the hack door, and powers it.
+    /// </summary>
+    public void PrepareHackPracticeDoor(EntityUid gridUid, EntityUid door, Vector2 localPos)
+    {
+        var tile = new Vector2i(
+            (int) MathF.Floor(localPos.X),
+            (int) MathF.Floor(localPos.Y));
+
+        var toDelete = new List<EntityUid>();
+        var query = EntityQueryEnumerator<DoorComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out _, out var xform))
+        {
+            if (xform.GridUid != gridUid || uid == door)
+                continue;
+
+            var otherTile = new Vector2i(
+                (int) MathF.Floor(xform.LocalPosition.X),
+                (int) MathF.Floor(xform.LocalPosition.Y));
+            if (otherTile != tile)
+                continue;
+
+            toDelete.Add(uid);
+        }
+
+        foreach (var uid in toDelete)
+            Del(uid);
+
+        var centered = new EntityCoordinates(gridUid, tile.X + 0.5f, tile.Y + 0.5f);
+        _xform.SetCoordinates(door, centered);
+        if (TryComp<TransformComponent>(door, out var doorXform) &&
+            !doorXform.Anchored &&
+            TryComp<MapGridComponent>(gridUid, out var grid))
+        {
+            _xform.AnchorEntity((door, doorXform), (gridUid, grid));
+        }
+
+        if (TryComp<DoorComponent>(door, out var doorComp) && doorComp.State != DoorState.Closed)
+            _doors.TryClose(door, doorComp);
+
+        if (TryComp<DoorBoltComponent>(door, out var bolt) && bolt.BoltsDown)
+            _doors.SetBoltsDown((door, bolt), false);
+
+        PowerDoorWithApc(gridUid, tile);
     }
 
     private void PowerDoorWithApc(EntityUid gridUid, Vector2i doorTile)

@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialAntagNukeopsMedic
+  mentorName: Urist McCombat
   job: Passenger
   antag: NukeopsMedic
   stub: false

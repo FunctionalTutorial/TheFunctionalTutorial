@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialClown
+  mentorName: Urist McHonk
   job: Clown
   stub: false
   simplifiedEnvironment: true

@@ -1,6 +1,7 @@
 # Engineering progression step 2/4 � grid power, SMES, Singulo/Tesla, MV/HV.
 - type: tutorialRole
   id: TutorialStationEngineer
+  mentorName: Urist McShock
   job: StationEngineer
   stub: false
   category: Engineering

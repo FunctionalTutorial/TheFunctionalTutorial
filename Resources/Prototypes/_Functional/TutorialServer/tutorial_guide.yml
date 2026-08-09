@@ -1,8 +1,8 @@
 - type: entity
   parent: BaseItem
   id: TutorialGuide
-  name: Tutorial
-  description: Opens your current tutorial stage prompts. Use Back/Next to review completed steps.
+  name: Urist McPositronic
+  description: A chatty positronic coach for off-grid tutorials. Activate it to open your checklist. It speaks your current tip aloud.
   components:
   - type: Sprite
     sprite: Objects/Devices/tablets.rsi

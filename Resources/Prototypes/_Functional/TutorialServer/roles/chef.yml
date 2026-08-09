@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialChef
+  mentorName: Urist McBurnt
   job: Chef
   stub: false
   simplifiedEnvironment: true

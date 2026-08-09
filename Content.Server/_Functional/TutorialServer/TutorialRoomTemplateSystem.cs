@@ -95,14 +95,16 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
             }
 
             var ok = TryStampCopies(srcGrid, copyCount, gate, fillAtmos, stampDir,
-                out mapUid, out gridUid, out spawnCoords, practicePathTargets);
+                out mapUid, out gridUid, out spawnCoords, practicePathTargets,
+                template.LightFacingOffsetDegrees);
             QueueDel(srcMap);
             return ok;
         }
 
         if (template.FallbackRoom is { } fallback)
             return TryStampFromRoomPrototype(fallback, copyCount, template.GateDoor, template.FillAtmosphere,
-                out mapUid, out gridUid, out spawnCoords, template.StampDirection, practicePathTargets);
+                out mapUid, out gridUid, out spawnCoords, template.StampDirection, practicePathTargets,
+                template.LightFacingOffsetDegrees);
 
         Log.Error($"tutorialRoomTemplate {templateId} has no loadable map and no fallbackRoom");
         return false;
@@ -120,7 +122,8 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
         out EntityUid gridUid,
         out EntityCoordinates spawnCoords,
         TutorialRoomDoorSide? stampDirection = null,
-        IReadOnlyList<(int Room, Vector2 Offset)>? practicePathTargets = null)
+        IReadOnlyList<(int Room, Vector2 Offset)>? practicePathTargets = null,
+        float lightFacingOffsetDegrees = 0f)
     {
         mapUid = EntityUid.Invalid;
         gridUid = EntityUid.Invalid;
@@ -137,7 +140,7 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
         var stampDir = stampDirection ?? TutorialRoomDoorSide.East;
 
         var ok = TryStampCopies(srcGrid, copyCount, gate, fillAtmosphere, stampDir,
-            out mapUid, out gridUid, out spawnCoords, practicePathTargets);
+            out mapUid, out gridUid, out spawnCoords, practicePathTargets, lightFacingOffsetDegrees);
         QueueDel(srcMap);
         return ok;
     }
@@ -154,10 +157,11 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
         out EntityUid mapUid,
         out EntityUid gridUid,
         out EntityCoordinates spawnCoords,
-        IReadOnlyList<(int Room, Vector2 Offset)>? practicePathTargets = null)
+        IReadOnlyList<(int Room, Vector2 Offset)>? practicePathTargets = null,
+        float lightFacingOffsetDegrees = 0f)
     {
         return TryStampCopies(templateGrid, copyCount, gateDoor, fillAtmosphere, TutorialRoomDoorSide.East,
-            out mapUid, out gridUid, out spawnCoords, practicePathTargets);
+            out mapUid, out gridUid, out spawnCoords, practicePathTargets, lightFacingOffsetDegrees);
     }
 
     /// <summary>
@@ -173,7 +177,8 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
         out EntityUid mapUid,
         out EntityUid gridUid,
         out EntityCoordinates spawnCoords,
-        IReadOnlyList<(int Room, Vector2 Offset)>? practicePathTargets = null)
+        IReadOnlyList<(int Room, Vector2 Offset)>? practicePathTargets = null,
+        float lightFacingOffsetDegrees = 0f)
     {
         mapUid = EntityUid.Invalid;
         gridUid = EntityUid.Invalid;
@@ -254,7 +259,8 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
             gateLateral, layout, practicePathTargets);
 
         // Station crop fixtures are AP-powered and often stay dark; guarantee wall lights.
-        _rooms.PlaceChamberPerimeterLights(gridUid, chamberOrigins, width, height);
+        _rooms.PlaceChamberPerimeterLights(gridUid, chamberOrigins, width, height,
+            lightFacingOffsetDegrees: lightFacingOffsetDegrees);
 
         PlaceSpawnPoint(gridUid, layout.ChamberCenters[0]);
         _rooms.EnsureGridSupport(gridUid);

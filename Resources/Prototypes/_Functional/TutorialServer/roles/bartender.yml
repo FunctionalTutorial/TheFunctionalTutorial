@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialBartender
+  mentorName: Urist McDrunkard
   job: Bartender
   stub: false
   simplifiedEnvironment: true

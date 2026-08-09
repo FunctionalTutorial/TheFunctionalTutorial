@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialChaplain
+  mentorName: Urist McHoly
   job: Chaplain
   stub: false
   simplifiedEnvironment: true

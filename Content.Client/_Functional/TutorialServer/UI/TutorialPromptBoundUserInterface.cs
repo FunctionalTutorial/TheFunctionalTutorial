@@ -17,14 +17,13 @@ public sealed class TutorialPromptBoundUserInterface : BoundUserInterface
     {
         base.Open();
         _window = this.CreateWindow<TutorialPromptWindow>();
-        _window.OnBackPressed += () => SendMessage(new TutorialPromptBackBuiMsg());
         _window.OnNextPressed += () => SendMessage(new TutorialPromptNextBuiMsg());
         _window.OnHintPressed += () => SendMessage(new TutorialPromptHintBuiMsg());
-        UpdateState(State);
     }
 
-    protected override void UpdateState(BoundUserInterfaceState? state)
+    protected override void UpdateState(BoundUserInterfaceState state)
     {
+        base.UpdateState(state);
         if (_window == null || state is not TutorialPromptBuiState s)
             return;
 

@@ -2,6 +2,7 @@
 # Practice spawns are glassware + apple only; machines are tagged by TutorialChemBootstrapSystem.
 - type: tutorialRole
   id: TutorialChemist
+  mentorName: Urist McMeth
   job: Chemist
   stub: false
   simplifiedEnvironment: true

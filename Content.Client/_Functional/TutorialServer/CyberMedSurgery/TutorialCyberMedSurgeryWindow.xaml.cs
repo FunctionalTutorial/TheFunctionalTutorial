@@ -66,7 +66,7 @@ public sealed partial class TutorialCyberMedSurgeryWindow : DefaultWindow
                 ? $"{step.Name} ({step.ToolLabel}) ✓"
                 : step.Available
                     ? $"{step.Name} ({step.ToolLabel})"
-                    : $"{step.Name} ({step.ToolLabel}) — {Loc.GetString("tutorial-cybermed-step-locked")}";
+                    : $"{step.Name} ({step.ToolLabel}) - {Loc.GetString("tutorial-cybermed-step-locked")}";
 
             var button = new Button
             {

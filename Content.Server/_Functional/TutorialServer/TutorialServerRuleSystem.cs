@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using Content.Server._Functional.TutorialServer.UI;
@@ -9,6 +10,9 @@ using Content.Server.GameTicking.Rules;
 using Content.Server.GameTicking.Rules.Components;
 using Content.Server.Humanoid;
 using Content.Server.Mind;
+using Content.Server.NPC;
+using Content.Server.NPC.HTN;
+using Content.Server.NPC.Systems;
 using Content.Server.Popups;
 using Content.Server.Power.EntitySystems;
 using Content.Server.Roles.Jobs;
@@ -99,10 +103,17 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly StatusEffectsSystem _statusEffects = default!;
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly NPCSystem _npc = default!;
+    [Dependency] private readonly HTNSystem _htn = default!;
+    [Dependency] private readonly TutorialMentorFollowSystem _mentorFollow = default!;
 
     private static readonly EntProtoId TutorialGuideProto = "TutorialGuide";
+    private static readonly EntProtoId TutorialMentorProto = "TutorialMentor";
+    private static readonly EntProtoId TutorialPassengerMentorProto = "TutorialPassengerMentor";
     private static readonly EntProtoId TutorialChooseRoleActionProto = "ActionTutorialChooseRole";
     private static readonly EntProtoId StatusEffectSsdSleepingProto = "StatusEffectSSDSleeping";
+    private static readonly EntProtoId TutorialHackAirlockProto = "TutorialHackAirlock";
+    private static readonly ProtoId<TutorialRolePrototype> TutorialPassengerRole = "TutorialPassenger";
     private static readonly TimeSpan ProgressPopupCooldown = TimeSpan.FromSeconds(0.75);
 
     /// <summary>
@@ -133,6 +144,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     private bool _prevLooc;
     private bool _prevDeadChat;
     private bool _prevDisallowLateJoin;
+    private bool _prevRoleTimers;
+    private bool _prevRoleWhitelist;
 
     public override void Initialize()
     {
@@ -274,11 +287,15 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _prevLooc = _cfg.GetCVar(CCVars.LoocEnabled);
         _prevDeadChat = _cfg.GetCVar(CCVars.DeadChatEnabled);
         _prevDisallowLateJoin = _cfg.GetCVar(CCVars.GameDisallowLateJoins);
+        _prevRoleTimers = _cfg.GetCVar(CCVars.GameRoleTimers);
+        _prevRoleWhitelist = _cfg.GetCVar(CCVars.GameRoleWhitelist);
 
         _cfg.SetCVar(CCVars.OocEnabled, false);
         _cfg.SetCVar(CCVars.LoocEnabled, false);
         _cfg.SetCVar(CCVars.DeadChatEnabled, false);
         _cfg.SetCVar(CCVars.GameDisallowLateJoins, false);
+        _cfg.SetCVar(CCVars.GameRoleTimers, false);
+        _cfg.SetCVar(CCVars.GameRoleWhitelist, false);
         _cvarsApplied = true;
     }
 
@@ -291,6 +308,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _cfg.SetCVar(CCVars.LoocEnabled, _prevLooc);
         _cfg.SetCVar(CCVars.DeadChatEnabled, _prevDeadChat);
         _cfg.SetCVar(CCVars.GameDisallowLateJoins, _prevDisallowLateJoin);
+        _cfg.SetCVar(CCVars.GameRoleTimers, _prevRoleTimers);
+        _cfg.SetCVar(CCVars.GameRoleWhitelist, _prevRoleWhitelist);
         _cvarsApplied = false;
     }
 
@@ -335,6 +354,16 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             }
         }
 
+        // Late-join with a station job → matching crew tutorial (round start keeps the picker).
+        if (ev.LateJoin &&
+            !string.IsNullOrEmpty(ev.JobId) &&
+            TryResolveTutorialRoleForJob(ev.JobId, out var jobRole) &&
+            TryStartTutorial(ev.Player, ev.Profile, ruleUid, rule, tracker, jobRole))
+        {
+            ev.Handled = true;
+            return;
+        }
+
         session.State = TutorialSessionState.PendingSelect;
         session.SelectedRoleId = null;
         session.PickerQuit = false;
@@ -343,6 +372,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         session.GridUid = EntityUid.Invalid;
         session.BodyUid = EntityUid.Invalid;
         session.GuideUid = EntityUid.Invalid;
+        session.MentorUid = EntityUid.Invalid;
         session.StepIndex = 0;
         session.GoalIndex = 0;
         session.SubGoalIndex = 0;
@@ -358,6 +388,40 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         Log.Info($"TUTORIAL_E2E: opened_role_picker for {ev.Player.Name}");
         // Claim spawn so default late-join does not place players on the lobby station.
         ev.Handled = true;
+    }
+
+    /// <summary>
+    /// Maps a station job id to its crew tutorial package (<c>Tutorial{JobId}</c> preferred).
+    /// </summary>
+    public bool TryResolveTutorialRoleForJob(string jobId, [NotNullWhen(true)] out TutorialRolePrototype? role)
+    {
+        role = null;
+        if (string.IsNullOrEmpty(jobId))
+            return false;
+
+        var preferredId = $"Tutorial{jobId}";
+        if (ProtoMan.TryIndex<TutorialRolePrototype>(preferredId, out var preferred) &&
+            preferred.Antag == null &&
+            preferred.Job?.Id == jobId)
+        {
+            role = preferred;
+            return true;
+        }
+
+        TutorialRolePrototype? match = null;
+        foreach (var proto in ProtoMan.EnumeratePrototypes<TutorialRolePrototype>())
+        {
+            if (proto.Antag != null)
+                continue;
+            if (proto.Job?.Id != jobId)
+                continue;
+            if (match != null)
+                return false; // Ambiguous job → keep picker.
+            match = proto;
+        }
+
+        role = match;
+        return role != null;
     }
 
     public void TrySelectRole(ICommonSession player, string roleId, bool confirmedStub)
@@ -673,13 +737,41 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         EnsureComp<TutorialParticipantComponent>(mob);
         RefreshParticipantHud(mob, roleProto, session);
-        GiveTutorialGuide(mob, session, spawnCoords, player, roleProto);
+        GiveTutorialCoach(mob, session, spawnCoords, player, roleProto);
         EnsureTutorialChooseAction(mob);
         rule.Sessions[player.UserId] = session;
 
         _respawn.AddToTracker(player.UserId, (ruleUid, tracker));
         Log.Info($"TUTORIAL_E2E: private_map_loaded role={roleProto.ID} map={mapUid} body={mob} player={player.Name}");
         return true;
+    }
+
+    /// <summary>
+    /// Travel/off-grid arenas use a speaking handheld guide; single-grid roles get a soft-following mentor.
+    /// </summary>
+    public static bool UsesTravelingCoach(TutorialRolePrototype role) =>
+        role.ShuttleArena != null || role.SalvageArena != null;
+
+    private void GiveTutorialCoach(
+        EntityUid mob,
+        TutorialSessionData session,
+        EntityCoordinates spawnCoords,
+        ICommonSession player,
+        TutorialRolePrototype roleProto)
+    {
+        // Clear any leftover coach entities when switching roles.
+        if (session.GuideUid != EntityUid.Invalid && !Deleted(session.GuideUid))
+            QueueDel(session.GuideUid);
+        if (session.MentorUid != EntityUid.Invalid && !Deleted(session.MentorUid))
+            QueueDel(session.MentorUid);
+        session.GuideUid = EntityUid.Invalid;
+        session.MentorUid = EntityUid.Invalid;
+        session.GuideAutoOpened = false;
+
+        if (UsesTravelingCoach(roleProto))
+            GiveTutorialGuide(mob, session, spawnCoords, player, roleProto);
+        else
+            GiveTutorialMentor(mob, session, spawnCoords, player, roleProto);
     }
 
     private void GiveTutorialGuide(
@@ -689,9 +781,6 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         ICommonSession player,
         TutorialRolePrototype roleProto)
     {
-        if (session.GuideUid != EntityUid.Invalid && !Deleted(session.GuideUid))
-            QueueDel(session.GuideUid);
-
         var guide = Spawn(TutorialGuideProto, spawnCoords);
         EnsureComp<UnremoveableComponent>(guide);
         session.GuideUid = guide;
@@ -707,6 +796,38 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             _ui.OpenUi(guide, TutorialPromptUiKey.Key, mob);
             session.GuideAutoOpened = true;
         }
+    }
+
+    private void GiveTutorialMentor(
+        EntityUid mob,
+        TutorialSessionData session,
+        EntityCoordinates spawnCoords,
+        ICommonSession player,
+        TutorialRolePrototype roleProto)
+    {
+        var mentorProto = roleProto.ID == TutorialPassengerRole.Id
+            ? TutorialPassengerMentorProto
+            : TutorialMentorProto;
+
+        var mentor = Spawn(mentorProto, spawnCoords.Offset(roleProto.MentorSpawnOffset));
+        var mentorComp = EnsureComp<TutorialMentorComponent>(mentor);
+        mentorComp.PlayerUid = mob;
+        session.MentorUid = mentor;
+
+        var mentorName = string.IsNullOrWhiteSpace(roleProto.MentorName)
+            ? Loc.GetString("tutorial-server-mentor-default-name")
+            : roleProto.MentorName;
+        _meta.SetEntityName(mentor, mentorName);
+
+        if (TryComp<HTNComponent>(mentor, out var htn))
+        {
+            _npc.SetBlackboard(mentor, NPCBlackboard.FollowTarget,
+                new EntityCoordinates(mob, Vector2.Zero), htn);
+            _htn.Replan(htn);
+        }
+
+        _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-mentor-tip"));
+        _popup.PopupEntity(Loc.GetString("tutorial-server-mentor-highlight"), mentor, player, PopupType.Medium);
     }
 
     /// <summary>
@@ -863,6 +984,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             var ent = Spawn(spawn.Id, coords);
             // Include nested storage / entity-storage fills (closet tools, etc.).
             EnsureSensorTargetsRecursive(ent);
+
+            if (spawn.Id == TutorialHackAirlockProto)
+                _tutorialRooms.PrepareHackPracticeDoor(gridUid, ent, coords.Position);
 
             if (!string.IsNullOrEmpty(spawn.Marker))
             {
@@ -1282,10 +1406,17 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         Dirty(mob, part);
 
-        if (session.GuideUid != EntityUid.Invalid && !Deleted(session.GuideUid))
+        // Always notify: guide UI sync and/or closed-UI / mentor-role progress toasts.
+        var ev = new TutorialParticipantProgressChangedEvent(session.GuideUid, oldGoalIndex, oldProgress);
+        RaiseLocalEvent(mob, ref ev);
+
+        // Chamber transitions can leave the mentor behind a sealed gate — give them time to walk
+        // before TutorialMentorFollowSystem path-checks and (only if stuck) snaps.
+        if (session.MentorUid != EntityUid.Invalid &&
+            !TerminatingOrDeleted(session.MentorUid) &&
+            oldGoalIndex != session.GoalIndex)
         {
-            var ev = new TutorialParticipantProgressChangedEvent(session.GuideUid, oldGoalIndex, oldProgress);
-            RaiseLocalEvent(mob, ref ev);
+            _mentorFollow.RequestCatchUp(session.MentorUid, restart: true);
         }
     }
 
@@ -1430,13 +1561,34 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         var bodyDead = TryComp<MobStateComponent>(ent, out var mobState) &&
                        mobState.CurrentState == MobState.Dead;
 
-        if (!bodyDead && _players.TryGetSessionById(userId.Value, out var playerSession))
-            GameTicker.JoinAsObserver(playerSession);
+        // Choose a tutorial / JoinAsObserver / /ghost already TransferTo a ghost. Nesting another
+        // JoinAsObserver here spawned a spare observer and unloaded the private map mid-TransferTo,
+        // which corrupted client game-state and surfaced as "Failed to deserialize packet" on the
+        // next Passenger select.
+        var transferringToGhost = args.TransferEntity is { } dest && HasComp<GhostComponent>(dest);
+        var uid = userId.Value;
+        var needObserver = !bodyDead && !transferringToGhost;
+        var openPicker = !bodyDead;
+        var deleteBody = !bodyDead;
 
-        EndTutorialSession(userId.Value, queueRespawn: false, unloadMap: true, deleteBody: !bodyDead);
+        // Finish TransferTo / actor attach before QueueDel of the practice map.
+        Timer.Spawn(0, () =>
+        {
+            if (!TryGetActiveRule(out _, out var activeRule, out _))
+                return;
 
-        if (!bodyDead && _players.TryGetSessionById(userId.Value, out playerSession))
-            TryOpenPickerForGhost(playerSession);
+            if (!activeRule.Sessions.TryGetValue(uid, out var session) ||
+                session.State != TutorialSessionState.InTutorial)
+                return;
+
+            if (needObserver && _players.TryGetSessionById(uid, out var playerSession))
+                GameTicker.JoinAsObserver(playerSession);
+
+            EndTutorialSession(uid, queueRespawn: false, unloadMap: true, deleteBody: deleteBody);
+
+            if (openPicker && _players.TryGetSessionById(uid, out playerSession))
+                TryOpenPickerForGhost(playerSession);
+        });
     }
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
@@ -1469,10 +1621,12 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         var bodyUid = session.BodyUid;
 
         var guideUid = session.GuideUid;
+        var mentorUid = session.MentorUid;
         session.MapUid = EntityUid.Invalid;
         session.GridUid = EntityUid.Invalid;
         session.BodyUid = EntityUid.Invalid;
         session.GuideUid = EntityUid.Invalid;
+        session.MentorUid = EntityUid.Invalid;
         session.SelectedRoleId = null;
         session.StepIndex = 0;
         session.GoalIndex = 0;
@@ -1485,6 +1639,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         if (guideUid != EntityUid.Invalid && !TerminatingOrDeleted(guideUid))
             QueueDel(guideUid);
+
+        if (mentorUid != EntityUid.Invalid && !TerminatingOrDeleted(mentorUid))
+            QueueDel(mentorUid);
 
         if (deleteBody && bodyUid != EntityUid.Invalid && !TerminatingOrDeleted(bodyUid))
             QueueDel(bodyUid);

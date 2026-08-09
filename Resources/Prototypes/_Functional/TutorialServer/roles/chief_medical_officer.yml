@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialChiefMedicalOfficer
+  mentorName: Urist McScalpel
   job: ChiefMedicalOfficer
   stub: false
   simplifiedEnvironment: true
@@ -32,6 +33,12 @@
   - id: TutorialPracticeMobPatient
     room: 0
     offset: 0, -0.5
+  - id: TutorialPracticeMobCorpse
+    room: 0
+    offset: -1, -0.5
+  - id: DefibrillatorOneHandedUnpowered
+    room: 0
+    offset: -1, -1
   - id: TutorialVendingMachineMedical
     room: 0
     offset: 1.5, 1
@@ -71,6 +78,9 @@
       text: tutorial-job-chief-medical-officer-sg-analyzer
       complete: HoldItem
       entity: HandheldHealthAnalyzer
+    - id: medhud-tip
+      text: tutorial-job-chief-medical-officer-sg-medhud-tip
+      complete: Acknowledge
     - id: hold-hypo
       text: tutorial-job-chief-medical-officer-sg-hypo
       complete: HoldItem
@@ -87,6 +97,18 @@
       text: tutorial-job-chief-medical-officer-sg-heal
       complete: PracticeMobDamageBelow
       maxDamage: 5
+    - id: defib-tip
+      text: tutorial-job-chief-medical-officer-sg-defib-tip
+      complete: Acknowledge
+    - id: hold-defib
+      text: tutorial-job-chief-medical-officer-sg-hold-defib
+      complete: HoldItem
+      entity: DefibrillatorOneHandedUnpowered
+    - id: revive-corpse
+      text: tutorial-job-chief-medical-officer-sg-revive
+      hint: tutorial-job-chief-medical-officer-sg-revive-hint
+      stuckHint: tutorial-job-chief-medical-officer-sg-revive-stuck
+      complete: PracticeMobRevived
     - id: walk
       text: tutorial-job-chief-medical-officer-sg-walk
       complete: ReachMarker

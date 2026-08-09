@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialJanitor
+  mentorName: Urist McMop
   job: Janitor
   stub: false
   simplifiedEnvironment: true

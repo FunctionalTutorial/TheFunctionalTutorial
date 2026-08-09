@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialBotanist
+  mentorName: Urist McWeed
   job: Botanist
   stub: false
   simplifiedEnvironment: true

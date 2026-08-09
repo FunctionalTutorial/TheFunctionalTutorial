@@ -12,10 +12,7 @@
                 <RichTextLabel Name="StatusLabel" StyleClasses="LabelSubText" HorizontalExpand="True" MaxWidth="390" />
             </BoxContainer>
         </ScrollContainer>
-        <BoxContainer Orientation="Horizontal" HorizontalExpand="True" SeparationOverride="8">
-            <Button Name="BackButton" Text="{Loc 'tutorial-server-prompt-back'}" HorizontalExpand="True" />
-            <Button Name="NextButton" Text="{Loc 'tutorial-server-prompt-next'}" HorizontalExpand="True" />
-        </BoxContainer>
+        <Button Name="NextButton" Text="{Loc 'tutorial-server-prompt-next'}" HorizontalExpand="True" />
         <Button Name="HintButton" Text="{Loc 'tutorial-server-prompt-hint'}" HorizontalExpand="True" />
     </BoxContainer>
 </controls:TutorialPromptWindow>

@@ -1,16 +1,22 @@
 # Engineering progression step 1/4 — doors, hull, LV/APC.
 - type: tutorialRole
   id: TutorialTechnicalAssistant
+  mentorName: Urist McWrench
   job: TechnicalAssistant
   stub: false
   category: Engineering
   map: /Maps/_Functional/TutorialServer/Roles/TechnicalAssistant.yml
   roomTemplate: TutorialSectionEngineering
   guidebook: Engineering
+  # Chair at crop (6.5, 3.5) — two west, three south of chamber origin.
+  mentorSpawnOffset: -2, -3
   practiceSpawns:
   - id: ClosetToolFilled
     room: 0
     offset: -2, 1
+  - id: ClothingHandsGlovesColorYellow
+    room: 0
+    offset: -1, 0
   - id: Screwdriver
     room: 0
     offset: 0.5, 0
@@ -23,9 +29,10 @@
   - id: Wirecutter
     room: 0
     offset: -0.2, 0
+  # Northern hallway eng door tile (replaces vaulted crop door after seal).
   - id: TutorialHackAirlock
     room: 0
-    offset: 1.5, 0
+    offset: 0, 1
   - id: SheetSteel10
     room: 1
     offset: 0.5, 0
@@ -63,6 +70,10 @@
     enterRoom: 0
     title: tutorial-job-technical-assistant-goal-hack
     subGoals:
+    - id: wear-gloves
+      text: tutorial-job-technical-assistant-sg-gloves
+      complete: WearItem
+      entity: ClothingHandsGlovesColorYellow
     - id: hold-screwdriver
       text: tutorial-job-technical-assistant-sg-screwdriver
       # HoldTag so belt / floor / closet screwdrivers all count (same tag).
@@ -76,6 +87,26 @@
       text: tutorial-job-technical-assistant-sg-multitool
       complete: HoldTag
       tag: Multitool
+    - id: pulse-power
+      text: tutorial-job-technical-assistant-sg-pulse-power
+      complete: TargetPowerDisabled
+      tag: TutorialHackDoor
+    - id: hold-crowbar-hack
+      text: tutorial-job-technical-assistant-sg-crowbar-hack
+      complete: HoldTag
+      tag: Crowbar
+    - id: crowbar-door
+      text: tutorial-job-technical-assistant-sg-crowbar-door
+      complete: TargetDoorOpen
+      tag: TutorialHackDoor
+    - id: hold-wirecutter
+      text: tutorial-job-technical-assistant-sg-wirecutter
+      complete: HoldTag
+      tag: Wirecutter
+    - id: cut-power
+      text: tutorial-job-technical-assistant-sg-cut-power
+      complete: PowerWiresCut
+      tag: TutorialHackDoor
     - id: wires-tip
       text: tutorial-job-technical-assistant-sg-wires-tip
       complete: Acknowledge

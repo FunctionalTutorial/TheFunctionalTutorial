@@ -1,6 +1,7 @@
 # Engineering progression step 4/4 � lead eng + atmos; oversee power and priorities.
 - type: tutorialRole
   id: TutorialChiefEngineer
+  mentorName: Urist McSingulo
   job: ChiefEngineer
   stub: false
   category: Engineering

@@ -1,11 +1,13 @@
 ﻿[game]
-# Straight in-game baby
-lobbyenabled = false
-# Dev map for faster loading & convenience
-map = "Dev"
+# Wizden: TutorialServer is the local default (was lobbyenabled=false + Dev/Sandbox).
+# Dev map only exposes Captain latejoin slots — that masked wrong-preset launches.
+lobbyenabled = true
+map = "TutorialLobby"
+defaultpreset = "TutorialServer"
 role_timers = false
 admin_job_tracking = true
 role_loadout_timers = false
+# Keep Passenger + Captain for any leftover Dev-map workflows.
 new_character_jobs = "Passenger, Captain"
 
 [events]

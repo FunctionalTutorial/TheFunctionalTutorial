@@ -5,11 +5,13 @@ using Content.Server.DeviceLinking.Components;
 using Content.Shared.Labels.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Nuke;
+using Content.Server.Power.Components;
 using Content.Server.Power.Generation.Teg;
 using Content.Server.Research.Systems;
 using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Events;
 using Content.Server.Shuttles.Systems;
+using Content.Server.Wires;
 using Content.Shared._Functional.TutorialServer;
 using Content.Shared.Nuke;
 using Content.Shared.Objectives.Components;
@@ -28,6 +30,7 @@ using Content.Shared.Cuffs.Components;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Systems;
+using Content.Shared.Doors.Components;
 using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
 using Content.Shared.Hands;
@@ -38,12 +41,14 @@ using Content.Shared.Implants.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Inventory;
+using Content.Shared.Inventory.Events;
 using Content.Shared.Item;
 using Content.Shared.Lathe;
 using Content.Shared.Movement.Systems;
 using Content.Shared.Nutrition.Components;
 using Content.Shared.Nutrition.EntitySystems;
 using Content.Shared.PDA;
+using Content.Shared.Power;
 using Content.Shared.Research.Components;
 using Content.Shared.Research.Prototypes;
 using Content.Shared.Roles;
@@ -90,6 +95,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
     [Dependency] private readonly SharedSolutionContainerSystem _solutions = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly SharedWiresSystem _wires = default!;
+    [Dependency] private readonly WiresSystem _wiresServer = default!;
     [Dependency] private readonly SharedContainerSystem _containers = default!;
     [Dependency] private readonly TagSystem _tags = default!;
     [Dependency] private readonly EmagSystem _emag = default!;
@@ -130,6 +136,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
 
         SubscribeLocalEvent<TutorialParticipantComponent, DidEquipHandEvent>(OnDidEquipHand);
         SubscribeLocalEvent<TutorialParticipantComponent, DidUnequipHandEvent>(OnDidUnequipHand);
+        SubscribeLocalEvent<TutorialParticipantComponent, DidEquipEvent>(OnDidEquip);
         SubscribeLocalEvent<TutorialParticipantComponent, UserInteractUsingEvent>(OnInteractUsing);
         SubscribeLocalEvent<TutorialParticipantComponent, UserInteractHandEvent>(OnInteractHand);
         SubscribeLocalEvent<TutorialParticipantComponent, UserActivateInWorldEvent>(OnActivateInWorld);
@@ -157,6 +164,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         SubscribeLocalEvent<TutorialPracticeMobComponent, InteractUsingEvent>(OnPracticeMobSlipInteract);
         SubscribeLocalEvent<TutorialPracticeMobComponent, StunnedEvent>(OnPracticeMobStunned);
         SubscribeLocalEvent<TutorialPracticeMobComponent, KnockedDownEvent>(OnPracticeMobKnockedDown);
+        SubscribeLocalEvent<TutorialPracticeMobComponent, MobStateChangedEvent>(OnPracticeMobStateChanged);
         SubscribeLocalEvent<TutorialParticipantComponent, ChangelingDevouredEvent>(OnChangelingDevoured);
         SubscribeLocalEvent<TutorialParticipantComponent, ChangelingStingDnaEvent>(OnChangelingStung);
         SubscribeLocalEvent<ActionComponent, ActionPerformedEvent>(OnActionPerformed);
@@ -236,6 +244,22 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                     if (IsWiresPanelOpen(xform.MapUid, sub.Tag))
                         _tutorial.AdvanceSubGoal(uid);
                     break;
+                case TutorialStepComplete.WearItem:
+                    if (sub.Entity != null && IsWearingProto(uid, sub.Entity.Value))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.TargetPowerDisabled:
+                    if (IsTargetPowerDisabled(xform.MapUid, sub.Tag))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.TargetDoorOpen:
+                    if (IsTargetDoorOpen(xform.MapUid, sub.Tag))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.PowerWiresCut:
+                    if (IsPowerWiresCut(xform.MapUid, sub.Tag))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
                 case TutorialStepComplete.PracticeMobCreamPied:
                     if (IsPracticeMobCreamPied(xform.MapUid))
                         _tutorial.AdvanceSubGoal(uid);
@@ -306,6 +330,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                     break;
                 case TutorialStepComplete.PracticeMobDead:
                     if (HasDeadPracticeMob(xform.MapUid))
+                        _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.PracticeMobRevived:
+                    if (HasRevivedPracticeCorpse(xform.MapUid))
                         _tutorial.AdvanceSubGoal(uid);
                     break;
                 case TutorialStepComplete.ChangelingDevoured:
@@ -712,6 +740,31 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         AdvancePracticeMobStunned(Transform(ent).MapUid);
     }
 
+    private void OnPracticeMobStateChanged(EntityUid uid, TutorialPracticeMobComponent component, MobStateChangedEvent args)
+    {
+        if (args.OldMobState != MobState.Dead)
+            return;
+
+        if (args.NewMobState is not (MobState.Critical or MobState.Alive))
+            return;
+
+        var mapUid = Transform(uid).MapUid;
+        var query = EntityQueryEnumerator<TutorialParticipantComponent, TransformComponent>();
+        while (query.MoveNext(out var participant, out var part, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            if (!_tutorial.TryGetCurrentSubGoal(participant, part, out var sub))
+                continue;
+
+            if (sub.Complete != TutorialStepComplete.PracticeMobRevived)
+                continue;
+
+            _tutorial.AdvanceSubGoal(participant);
+        }
+    }
+
     private static bool IsStunToolProto(string? protoId)
     {
         return protoId is "Stunbaton" or "WeaponDisabler" or "Flash" or "FlashMilitary";
@@ -971,6 +1024,20 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         return false;
     }
 
+    private void OnDidEquip(Entity<TutorialParticipantComponent> ent, ref DidEquipEvent args)
+    {
+        if (!_tutorial.TryGetCurrentSubGoal(ent, ent.Comp, out var sub))
+            return;
+
+        if (sub.Complete != TutorialStepComplete.WearItem || sub.Entity == null)
+            return;
+
+        if (!IsWearingProto(ent, sub.Entity.Value))
+            return;
+
+        _tutorial.AdvanceSubGoal(ent);
+    }
+
     private void OnDidEquipHand(Entity<TutorialParticipantComponent> ent, ref DidEquipHandEvent args)
     {
         if (!_tutorial.TryGetCurrentSubGoal(ent, ent.Comp, out var sub))
@@ -1024,6 +1091,22 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 return;
 
             // Let ActivatableUI / insert logic run; Bound-UI machines complete on open instead.
+            if (HasComp<ActivatableUIComponent>(args.Target))
+                return;
+
+            args.Handled = true;
+            _tutorial.AdvanceSubGoal(ent);
+            return;
+        }
+
+        if (sub.Complete == TutorialStepComplete.InteractTargetHolding)
+        {
+            if (string.IsNullOrEmpty(sub.Tag) ||
+                sub.Entity == null ||
+                !_tags.HasTag(args.Target, (ProtoId<TagPrototype>) sub.Tag) ||
+                !IsProto(args.Used, sub.Entity.Value))
+                return;
+
             if (HasComp<ActivatableUIComponent>(args.Target))
                 return;
 
@@ -1371,6 +1454,11 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             if (xform.MapUid != mapUid)
                 continue;
 
+            // Dead corpses coexist with heal drills; only living/crit patients gate completion.
+            if (TryComp<MobStateComponent>(uid, out var mobState) &&
+                mobState.CurrentState == MobState.Dead)
+                continue;
+
             found = true;
             if (_damageable.GetTotalDamage((uid, damageable)).Float() > maxDamage)
                 return false;
@@ -1447,6 +1535,88 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 continue;
 
             return true;
+        }
+
+        return false;
+    }
+
+    private bool IsWearingProto(EntityUid mob, EntProtoId proto)
+    {
+        var enumerator = _inventory.GetSlotEnumerator(mob);
+        while (enumerator.NextItem(out var item))
+        {
+            if (IsProto(item, proto))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsTargetPowerDisabled(EntityUid? mapUid, string? tag)
+    {
+        if (mapUid == null || string.IsNullOrEmpty(tag))
+            return false;
+
+        var tagId = (ProtoId<TagPrototype>) tag;
+        var query = EntityQueryEnumerator<ApcPowerReceiverComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var power, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            if (!_tags.HasTag(uid, tagId))
+                continue;
+
+            if (power.PowerDisabled || !power.Powered)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsTargetDoorOpen(EntityUid? mapUid, string? tag)
+    {
+        if (mapUid == null || string.IsNullOrEmpty(tag))
+            return false;
+
+        var tagId = (ProtoId<TagPrototype>) tag;
+        var query = EntityQueryEnumerator<DoorComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var door, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            if (!_tags.HasTag(uid, tagId))
+                continue;
+
+            if (door.State is DoorState.Open or DoorState.Opening)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsPowerWiresCut(EntityUid? mapUid, string? tag)
+    {
+        if (mapUid == null || string.IsNullOrEmpty(tag))
+            return false;
+
+        var tagId = (ProtoId<TagPrototype>) tag;
+        var query = EntityQueryEnumerator<WiresComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var wires, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            if (!_tags.HasTag(uid, tagId))
+                continue;
+
+            if (!_wiresServer.TryGetData<int?>(uid, PowerWireActionKey.CutWires, out var cut, wires) ||
+                !_wiresServer.TryGetData<int?>(uid, PowerWireActionKey.WireCount, out var count, wires))
+                continue;
+
+            if (cut is > 0 && count is > 0 && cut == count)
+                return true;
         }
 
         return false;
@@ -1722,6 +1892,32 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 continue;
 
             if (mobState.CurrentState == MobState.Dead)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static readonly ProtoId<TagPrototype> TutorialPracticeCorpseTag = "TutorialPracticeCorpse";
+
+    /// <summary>
+    /// A practice corpse finished a revive (left Dead for Critical/Alive).
+    /// </summary>
+    private bool HasRevivedPracticeCorpse(EntityUid? mapUid)
+    {
+        if (mapUid == null)
+            return false;
+
+        var query = EntityQueryEnumerator<TutorialPracticeMobComponent, MobStateComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out _, out var mobState, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            if (!_tags.HasTag(uid, TutorialPracticeCorpseTag))
+                continue;
+
+            if (mobState.CurrentState is MobState.Critical or MobState.Alive)
                 return true;
         }
 

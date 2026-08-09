@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialWarden
+  mentorName: Urist McBrig
   job: Warden
   stub: false
   simplifiedEnvironment: true

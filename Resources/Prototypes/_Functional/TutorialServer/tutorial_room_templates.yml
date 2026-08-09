@@ -141,6 +141,8 @@
   sourceNote: "Saltern arrivals AABB crop"
   # Unpowered pry target between stamped chambers (LV/APCs still light the rooms).
   gateDoor: TutorialAirlockMaint
+  # Crop wallmount sprites face the opposite way from procedural lights.
+  lightFacingOffsetDegrees: 180
 
 - type: tutorialRoomTemplate
   id: TutorialSectionMaintAntag

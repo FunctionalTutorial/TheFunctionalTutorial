@@ -27,13 +27,17 @@ public sealed class TutorialRolePickerEntry
 [Serializable, NetSerializable]
 public sealed class TutorialSelectRoleMessage : EuiMessageBase
 {
-    public string RoleId { get; }
-    public bool ConfirmedStub { get; }
+    public string RoleId { get; set; } = string.Empty;
+    public bool ConfirmedStub { get; set; }
 
     public TutorialSelectRoleMessage(string roleId, bool confirmedStub)
     {
         RoleId = roleId;
         ConfirmedStub = confirmedStub;
+    }
+
+    public TutorialSelectRoleMessage()
+    {
     }
 }
 

@@ -10,7 +10,6 @@ namespace Content.Client._Functional.TutorialServer.UI;
 [GenerateTypedNameReferences]
 public sealed partial class TutorialPromptWindow : DefaultWindow
 {
-    public Action? OnBackPressed;
     public Action? OnNextPressed;
     public Action? OnHintPressed;
 
@@ -19,7 +18,6 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
         RobustXamlLoader.Load(this);
         Title = Loc.GetString("tutorial-server-prompt-title");
 
-        BackButton.OnPressed += _ => OnBackPressed?.Invoke();
         NextButton.OnPressed += _ => OnNextPressed?.Invoke();
         HintButton.OnPressed += _ => OnHintPressed?.Invoke();
     }
@@ -32,7 +30,6 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
             ChecklistLabel.Visible = false;
             SetLabel(StepLabel, string.Empty);
             SetLabel(StatusLabel, string.Empty);
-            BackButton.Disabled = true;
             NextButton.Disabled = true;
             HintButton.Disabled = true;
             HintButton.Visible = false;
@@ -50,11 +47,11 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
             for (var i = 0; i < state.SubGoalStates.Count; i++)
             {
                 var entry = state.SubGoalStates[i];
-                var mark = entry.Completed || (state.ViewGoalIndex < state.GoalIndex && i <= state.ViewIndex)
+                var mark = entry.Completed
                     ? "[x]"
                     : i == state.ViewIndex
                         ? "[>]"
-                        : state.ViewGoalIndex == state.GoalIndex && i == state.ProgressIndex
+                        : i == state.ProgressIndex
                             ? "[*]"
                             : "[ ]";
                 sb.AppendLine($"{mark} {entry.Text}");
@@ -88,17 +85,12 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
             SetLabel(StatusLabel, string.Empty);
         }
 
-        BackButton.Disabled = !state.CanGoBack;
         NextButton.Disabled = !state.CanGoNext;
-        NextButton.Text = state.ViewGoalIndex == state.GoalIndex &&
-                          state.ViewIndex == state.ProgressIndex &&
-                          state.ViewComplete == TutorialStepComplete.Acknowledge
+        NextButton.Text = state.ViewComplete == TutorialStepComplete.Acknowledge
             ? Loc.GetString("tutorial-server-acknowledge")
             : Loc.GetString("tutorial-server-prompt-next");
 
-        var hasStuckHint = !string.IsNullOrEmpty(state.StuckHintText) &&
-                           state.ViewGoalIndex == state.GoalIndex &&
-                           state.ViewIndex == state.ProgressIndex;
+        var hasStuckHint = !string.IsNullOrEmpty(state.StuckHintText);
         HintButton.Visible = hasStuckHint;
         HintButton.Disabled = !hasStuckHint;
     }

@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialResearchDirector
+  mentorName: Urist McGrant
   job: ResearchDirector
   stub: false
   simplifiedEnvironment: true

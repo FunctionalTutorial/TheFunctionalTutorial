@@ -331,16 +331,18 @@ public sealed partial class TutorialPracticeRoomSystem : EntitySystem
         int chamberW,
         int chamberH,
         EntProtoId? light = null,
-        int spacing = 4)
+        int spacing = 4,
+        float lightFacingOffsetDegrees = 0f)
     {
         var proto = light ?? new EntProtoId("AlwaysPoweredWallLight");
         spacing = Math.Max(spacing, 3);
 
         // PointLight offset is local (0, -0.5); rotate so the glow faces into the room.
-        var faceSouth = Angle.FromDegrees(180); // north wall
-        var faceNorth = Angle.FromDegrees(0); // south wall
-        var faceEast = Angle.FromDegrees(270); // west wall
-        var faceWest = Angle.FromDegrees(90); // east wall
+        var offset = lightFacingOffsetDegrees;
+        var faceSouth = Angle.FromDegrees(180 + offset); // north wall
+        var faceNorth = Angle.FromDegrees(0 + offset); // south wall
+        var faceEast = Angle.FromDegrees(270 + offset); // west wall
+        var faceWest = Angle.FromDegrees(90 + offset); // east wall
 
         foreach (var origin in chamberOrigins)
         {

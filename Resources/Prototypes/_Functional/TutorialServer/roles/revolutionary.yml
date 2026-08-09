@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialAntagHeadRev
+  mentorName: Urist McFlash
   job: Passenger
   antag: HeadRev
   stub: false

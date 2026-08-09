@@ -7,6 +7,7 @@ using Content.Server._Functional.TutorialServer;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules.Components;
 using Content.Server.Ghost;
+using Content.Server.Medical;
 using Content.Server.Vocalization.Components;
 using Content.Server._Functional.TutorialServer.CyberMedSurgery;
 using Content.Server._Functional.TutorialServer.StarlightSurgery;
@@ -21,7 +22,11 @@ using Content.Server.Power.Components;
 using Content.Shared.Atmos.Components;
 using Content.Shared.CCVar;
 using Content.Shared.Cuffs.Components;
+using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Prototypes;
 using Content.Shared.Damage.Systems;
+using Content.Shared.FixedPoint;
 using Content.Shared.Fluids.Components;
 using Content.Shared.GameTicking;
 using Content.Shared.Ghost;
@@ -32,6 +37,10 @@ using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Inventory;
 using Content.Shared.Item;
+using Content.Shared.Item.ItemToggle;
+using Content.Shared.Medical;
+using Content.Shared.Mobs;
+using Content.Shared.Mobs.Components;
 using Content.Shared.Maps;
 using Content.Shared.Mind;
 using Content.Shared.Nutrition.EntitySystems;
@@ -96,11 +105,100 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(server.EntMan.Count<TutorialServerRuleComponent>(), Is.GreaterThan(0));
             Assert.That(server.EntMan.Count<RespawnTrackerComponent>(), Is.GreaterThan(0));
             Assert.That(cfg.GetCVar(CCVars.GameDisallowLateJoins), Is.False);
+            Assert.That(cfg.GetCVar(CCVars.GameRoleTimers), Is.False);
+            Assert.That(cfg.GetCVar(CCVars.GameRoleWhitelist), Is.False);
             Assert.That(cfg.GetCVar(CCVars.OocEnabled), Is.False);
             Assert.That(cfg.GetCVar(CCVars.LoocEnabled), Is.False);
             Assert.That(cfg.GetCVar(CCVars.DeadChatEnabled), Is.False);
             Assert.That(server.EntMan.Count<Content.Server.Shuttles.Components.StationCentcommComponent>(), Is.EqualTo(0),
                 "TutorialServer must not spawn CentComm");
+        });
+    }
+
+    [Test]
+    public async Task TutorialLobbyMap_UsesLobbyStationWithCrewTutorials()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var protos = server.ProtoMan;
+        var tutorial = server.System<TutorialServerRuleSystem>();
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(protos.TryIndex<GameMapPrototype>("TutorialLobby", out var lobby), Is.True);
+            var station = lobby!.Stations.Values.Single();
+            Assert.That(station.StationPrototype.Id, Is.EqualTo("TutorialLobbyStation"));
+
+            // Crew latejoin is wired through station jobs on TutorialLobby; Dev is Captain-only.
+            Assert.That(protos.TryIndex<GameMapPrototype>("Dev", out var dev), Is.True);
+            Assert.That(dev!.Stations.Values.Single().StationPrototype.Id,
+                Is.EqualTo("StandardNanotrasenStation"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tutorial.TryResolveTutorialRoleForJob("TechnicalAssistant", out var ta), Is.True);
+                Assert.That(ta!.ID, Is.EqualTo("TutorialTechnicalAssistant"));
+                Assert.That(tutorial.TryResolveTutorialRoleForJob("Passenger", out var passenger), Is.True);
+                Assert.That(passenger!.ID, Is.EqualTo("TutorialPassenger"));
+                Assert.That(tutorial.TryResolveTutorialRoleForJob("MedicalDoctor", out var md), Is.True);
+                Assert.That(md!.ID, Is.EqualTo("TutorialMedicalDoctor"));
+            });
+        });
+    }
+
+    [Test]
+    public async Task TutorialPreset_LateJoinJobStartsMatchingTutorial()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var cfg = server.ResolveDependency<IConfigurationManager>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(cfg.GetCVar(CCVars.GameRoleTimers), Is.False);
+            Assert.That(tutorial.TryResolveTutorialRoleForJob("Captain", out var captain));
+            Assert.That(captain!.ID, Is.EqualTo("TutorialCaptain"));
+            Assert.That(tutorial.TryResolveTutorialRoleForJob("HeadOfSecurity", out var hos));
+            Assert.That(hos!.ID, Is.EqualTo("TutorialHeadOfSecurity"));
+            Assert.That(tutorial.TryResolveTutorialRoleForJob("TechnicalAssistant", out var ta));
+            Assert.That(ta!.ID, Is.EqualTo("TutorialTechnicalAssistant"));
+        });
+
+        await server.WaitPost(() =>
+        {
+            ticker.MakeJoinGame(pair.Player!, EntityUid.Invalid, "Captain", silent: true);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            Assert.That(player.AttachedEntity, Is.Not.Null);
+            Assert.That(server.EntMan.HasComponent<TutorialParticipantComponent>(player.AttachedEntity!.Value), Is.True,
+                "Late-joining as Captain should spawn into the Captain tutorial");
+            Assert.That(tutorial.IsPickerOpen(player), Is.False);
+
+            TutorialSessionData? session = null;
+            var ruleQuery = server.EntMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.SelectedRoleId, Is.EqualTo("TutorialCaptain"));
+            Assert.That(session.State, Is.EqualTo(TutorialSessionState.InTutorial));
         });
     }
 
@@ -260,13 +358,28 @@ public sealed class TutorialServerTests : GameTest
 
             var ta = proto.Index<TutorialRolePrototype>("TutorialTechnicalAssistant");
             Assert.That(ta.Stub, Is.False);
+            Assert.That(ta.MentorSpawnOffset, Is.EqualTo(new System.Numerics.Vector2(-2f, -3f)));
+            Assert.That(Sub(ta, "wear-gloves").Complete, Is.EqualTo(TutorialStepComplete.WearItem));
+            Assert.That(Sub(ta, "wear-gloves").Entity, Is.EqualTo(new EntProtoId("ClothingHandsGlovesColorYellow")));
             Assert.That(Sub(ta, "hold-screwdriver").Complete, Is.EqualTo(TutorialStepComplete.HoldTag));
             Assert.That(Sub(ta, "hold-screwdriver").Tag, Is.EqualTo("Screwdriver"));
             Assert.That(Sub(ta, "hold-multitool").Complete, Is.EqualTo(TutorialStepComplete.HoldTag));
             Assert.That(Sub(ta, "hold-multitool").Tag, Is.EqualTo("Multitool"));
             Assert.That(Sub(ta, "open-panel").Complete, Is.EqualTo(TutorialStepComplete.WiresPanelOpen));
+            Assert.That(Sub(ta, "pulse-power").Complete, Is.EqualTo(TutorialStepComplete.TargetPowerDisabled));
+            Assert.That(Sub(ta, "crowbar-door").Complete, Is.EqualTo(TutorialStepComplete.TargetDoorOpen));
+            Assert.That(Sub(ta, "cut-power").Complete, Is.EqualTo(TutorialStepComplete.PowerWiresCut));
             Assert.That(Sub(ta, "place-lv").Complete, Is.EqualTo(TutorialStepComplete.MapHasEntity));
             Assert.That(Sub(ta, "place-lv").Entity, Is.EqualTo(new EntProtoId("CableApcExtension")));
+            Assert.That(ta.PracticeSpawns.Any(p => p.Id == "TutorialHackAirlock" && p.Offset == new System.Numerics.Vector2(0f, 1f)));
+            Assert.That(ta.PracticeSpawns.Any(p => p.Id == "ClothingHandsGlovesColorYellow"));
+
+            var passenger = proto.Index<TutorialRolePrototype>("TutorialPassenger");
+            Assert.That(passenger.MentorSpawnOffset, Is.EqualTo(new System.Numerics.Vector2(4f, -2f)));
+            Assert.That(proto.Index<TutorialRoomTemplatePrototype>("TutorialSectionArrivals").LightFacingOffsetDegrees,
+                Is.EqualTo(180f));
+            Assert.That(proto.Index<TutorialRoomTemplatePrototype>("TutorialSectionEngineering").LightFacingOffsetDegrees,
+                Is.EqualTo(0f));
 
             var eng = proto.Index<TutorialRolePrototype>("TutorialStationEngineer");
             Assert.That(Sub(eng, "place-mv").Complete, Is.EqualTo(TutorialStepComplete.MapHasEntity));
@@ -292,9 +405,16 @@ public sealed class TutorialServerTests : GameTest
 
             var doctor = proto.Index<TutorialRolePrototype>("TutorialMedicalDoctor");
             Assert.That(Sub(doctor, "heal-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDamageBelow));
+            Assert.That(Sub(doctor, "scan-patient").Complete, Is.EqualTo(TutorialStepComplete.InteractTargetHolding));
+            Assert.That(Sub(doctor, "scan-patient").Entity, Is.EqualTo(new EntProtoId("HandheldHealthAnalyzer")));
+            Assert.That(Sub(doctor, "scan-patient").Tag, Is.EqualTo("TutorialPracticePatient"));
             Assert.That(Sub(doctor, "use-epi").Complete, Is.EqualTo(TutorialStepComplete.UseInHand));
             Assert.That(Sub(doctor, "use-epi").Entity, Is.EqualTo(new EntProtoId("EmergencyMedipen")));
+            Assert.That(Sub(doctor, "revive-corpse").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobRevived));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "TutorialPracticeMobPatient"));
+            Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "TutorialPracticeMobCorpse"));
+            Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "DefibrillatorOneHandedUnpowered"));
+            Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "ClothingEyesHudMedical"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "EmergencyMedipen"));
 
             var sec = proto.Index<TutorialRolePrototype>("TutorialSecurityOfficer");
@@ -326,7 +446,11 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(cmo, "heal-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDamageBelow));
             Assert.That(Sub(cmo, "use-crew-monitor").Complete, Is.EqualTo(TutorialStepComplete.UseInHand));
             Assert.That(Sub(cmo, "use-crew-monitor").Entity, Is.EqualTo(new EntProtoId("HandheldCrewMonitor")));
+            Assert.That(Sub(cmo, "revive-corpse").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobRevived));
+            Assert.That(Sub(cmo, "medhud-tip").Complete, Is.EqualTo(TutorialStepComplete.Acknowledge));
             Assert.That(cmo.PracticeSpawns.Any(p => p.Id == "HandheldCrewMonitor"));
+            Assert.That(cmo.PracticeSpawns.Any(p => p.Id == "TutorialPracticeMobCorpse"));
+            Assert.That(cmo.PracticeSpawns.Any(p => p.Id == "DefibrillatorOneHandedUnpowered"));
 
             var rd = proto.Index<TutorialRolePrototype>("TutorialResearchDirector");
             Assert.That(rd.Goals.SelectMany(g => g.SubGoals).Any(s => s.Complete == TutorialStepComplete.SpawnAnomaly));
@@ -334,7 +458,11 @@ public sealed class TutorialServerTests : GameTest
 
             var para = proto.Index<TutorialRolePrototype>("TutorialParamedic");
             Assert.That(para.Stub, Is.False);
+            Assert.That(Sub(para, "scan-patient").Complete, Is.EqualTo(TutorialStepComplete.InteractTargetHolding));
+            Assert.That(Sub(para, "scan-patient").Entity, Is.EqualTo(new EntProtoId("HandheldHealthAnalyzer")));
             Assert.That(Sub(para, "heal-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDamageBelow));
+            Assert.That(Sub(para, "heal-dummy").StuckHint, Is.EqualTo("tutorial-job-paramedic-sg-heal-stuck"));
+            Assert.That(para.PracticeSpawns.Any(p => p.Id == "ClothingEyesHudMedical"));
 
             var atmos = proto.Index<TutorialRolePrototype>("TutorialAtmosphericTechnician");
             Assert.That(atmos.Stub, Is.False);
@@ -474,7 +602,9 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(Sub(para, "buckle-patient").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobBuckled));
             Assert.That(Sub(para, "heal-dummy").MaxDamage, Is.EqualTo(25f));
+            Assert.That(Sub(para, "heal-dummy").Hint, Is.EqualTo("tutorial-job-paramedic-sg-heal-hint"));
             Assert.That(Sub(para, "rollerbed-tip").Complete, Is.EqualTo(TutorialStepComplete.Acknowledge));
+            Assert.That(Sub(para, "medhud-tip").Complete, Is.EqualTo(TutorialStepComplete.Acknowledge));
             Assert.That(para.PracticeSpawns.Any(p => p.Id == "TutorialRollerBed"));
 
             var hos = proto.Index<TutorialRolePrototype>("TutorialHeadOfSecurity");
@@ -700,6 +830,7 @@ public sealed class TutorialServerTests : GameTest
             AssertSpeakingMob("TutorialPracticeMobSuspect", "Urist McSuspect", "TutorialPracticeMobSuspectAds");
             AssertSpeakingMob("TutorialPracticeMobPatient", "Urist McPatient", "TutorialPracticeMobPatientAds");
             AssertSpeakingMob("TutorialPracticeMobCasualty", "Urist McCasualty", "TutorialPracticeMobCasualtyAds");
+            AssertSpeakingMob("TutorialPracticeMobCorpse", "Urist McCorpse", "TutorialPracticeMobPatientAds");
             AssertSpeakingMob("TutorialPracticeMobParishioner", "Urist McParishioner", "TutorialPracticeMobParishionerAds");
             AssertSpeakingMob("TutorialPracticeMobAudience", "Urist McAudience", "TutorialPracticeMobAudienceAds");
             AssertSpeakingMob("TutorialPracticeMobVictim", "Urist McVictim", "TutorialPracticeMobVictimAds");
@@ -811,7 +942,15 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(passenger.PracticeSpawns.Count(p => p.Id == "FlashlightLantern"), Is.EqualTo(1));
             Assert.That(passenger.PracticeSpawns.Count(p => p.Id == "DrinkWaterBottleFull"), Is.EqualTo(1));
             Assert.That(passenger.PracticeSpawns.Any(p => p.Id == "ClosetToolFilled"), Is.False);
-            Assert.That(passenger.PracticeSpawns.Any(p => p.Id == "TutorialPassengerTrainer" && p.Room == 0));
+            Assert.That(passenger.PracticeSpawns.Any(p => p.Id == "TutorialPassengerTrainer"), Is.False,
+                "Passenger mentor is session-spawned, not a practiceSpawn");
+            Assert.That(passenger.PracticeSpawns.Any(p => p.Id == "TutorialPassengerMentor"), Is.False);
+            Assert.That(TutorialServerRuleSystem.UsesTravelingCoach(passenger), Is.False);
+            Assert.That(passenger.MentorName, Is.EqualTo("Urist McGreentide"));
+            Assert.That(proto.Index<TutorialRolePrototype>("TutorialMedicalDoctor").MentorName,
+                Is.EqualTo("Urist McMalpractice"));
+            Assert.That(proto.Index<TutorialRolePrototype>("TutorialBartender").MentorName,
+                Is.EqualTo("Urist McDrunkard"));
             Assert.That(passenger.PracticeSpawns.Any(p => p.Id == "Crowbar" && p.Room == 0),
                 "Crowbar must spawn in the trainer room");
             Assert.That(passenger.PracticeSpawns.Where(p => p.Marker != "passenger-exit").All(p => p.Room == 0),
@@ -2187,7 +2326,7 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
-    public async Task TutorialGuide_GivesItemAndBackNextRespectsSensors()
+    public async Task TutorialMentor_PassengerSpawnsMentorWithoutGuide()
     {
         var pair = Pair;
         var server = pair.Server;
@@ -2203,8 +2342,8 @@ public sealed class TutorialServerTests : GameTest
 
         await server.WaitPost(() =>
         {
-            var tutorial = server.System<TutorialServerRuleSystem>();
-            tutorial.TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
+            server.System<TutorialServerRuleSystem>()
+                .TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
         });
         await pair.RunTicksSync(60);
 
@@ -2218,8 +2357,6 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
             Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.ReachMarker),
                 "Passenger first tip is walk to the trainer marker");
-            Assert.That(part.GoalIndex, Is.EqualTo(0));
-            Assert.That(part.SubGoalIndex, Is.EqualTo(0));
 
             TutorialSessionData? session = null;
             var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
@@ -2230,60 +2367,196 @@ public sealed class TutorialServerTests : GameTest
             }
 
             Assert.That(session, Is.Not.Null, "Active tutorial session should track the player");
-            Assert.That(session!.GuideUid, Is.Not.EqualTo(EntityUid.Invalid));
-            Assert.That(entMan.EntityExists(session.GuideUid));
+            Assert.That(session!.GuideUid, Is.EqualTo(EntityUid.Invalid), "Single-grid roles have no tablet");
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(entMan.EntityExists(session.MentorUid));
+            Assert.That(entMan.HasComponent<TutorialMentorComponent>(session.MentorUid));
+            Assert.That(entMan.HasComponent<TutorialTrainerComponent>(session.MentorUid));
+            Assert.That(entMan.GetComponent<TutorialMentorComponent>(session.MentorUid).PlayerUid, Is.EqualTo(mob));
+            Assert.That(entMan.GetComponent<MetaDataComponent>(session.MentorUid).EntityPrototype?.ID,
+                Is.EqualTo("TutorialPassengerMentor"));
+            Assert.That(entMan.GetComponent<MetaDataComponent>(session.MentorUid).EntityName,
+                Is.EqualTo("Urist McGreentide"));
+
+            var hands = server.System<SharedHandsSystem>();
+            Assert.That(entMan.TryGetComponent<HandsComponent>(mob, out var handsComp));
+            foreach (var handId in hands.EnumerateHands((mob, handsComp!)))
+            {
+                var held = hands.GetHeldItem((mob, handsComp), handId);
+                if (held != null)
+                    Assert.That(entMan.HasComponent<TutorialGuideComponent>(held.Value), Is.False);
+            }
+        });
+    }
+
+    [Test]
+    public async Task TutorialMentor_CatchUpDelaysSnapUntilPathFails()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var follow = server.System<TutorialMentorFollowSystem>();
+        var timing = server.ResolveDependency<IGameTiming>();
+        var xforms = server.System<SharedTransformSystem>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        EntityUid mentor = default;
+        EntityUid mob = default;
+        EntityUid gridUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            mob = pair.Player!.AttachedEntity!.Value;
+            TutorialSessionData? session = null;
+            var ruleQuery = server.EntMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(pair.Player!.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            mentor = session!.MentorUid;
+            gridUid = server.EntMan.GetComponent<TransformComponent>(mob).GridUid!.Value;
+        });
+
+        Vector2 mentorPosBefore = default;
+        await server.WaitPost(() =>
+        {
+            var layout = server.EntMan.GetComponent<TutorialRoomLayoutComponent>(gridUid);
+            Assert.That(layout.ChamberCenters.Count, Is.EqualTo(2));
+            // Separate across the sealed pry gate so catch-up is needed.
+            xforms.SetCoordinates(mentor, new EntityCoordinates(gridUid, layout.ChamberCenters[0]));
+            xforms.SetCoordinates(mob, new EntityCoordinates(gridUid, layout.ChamberCenters[1]));
+            mentorPosBefore = xforms.GetWorldPosition(mentor);
+            follow.RequestCatchUp(mentor, restart: true);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var mentorComp = server.EntMan.GetComponent<TutorialMentorComponent>(mentor);
+            Assert.That(mentorComp.CatchUpDeadline, Is.Not.Null,
+                "Separated mentor should start a delayed catch-up window");
+            Assert.That(mentorComp.CatchUpDeadline!.Value, Is.GreaterThan(timing.CurTime));
+            Assert.That(xforms.GetWorldPosition(mentor), Is.EqualTo(mentorPosBefore),
+                "Mentor must not teleport during the catch-up delay");
+        });
+
+        // Expire the grace window so Update queues a path check.
+        await server.WaitPost(() =>
+        {
+            var mentorComp = server.EntMan.GetComponent<TutorialMentorComponent>(mentor);
+            mentorComp.CatchUpDeadline = timing.CurTime - TimeSpan.FromSeconds(0.1);
+        });
+
+        // Enough ticks for pathfinding + continuation (sealed gate => NoPath => snap).
+        await pair.RunTicksSync(90);
+
+        await server.WaitAssertion(() =>
+        {
+            var mentorComp = server.EntMan.GetComponent<TutorialMentorComponent>(mentor);
+            var dist = (xforms.GetWorldPosition(mentor) - xforms.GetWorldPosition(mob)).Length();
+            Assert.That(dist, Is.LessThan(4f),
+                "After grace + failed path across sealed chambers, mentor should snap near the player");
+            Assert.That(mentorComp.CatchUpDeadline, Is.Null);
+        });
+    }
+
+    [Test]
+    public async Task TutorialGuide_TravelRoleGivesTalkingGuideWithoutMentor()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var proto = server.ProtoMan;
+
+        await server.WaitAssertion(() =>
+        {
+            var cargo = proto.Index<TutorialRolePrototype>("TutorialCargoTechnician");
+            Assert.That(TutorialServerRuleSystem.UsesTravelingCoach(cargo), Is.True);
+            var salvage = proto.Index<TutorialRolePrototype>("TutorialSalvageSpecialist");
+            Assert.That(TutorialServerRuleSystem.UsesTravelingCoach(salvage), Is.True);
+        });
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            server.System<TutorialServerRuleSystem>()
+                .TrySelectRole(pair.Player!, "TutorialCargoTechnician", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            Assert.That(player.AttachedEntity, Is.Not.Null);
+            var mob = player.AttachedEntity!.Value;
+            var entMan = server.EntMan;
+
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
+
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.MentorUid, Is.EqualTo(EntityUid.Invalid), "Travel roles have no mentor body");
+            Assert.That(session.GuideUid, Is.Not.EqualTo(EntityUid.Invalid));
             Assert.That(entMan.HasComponent<TutorialGuideComponent>(session.GuideUid));
             Assert.That(entMan.GetComponent<MetaDataComponent>(session.GuideUid).EntityName,
-                Is.EqualTo("Tutorial"));
+                Is.EqualTo("Urist McPositronic"));
 
             var guideSys = server.System<TutorialGuideSystem>();
-            var tutorialSys = server.System<TutorialServerRuleSystem>();
-            var guideComp = entMan.GetComponent<TutorialGuideComponent>(session.GuideUid);
-            var guide = new Entity<TutorialGuideComponent>(session.GuideUid, guideComp);
+            var guide = new Entity<TutorialGuideComponent>(
+                session.GuideUid,
+                entMan.GetComponent<TutorialGuideComponent>(session.GuideUid));
 
             var state = guideSys.GetUiState(guide, mob);
             Assert.That(state.HasTutorial, Is.True);
             Assert.That(state.CanGoBack, Is.False);
-            Assert.That(state.WaitingOnSensor, Is.True);
-            Assert.That(state.CanGoNext, Is.False, "Next greyed out while waiting on ReachMarker sensor");
-            Assert.That(guideSys.TryGoNext(guide, mob), Is.False);
+            Assert.That(state.CanGoNext, Is.True, "Acknowledge tip can advance via Next");
+            Assert.That(state.WaitingOnSensor, Is.False);
 
-            // Force-advance through welcome (8 sub-goals) into crowbar-door's second tip (pry).
-            for (var i = 0; i < 9; i++)
-                tutorialSys.AdvanceSubGoal(mob);
-
+            Assert.That(guideSys.TryGoNext(guide, mob), Is.True);
             Assert.That(entMan.TryGetComponent(mob, out part));
-            Assert.That(part!.GoalIndex, Is.EqualTo(1), "Passenger advances to crowbar-door goal");
-            Assert.That(part.SubGoalIndex, Is.EqualTo(1), "Pry tip");
-            Assert.That(part.StepComplete, Is.EqualTo(TutorialStepComplete.InteractTargetTag));
+            Assert.That(part!.SubGoalIndex, Is.EqualTo(1));
 
-            guide.Comp.ViewGoalIndex = 1;
-            guide.Comp.ViewIndex = 0;
+            // Force into a sensor tip and confirm Next cannot skip it.
+            var tutorialSys = server.System<TutorialServerRuleSystem>();
+            tutorialSys.AdvanceSubGoal(mob); // into pilot / open-console
+            Assert.That(entMan.TryGetComponent(mob, out part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.PilotShuttle));
+            Assert.That(guideSys.TryGoNext(guide, mob), Is.False);
             state = guideSys.GetUiState(guide, mob);
-            Assert.That(state.CanGoBack, Is.True, "Back enabled when browsing a prior tip");
-            Assert.That(state.CanGoNext, Is.True, "Next allowed when viewing a previously passed step");
-            Assert.That(guideSys.TryGoNext(guide, mob), Is.True);
-            Assert.That(guide.Comp.ViewIndex, Is.EqualTo(1));
-
-            state = guideSys.GetUiState(guide, mob);
-            Assert.That(state.WaitingOnSensor, Is.True);
             Assert.That(state.CanGoNext, Is.False);
-            Assert.That(guideSys.TryGoBack(guide, mob), Is.True);
-            Assert.That(guide.Comp.ViewIndex, Is.EqualTo(0));
-
-            // Back across goals returns toward welcome (lands on the last welcome tip).
-            Assert.That(guideSys.TryGoBack(guide, mob), Is.True);
-            Assert.That(guide.Comp.ViewGoalIndex, Is.EqualTo(0));
-            Assert.That(guide.Comp.ViewIndex, Is.EqualTo(7), "Crossing back into welcome opens its last tip");
-            while (guide.Comp.ViewIndex > 0)
-                Assert.That(guideSys.TryGoBack(guide, mob), Is.True);
-
-            state = guideSys.GetUiState(guide, mob);
-            Assert.That(state.CanGoBack, Is.False);
-            Assert.That(state.CanGoNext, Is.True);
-            Assert.That(guideSys.TryGoNext(guide, mob), Is.True);
-            Assert.That(guide.Comp.ViewGoalIndex, Is.EqualTo(0));
-            Assert.That(guide.Comp.ViewIndex, Is.EqualTo(1));
+            Assert.That(state.WaitingOnSensor, Is.True);
         });
     }
 
@@ -2302,11 +2575,11 @@ public sealed class TutorialServerTests : GameTest
         });
         await pair.RunTicksSync(5);
 
-        // Chef still auto-opens; Passenger defers until after welcome.
+        // Travel-coach roles keep AutoOpenGuide on the talking tablet.
         await server.WaitPost(() =>
         {
             server.System<TutorialServerRuleSystem>()
-                .TrySelectRole(pair.Player!, "TutorialChef", confirmedStub: false);
+                .TrySelectRole(pair.Player!, "TutorialCargoTechnician", confirmedStub: false);
         });
         await pair.RunTicksSync(60);
 
@@ -2327,14 +2600,15 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(session, Is.Not.Null);
             Assert.That(session!.GuideUid, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(session.MentorUid, Is.EqualTo(EntityUid.Invalid));
             var ui = server.System<UserInterfaceSystem>();
             Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.True,
-                "Prompt Bound UI should auto-open once at tutorial start for roles with AutoOpenGuide");
+                "Prompt Bound UI should auto-open once at tutorial start for travel roles with AutoOpenGuide");
         });
     }
 
     [Test]
-    public async Task TutorialPassenger_DefersGuideOpenUntilAfterWelcome()
+    public async Task TutorialPassenger_MentorKeepsHandsFreeAndMapGates()
     {
         var pair = Pair;
         var server = pair.Server;
@@ -2361,7 +2635,6 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(player.AttachedEntity, Is.Not.Null);
             var mob = player.AttachedEntity!.Value;
             var entMan = server.EntMan;
-            var ui = server.System<UserInterfaceSystem>();
             var tutorial = server.System<TutorialServerRuleSystem>();
 
             TutorialSessionData? session = null;
@@ -2373,10 +2646,9 @@ public sealed class TutorialServerTests : GameTest
             }
 
             Assert.That(session, Is.Not.Null);
-            Assert.That(session!.GuideUid, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(session!.GuideUid, Is.EqualTo(EntityUid.Invalid));
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
             Assert.That(session.GuideAutoOpened, Is.False);
-            Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.False,
-                "Passenger guide should stay closed during the NPC opening block");
 
             var hands = server.System<SharedHandsSystem>();
             Assert.That(entMan.TryGetComponent<HandsComponent>(mob, out var handsComp));
@@ -2393,12 +2665,11 @@ public sealed class TutorialServerTests : GameTest
             }
 
             Assert.That(leftHand, Is.Not.Null);
-            Assert.That(hands.GetHeldItem((mob, handsComp), leftHand), Is.EqualTo(session.GuideUid),
-                "Tutorial tablet should occupy the left/off hand");
+            Assert.That(hands.HandIsEmpty((mob, handsComp), leftHand!), Is.True,
+                "No tablet — left hand stays free for pickup practice");
             Assert.That(rightHand, Is.Not.Null);
             Assert.That(hands.HandIsEmpty((mob, handsComp), rightHand!), Is.True,
                 "Active right hand should stay free for pickup practice");
-            Assert.That(hands.GetActiveHand((mob, handsComp)), Is.EqualTo(rightHand));
 
             Assert.That(entMan.TryGetComponent<GravityComponent>(session.GridUid, out var gravity));
             Assert.That(gravity!.Enabled, Is.True, "Passenger map must have gravity enabled");
@@ -2427,12 +2698,8 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(session, Is.Not.Null);
             Assert.That(session!.GoalIndex, Is.EqualTo(1));
-            // Welcome ends on drink-water (UseInHand). Auto-opening the Bound UI in that same
-            // AdvanceSubGoal steals focus from the bottle — Passenger has no chamber pad, so the
-            // tablet stays closed until the player activates it.
-            Assert.That(session.GuideAutoOpened, Is.False);
-            Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.False,
-                "Guide must not auto-open when welcome ends on a UseInHand (drink)");
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(entMan.EntityExists(session.MentorUid), Is.True, "Mentor persists across goals");
             Assert.That(entMan.GetComponent<TutorialGateDoorComponent>(gate).Unlocked, Is.False,
                 "Pry exit must remain closed after welcome unlock pass");
         });
@@ -2765,6 +3032,102 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
+    public async Task TutorialChooseAction_ReselectPassengerSpawnsCleanly()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var actions = server.System<SharedActionsSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        EntityUid firstBody = default;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(pair.Player!.AttachedEntity, Is.Not.Null);
+            firstBody = pair.Player.AttachedEntity!.Value;
+            Assert.That(entMan.HasComponent<TutorialParticipantComponent>(firstBody), Is.True);
+        });
+
+        await server.WaitPost(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            EntityUid? chooseAction = null;
+            foreach (var (actionUid, _) in actions.GetActions(mob))
+            {
+                if (entMan.GetComponent<MetaDataComponent>(actionUid).EntityPrototype?.ID ==
+                    "ActionTutorialChooseRole")
+                {
+                    chooseAction = actionUid;
+                    break;
+                }
+            }
+
+            Assert.That(chooseAction, Is.Not.Null);
+            actions.PerformAction(mob, (chooseAction.Value, entMan.GetComponent<ActionComponent>(chooseAction.Value)));
+        });
+        await pair.RunTicksSync(20);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            Assert.That(player.AttachedEntity, Is.Not.Null);
+            Assert.That(entMan.HasComponent<GhostComponent>(player.AttachedEntity!.Value), Is.True);
+            Assert.That(tutorial.IsPickerOpen(player), Is.True);
+            Assert.That(entMan.Deleted(firstBody) || entMan.IsQueuedForDeletion(firstBody), Is.True,
+                "Leaving via Choose a tutorial must tear down the previous Passenger body");
+        });
+
+        // Reselecting the same role must spawn a fresh session (no mid-transfer map unload leftovers).
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            Assert.That(player.AttachedEntity, Is.Not.Null, "Passenger reselect must attach a living body");
+            var mob = player.AttachedEntity!.Value;
+            Assert.That(entMan.HasComponent<GhostComponent>(mob), Is.False);
+            Assert.That(entMan.HasComponent<TutorialParticipantComponent>(mob), Is.True);
+            Assert.That(mob, Is.Not.EqualTo(firstBody));
+
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.State, Is.EqualTo(TutorialSessionState.InTutorial));
+            Assert.That(session.SelectedRoleId, Is.EqualTo("TutorialPassenger"));
+            Assert.That(session.BodyUid, Is.EqualTo(mob));
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid),
+                "Passenger reselect must spawn a mentor coach");
+            Assert.That(entMan.Deleted(session.MentorUid), Is.False);
+            Assert.That(tutorial.IsPickerOpen(player), Is.False);
+        });
+    }
+
+    [Test]
     public async Task TutorialPassenger_ClosedBottleUseDoesNotAdvanceDrinkGoal()
     {
         var pair = Pair;
@@ -2858,13 +3221,9 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(session, Is.Not.Null);
             Assert.That(session!.GoalIndex, Is.EqualTo(0), "Opening a closed bottle must not finish welcome");
             Assert.That(session.SubGoalIndex, Is.EqualTo(7));
-            Assert.That(session.GuideAutoOpened, Is.False,
-                "Deferred guide must not open on the first Z that only opens the bottle");
-            Assert.That(
-                server.System<UserInterfaceSystem>()
-                    .IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob),
-                Is.False,
-                "Tutorial prompt must stay closed when only opening the bottle");
+            Assert.That(session.GuideUid, Is.EqualTo(EntityUid.Invalid),
+                "Passenger has no guide tablet that could steal focus");
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
         });
 
         await server.WaitPost(() =>
@@ -2885,18 +3244,13 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(session, Is.Not.Null);
             Assert.That(session!.GoalIndex, Is.EqualTo(1), "Second Z (drink) should finish welcome");
-            Assert.That(session.GuideAutoOpened, Is.False,
-                "Drinking must not open the tutorial Bound UI (deferred open is pad-gated)");
-            Assert.That(
-                server.System<UserInterfaceSystem>()
-                    .IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob),
-                Is.False,
-                "Tutorial prompt must stay closed after drinking");
+            Assert.That(session.GuideUid, Is.EqualTo(EntityUid.Invalid));
+            Assert.That(entMan.EntityExists(session.MentorUid), Is.True);
         });
     }
 
     [Test]
-    public async Task TutorialGuide_StuckHintDoesNotAdvanceCurriculum()
+    public async Task TutorialMentor_StuckHintDoesNotAdvanceCurriculum()
     {
         var pair = Pair;
         var server = pair.Server;
@@ -2933,19 +3287,24 @@ public sealed class TutorialServerTests : GameTest
             }
 
             Assert.That(session, Is.Not.Null);
-            var guide = new Entity<TutorialGuideComponent>(
-                session!.GuideUid,
-                entMan.GetComponent<TutorialGuideComponent>(session.GuideUid));
+            Assert.That(session!.GuideUid, Is.EqualTo(EntityUid.Invalid));
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
 
             Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
             Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.ReachMarker));
             Assert.That(part.StuckHintText, Is.Not.Empty, "Passenger purple-X step should author a stuckHint");
             Assert.That(part.HintText, Is.Not.Empty);
-            Assert.That(guideSys.TryGoNext(guide, mob), Is.False, "Sensor tip cannot be skipped with Next");
 
             var goalBefore = part.GoalIndex;
             var subBefore = part.SubGoalIndex;
             Assert.That(guideSys.TryShowStuckHint(mob), Is.True);
+            Assert.That(entMan.TryGetComponent(mob, out part));
+            Assert.That(part!.GoalIndex, Is.EqualTo(goalBefore));
+            Assert.That(part.SubGoalIndex, Is.EqualTo(subBefore));
+
+            // Mentor click while on a sensor tip should not advance curriculum.
+            var interact = new InteractHandEvent(mob, session.MentorUid);
+            entMan.EventBus.RaiseLocalEvent(session.MentorUid, interact);
             Assert.That(entMan.TryGetComponent(mob, out part));
             Assert.That(part!.GoalIndex, Is.EqualTo(goalBefore));
             Assert.That(part.SubGoalIndex, Is.EqualTo(subBefore));
@@ -3053,7 +3412,7 @@ public sealed class TutorialServerTests : GameTest
         await server.WaitPost(() =>
         {
             server.System<TutorialServerRuleSystem>()
-                .TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
+                .TrySelectRole(pair.Player!, "TutorialCargoTechnician", confirmedStub: false);
         });
         await pair.RunTicksSync(60);
 
@@ -3080,20 +3439,72 @@ public sealed class TutorialServerTests : GameTest
                 entMan.GetComponent<TutorialGuideComponent>(session.GuideUid));
 
             Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
-            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.ReachMarker));
-            Assert.That(guideSys.TryGoNext(guide, mob), Is.False, "Closed UI cannot skip a sensor tip");
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
             Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.False);
 
-            // Sensor advance while closed should still move curriculum and resync when reopened.
+            // Advance while closed should still move curriculum and resync when reopened.
             server.System<TutorialServerRuleSystem>().AdvanceSubGoal(mob);
             Assert.That(entMan.TryGetComponent(mob, out part));
             Assert.That(part!.GoalIndex, Is.EqualTo(0));
-            Assert.That(part.SubGoalIndex, Is.EqualTo(1), "Advance from meet-trainer into pick-crowbar");
+            Assert.That(part.SubGoalIndex, Is.EqualTo(1));
 
             ui.OpenUi(session.GuideUid, TutorialPromptUiKey.Key, mob);
             var state = guideSys.GetUiState(guide, mob);
             Assert.That(state.ViewGoalIndex, Is.EqualTo(part.GoalIndex));
             Assert.That(state.ProgressIndex, Is.EqualTo(part.SubGoalIndex));
+        });
+    }
+
+    [Test]
+    public async Task TutorialMentor_AcknowledgeAdvancesOnInteract()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            server.System<TutorialServerRuleSystem>()
+                .TrySelectRole(pair.Player!, "TutorialChef", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            var mob = player.AttachedEntity!.Value;
+            var entMan = server.EntMan;
+
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.GuideUid, Is.EqualTo(EntityUid.Invalid));
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
+
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
+            var subBefore = part.SubGoalIndex;
+
+            var interact = new InteractHandEvent(mob, session.MentorUid);
+            entMan.EventBus.RaiseLocalEvent(session.MentorUid, interact);
+
+            Assert.That(entMan.TryGetComponent(mob, out part));
+            Assert.That(part!.SubGoalIndex, Is.EqualTo(subBefore + 1),
+                "Empty-hand click on mentor should Acknowledge-advance");
         });
     }
 
@@ -4415,7 +4826,11 @@ public sealed class TutorialServerTests : GameTest
             var mob = pair.Player!.AttachedEntity!.Value;
             Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
             Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
-            tutorial.AdvanceSubGoal(mob);
+            tutorial.AdvanceSubGoal(mob); // intro Acknowledge → wear gloves
+
+            Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
+                Is.EqualTo(TutorialStepComplete.WearItem));
+            tutorial.AdvanceSubGoal(mob); // gloves → hold screwdriver
 
             Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
                 Is.EqualTo(TutorialStepComplete.HoldTag));
@@ -4461,7 +4876,8 @@ public sealed class TutorialServerTests : GameTest
         await server.WaitAssertion(() =>
         {
             var mob = pair.Player!.AttachedEntity!.Value;
-            tutorial.AdvanceSubGoal(mob);
+            tutorial.AdvanceSubGoal(mob); // intro → gloves
+            tutorial.AdvanceSubGoal(mob); // gloves → screwdriver
             Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
                 Is.EqualTo(TutorialStepComplete.HoldTag));
 
@@ -4610,5 +5026,234 @@ public sealed class TutorialServerTests : GameTest
         });
 
         await server.WaitPost(() => entMan.DeleteEntity(borg));
+    }
+
+    [Test]
+    public async Task TutorialMedicalDoctor_ScanRequiresHeldAnalyzer_HealIgnoresDead_DefibRevives()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var hands = server.System<SharedHandsSystem>();
+        var interaction = server.System<SharedInteractionSystem>();
+        var damageable = server.System<DamageableSystem>();
+        var itemToggle = server.System<ItemToggleSystem>();
+        var defib = server.System<DefibrillatorSystem>();
+        var tags = server.System<TagSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialMedicalDoctor", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        EntityUid mob = default;
+        EntityUid patient = default;
+        EntityUid corpse = default;
+        EntityUid analyzer = default;
+        EntityUid defibrillator = default;
+
+        void DropAllHeld()
+        {
+            foreach (var held in hands.EnumerateHeld(mob).ToArray())
+                hands.TryDrop(mob, held, checkActionBlocker: false);
+        }
+
+        EntityUid FindOnMap(string protoId)
+        {
+            var mapUid = entMan.GetComponent<TransformComponent>(mob).MapUid;
+            var itemQuery = entMan.EntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            while (itemQuery.MoveNext(out var uid, out var meta, out var xform))
+            {
+                if (xform.MapUid != mapUid || meta.EntityPrototype?.ID != protoId)
+                    continue;
+                return uid;
+            }
+
+            return EntityUid.Invalid;
+        }
+
+        await server.WaitAssertion(() =>
+        {
+            mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out _), Is.True);
+
+            var mapUid = entMan.GetComponent<TransformComponent>(mob).MapUid;
+            var query = entMan.EntityQueryEnumerator<TutorialPracticeMobComponent, MetaDataComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out _, out var meta, out var xform))
+            {
+                if (xform.MapUid != mapUid)
+                    continue;
+
+                switch (meta.EntityPrototype?.ID)
+                {
+                    case "TutorialPracticeMobPatient":
+                        patient = uid;
+                        break;
+                    case "TutorialPracticeMobCorpse":
+                        corpse = uid;
+                        break;
+                }
+            }
+
+            Assert.That(patient, Is.Not.EqualTo(EntityUid.Invalid), "Doctor arena must spawn a living patient");
+            Assert.That(corpse, Is.Not.EqualTo(EntityUid.Invalid), "Doctor arena must spawn a practice corpse");
+            Assert.That(tags.HasTag(patient, (ProtoId<TagPrototype>) "TutorialPracticePatient"), Is.True);
+            Assert.That(tags.HasTag(corpse, (ProtoId<TagPrototype>) "TutorialPracticeCorpse"), Is.True);
+            Assert.That(entMan.GetComponent<MobStateComponent>(corpse).CurrentState, Is.EqualTo(MobState.Dead),
+                "Corpse spawnDamage should put the practice mob in Dead");
+
+            // Advance into scan-patient (InteractTargetHolding).
+            for (var i = 0; i < 20; i++)
+            {
+                if (!tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var sub))
+                    break;
+                if (sub.Id == "scan-patient")
+                    break;
+                if (sub.Complete == TutorialStepComplete.Acknowledge)
+                    tutorial.AdvanceSubGoal(mob);
+                else if (sub.Complete == TutorialStepComplete.HoldItem &&
+                         sub.Entity == new EntProtoId("ClothingEyesHudMedical"))
+                {
+                    DropAllHeld();
+                    var hud = FindOnMap("ClothingEyesHudMedical");
+                    Assert.That(hud, Is.Not.EqualTo(EntityUid.Invalid));
+                    Assert.That(hands.TryPickupAnyHand(mob, hud, checkActionBlocker: false, animate: false), Is.True);
+                }
+                else if (sub.Complete == TutorialStepComplete.HoldItem &&
+                         sub.Entity == new EntProtoId("HandheldHealthAnalyzer"))
+                {
+                    DropAllHeld();
+                    analyzer = FindOnMap("HandheldHealthAnalyzer");
+                    Assert.That(analyzer, Is.Not.EqualTo(EntityUid.Invalid));
+                    Assert.That(hands.TryPickupAnyHand(mob, analyzer, checkActionBlocker: false, animate: false), Is.True);
+                }
+                else
+                {
+                    Assert.Fail($"Unexpected sub-goal while seeking scan-patient: {sub.Id} ({sub.Complete})");
+                    break;
+                }
+            }
+
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var scanSub));
+            Assert.That(scanSub.Id, Is.EqualTo("scan-patient"));
+            Assert.That(scanSub.Complete, Is.EqualTo(TutorialStepComplete.InteractTargetHolding));
+
+            // Empty-hand click must not advance — drop analyzer first.
+            DropAllHeld();
+            var emptyHand = new UserInteractHandEvent(mob, patient);
+            entMan.EventBus.RaiseLocalEvent(mob, emptyHand, true);
+        });
+        await pair.RunTicksSync(2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var stillScan));
+            Assert.That(stillScan.Id, Is.EqualTo("scan-patient"),
+                "Empty-hand interact must not complete InteractTargetHolding");
+
+            DropAllHeld();
+            if (analyzer == EntityUid.Invalid || entMan.Deleted(analyzer))
+                analyzer = FindOnMap("HandheldHealthAnalyzer");
+            Assert.That(hands.TryPickupAnyHand(mob, analyzer, checkActionBlocker: false, animate: false), Is.True);
+            var coords = entMan.GetComponent<TransformComponent>(patient).Coordinates;
+            Assert.That(interaction.InteractUsing(mob, analyzer, patient, coords, checkCanInteract: false, checkCanUse: false),
+                Is.True);
+        });
+        await pair.RunTicksSync(2);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var afterScan));
+            Assert.That(afterScan.Id, Is.EqualTo("med-vend"),
+                "Held analyzer on TutorialPracticePatient should advance scan-patient");
+
+            // Force-advance to heal-dummy, then prove Dead corpses are ignored.
+            for (var i = 0; i < 20; i++)
+            {
+                if (!tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var sub))
+                    break;
+                if (sub.Id == "heal-dummy")
+                    break;
+                tutorial.AdvanceSubGoal(mob);
+            }
+
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var healSub));
+            Assert.That(healSub.Id, Is.EqualTo("heal-dummy"));
+
+            // Clear living patient damage; corpse stays dead/high damage.
+            Assert.That(entMan.TryGetComponent<DamageableComponent>(patient, out var patientDmg), Is.True);
+            damageable.SetDamage((patient, patientDmg!), new DamageSpecifier());
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var afterHeal));
+            Assert.That(afterHeal.Id, Is.Not.EqualTo("heal-dummy"),
+                "PracticeMobDamageBelow must ignore Dead corpses and advance when the living patient is healed");
+
+            // Force-advance past epi/crit tips into the revive goal, then pick up the defib.
+            for (var i = 0; i < 30; i++)
+            {
+                if (!tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var sub))
+                    break;
+                if (sub.Id is "hold-defib" or "revive-corpse")
+                    break;
+                tutorial.AdvanceSubGoal(mob);
+            }
+
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var holdDefib));
+            Assert.That(holdDefib.Id, Is.EqualTo("hold-defib"),
+                $"Expected hold-defib, at {holdDefib.Id} ({holdDefib.Complete})");
+
+            DropAllHeld();
+            defibrillator = FindOnMap("DefibrillatorOneHandedUnpowered");
+            Assert.That(defibrillator, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(hands.TryPickupAnyHand(mob, defibrillator, checkActionBlocker: false, animate: false), Is.True);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var reviveSub));
+            Assert.That(reviveSub.Id, Is.EqualTo("revive-corpse"),
+                $"Holding defib should advance to revive-corpse, at {reviveSub.Id}");
+
+            // Reset to the tutorial mix — asphyx can climb while the corpse waits mid-test.
+            var proto = server.ProtoMan;
+            var blunt = proto.Index<DamageTypePrototype>("Blunt");
+            var asphyx = proto.Index<DamageTypePrototype>("Asphyxiation");
+            var readyDamage = new DamageSpecifier(blunt, FixedPoint2.New(160)) +
+                              new DamageSpecifier(asphyx, FixedPoint2.New(50));
+            Assert.That(entMan.TryGetComponent<DamageableComponent>(corpse, out var corpseDmg), Is.True);
+            damageable.SetDamage((corpse, corpseDmg!), readyDamage);
+            Assert.That(entMan.GetComponent<MobStateComponent>(corpse).CurrentState, Is.EqualTo(MobState.Dead));
+
+            Assert.That(itemToggle.TryActivate(defibrillator, mob), Is.True);
+            defib.Zap(defibrillator, corpse, mob);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(entMan.GetComponent<MobStateComponent>(corpse).CurrentState, Is.EqualTo(MobState.Critical),
+                "210 damage corpse with 50 asphyx should revive after one zap (-40 asphyx + electrocution)");
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var afterRevive));
+            // ReachMarker may auto-complete if the player already stands on med-pass.
+            Assert.That(afterRevive.Id, Is.EqualTo("walk").Or.EqualTo("done"),
+                $"PracticeMobRevived should leave revive-corpse (at {afterRevive.Id})");
+            Assert.That(afterRevive.Complete, Is.Not.EqualTo(TutorialStepComplete.PracticeMobRevived));
+        });
     }
 }

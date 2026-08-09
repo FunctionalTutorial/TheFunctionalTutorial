@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialQuartermaster
+  mentorName: Urist McBudget
   job: Quartermaster
   stub: false
   category: Cargo

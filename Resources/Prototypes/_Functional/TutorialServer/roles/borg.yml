@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialBorg
+  mentorName: Urist McLaws
   job: Borg
   spawnEntity: TutorialPlayerBorg
   stub: false

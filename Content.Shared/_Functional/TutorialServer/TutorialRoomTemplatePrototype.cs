@@ -47,4 +47,11 @@ public sealed partial class TutorialRoomTemplatePrototype : IPrototype
 
     [DataField]
     public int MaxCopies = 8;
+
+    /// <summary>
+    /// Extra degrees added to perimeter wall-light facing (PointLight local offset faces -Y).
+    /// Arrivals crop sprites need 180 so fixtures read as wall-mounted.
+    /// </summary>
+    [DataField]
+    public float LightFacingOffsetDegrees;
 }

@@ -6,6 +6,7 @@ using Content.Shared.Preferences.Loadouts;
 using Content.Shared.Research.Prototypes;
 using Content.Shared.Roles;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Content.Shared._Functional.TutorialServer;
@@ -142,6 +143,13 @@ public sealed partial class TutorialRolePrototype : IPrototype
     public Vector2 SpawnOffset;
 
     /// <summary>
+    /// Offset from the chamber / zone-origin spawn point for the soft-following mentor.
+    /// Defaults beside the player at <c>(1.2, 0)</c>.
+    /// </summary>
+    [DataField]
+    public Vector2 MentorSpawnOffset = new(1.2f, 0f);
+
+    /// <summary>
     /// Display name override locale id. Falls back to job/antag name.
     /// </summary>
     [DataField]
@@ -166,6 +174,13 @@ public sealed partial class TutorialRolePrototype : IPrototype
     /// </summary>
     [DataField]
     public bool AutoOpenGuide = true;
+
+    /// <summary>
+    /// Display name for the soft-following mentor on single-grid roles (e.g. Urist McMalpractice).
+    /// Ignored for travel/off-grid roles that use the handheld coach instead.
+    /// </summary>
+    [DataField]
+    public string? MentorName;
 }
 
 [DataDefinition]
@@ -354,6 +369,7 @@ public sealed partial class TutorialPracticeSpawn
     public bool AlwaysPowered = true;
 }
 
+[Serializable, NetSerializable]
 public enum TutorialStepComplete : byte
 {
     /// <summary>Player presses Continue on the HUD.</summary>
@@ -367,6 +383,12 @@ public enum TutorialStepComplete : byte
 
     /// <summary>Player interacts with a world target that has <see cref="TutorialSubGoalData.Tag"/>.</summary>
     InteractTargetTag,
+
+    /// <summary>
+    /// Player interacts with a world target that has <see cref="TutorialSubGoalData.Tag"/>
+    /// while holding an item matching <see cref="TutorialSubGoalData.Entity"/>.
+    /// </summary>
+    InteractTargetHolding,
 
     /// <summary>Player holds an item matching <see cref="TutorialSubGoalData.Entity"/>.</summary>
     HoldItem,
@@ -424,7 +446,10 @@ public enum TutorialStepComplete : byte
     /// <summary>Player cuffed a <see cref="TutorialPracticeMobComponent"/> on their map.</summary>
     PracticeMobCuffed,
 
-    /// <summary>Practice mob total damage is at or below MaxDamage.</summary>
+    /// <summary>
+    /// Non-dead practice mobs on the map have total damage at or below MaxDamage.
+    /// Dead practice mobs are ignored so a corpse can coexist with a heal drill.
+    /// </summary>
     PracticeMobDamageBelow,
 
     /// <summary>AME controller on the map has fuel and is injecting.</summary>
@@ -560,6 +585,11 @@ public enum TutorialStepComplete : byte
     PracticeMobDead,
 
     /// <summary>
+    /// A practice mob on the map left Dead for Critical or Alive (e.g. successful defibrillation).
+    /// </summary>
+    PracticeMobRevived,
+
+    /// <summary>
     /// Player successfully finished a changeling devour (<c>ChangelingDevouredEvent</c>).
     /// </summary>
     ChangelingDevoured,
@@ -648,4 +678,25 @@ public enum TutorialStepComplete : byte
     /// (must differ from the chassis's initially auto-selected module — use after a tip).
     /// </summary>
     BorgModuleSelected,
+
+    /// <summary>
+    /// Player is wearing <see cref="TutorialSubGoalData.Entity"/> in an inventory clothing slot.
+    /// </summary>
+    WearItem,
+
+    /// <summary>
+    /// A tagged practice entity on the map has power disabled / is unpowered
+    /// (<see cref="TutorialSubGoalData.Tag"/>).
+    /// </summary>
+    TargetPowerDisabled,
+
+    /// <summary>
+    /// A tagged door on the map is fully open (<see cref="TutorialSubGoalData.Tag"/>).
+    /// </summary>
+    TargetDoorOpen,
+
+    /// <summary>
+    /// A tagged entity on the map has all power wires cut (<see cref="TutorialSubGoalData.Tag"/>).
+    /// </summary>
+    PowerWiresCut,
 }

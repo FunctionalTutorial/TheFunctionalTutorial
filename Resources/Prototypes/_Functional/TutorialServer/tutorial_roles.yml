@@ -3,6 +3,7 @@
 
 - type: tutorialRole
   id: TutorialLawyer
+  mentorName: Urist McObjection
   job: Lawyer
   stub: true
   category: Stub
@@ -18,6 +19,7 @@
 
 - type: tutorialRole
   id: TutorialLibrarian
+  mentorName: Urist McShush
   job: Librarian
   stub: true
   category: Stub
@@ -33,6 +35,7 @@
 
 - type: tutorialRole
   id: TutorialMusician
+  mentorName: Urist McTone
   job: Musician
   stub: true
   category: Stub
@@ -48,6 +51,7 @@
 
 - type: tutorialRole
   id: TutorialReporter
+  mentorName: Urist McScoop
   job: Reporter
   stub: true
   category: Stub
@@ -63,6 +67,7 @@
 
 - type: tutorialRole
   id: TutorialVisitor
+  mentorName: Urist McTourist
   job: Visitor
   stub: true
   category: Stub
@@ -78,6 +83,7 @@
 
 - type: tutorialRole
   id: TutorialMedicalIntern
+  mentorName: Urist McSponge
   job: MedicalIntern
   stub: true
   category: Stub
@@ -93,6 +99,7 @@
 
 - type: tutorialRole
   id: TutorialPsychologist
+  mentorName: Urist McCouch
   job: Psychologist
   stub: true
   category: Stub
@@ -113,6 +120,7 @@
 
 - type: tutorialRole
   id: TutorialStationAi
+  mentorName: Urist McSilicon
   job: StationAi
   stub: true
   category: Stub

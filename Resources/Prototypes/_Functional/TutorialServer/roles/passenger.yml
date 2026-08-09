@@ -3,6 +3,7 @@
 # between rooms is crowbarred to exit into room 1 (finish).
 - type: tutorialRole
   id: TutorialPassenger
+  mentorName: Urist McGreentide
   job: Passenger
   stub: false
   simplifiedEnvironment: true
@@ -13,12 +14,12 @@
 
   roomTemplate: TutorialSectionArrivals
   guidebook: Jobs
+  # One tile south of the purple X trainer-spot marker at (4, -1).
+  mentorSpawnOffset: 4, -2
   practiceSpawns:
-  # Room 0 â€” walk end-to-end, then pickup / drop / use / stow / drink (no room change).
+  # Room 0 - walk end-to-end, then pickup / drop / use / stow / drink (no room change).
   # Marker offset > ReachMarker range (1.5) so spawn at chamber center does not auto-complete.
-  - id: TutorialPassengerTrainer
-    room: 0
-    offset: 3.5, -1
+  # Mentor is session-spawned (soft follow); only the walk marker stays authored here.
   - id: TutorialStepMarker
     room: 0
     offset: 4, -1
@@ -32,7 +33,7 @@
   - id: DrinkWaterBottleFull
     room: 0
     offset: 0.5, -1
-  # Chamber 1 â€” pry-exit destination (Arrivals maint gate). Keeps the second stamp.
+  # Chamber 1 - pry-exit destination (Arrivals maint gate). Keeps the second stamp.
   - id: TutorialStepMarker
     room: 1
     offset: 0, -1.5

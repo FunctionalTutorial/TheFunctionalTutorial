@@ -34,9 +34,6 @@ public sealed class TutorialPromptBuiState : BoundUserInterfaceState
 }
 
 [Serializable, NetSerializable]
-public sealed class TutorialPromptBackBuiMsg : BoundUserInterfaceMessage;
-
-[Serializable, NetSerializable]
 public sealed class TutorialPromptNextBuiMsg : BoundUserInterfaceMessage;
 
 [Serializable, NetSerializable]

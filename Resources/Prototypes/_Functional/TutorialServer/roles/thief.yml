@@ -9,6 +9,7 @@
 
 - type: tutorialRole
   id: TutorialAntagThief
+  mentorName: Urist McSticky
   job: Passenger
   antag: Thief
   stub: false

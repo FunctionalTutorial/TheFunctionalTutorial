@@ -47,10 +47,16 @@ public sealed partial class TutorialSessionData
     public bool Completed;
 
     /// <summary>
-    /// Handheld tutorial prompt device given at tutorial start.
+    /// Handheld tutorial prompt device given at tutorial start for travel/off-grid roles.
     /// </summary>
     [DataField]
     public EntityUid GuideUid;
+
+    /// <summary>
+    /// Soft-following mentor body for single-grid roles (mutually exclusive with <see cref="GuideUid"/>).
+    /// </summary>
+    [DataField]
+    public EntityUid MentorUid;
 
     /// <summary>
     /// True once the guide Bound UI has been auto-opened for this session

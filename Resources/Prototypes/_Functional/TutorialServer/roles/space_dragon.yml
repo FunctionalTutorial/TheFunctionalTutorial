@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialAntagDragon
+  mentorName: Urist McRift
   antag: Dragon
   stub: false
   simplifiedEnvironment: true

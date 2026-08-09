@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialAntagChangeling
+  mentorName: Urist McAbsorb
   job: Passenger
   antag: Changeling
   stub: true # temporarily greyed pending manual test

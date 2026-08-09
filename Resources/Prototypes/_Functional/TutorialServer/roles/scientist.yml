@@ -1,6 +1,7 @@
 # Scanners in the science lab, then a gated anomaly bay (isolation only).
 - type: tutorialRole
   id: TutorialScientist
+  mentorName: Urist McBoom
   job: Scientist
   stub: false
   simplifiedEnvironment: true

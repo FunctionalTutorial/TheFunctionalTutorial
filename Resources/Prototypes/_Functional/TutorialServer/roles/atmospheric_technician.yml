@@ -1,6 +1,7 @@
 # Engineering progression step 3/4 — distro, TEG, waste filtering.
 - type: tutorialRole
   id: TutorialAtmosphericTechnician
+  mentorName: Urist McPlasma
   job: AtmosphericTechnician
   stub: false
   category: Engineering

@@ -222,6 +222,11 @@
         Blunt: 30
         Slash: 10
         Heat: 20
+  # Tag replaces parent list — keep TutorialPracticeMob.
+  - type: Tag
+    tags:
+    - TutorialPracticeMob
+    - TutorialPracticePatient
 
 - type: entity
   parent: TutorialPracticeMob
@@ -234,6 +239,10 @@
         Blunt: 60
         Slash: 20
         Heat: 40
+  - type: Tag
+    tags:
+    - TutorialPracticeMob
+    - TutorialPracticePatient
 
 # Light damage so one bible heal clears PracticeMobDamageBelow maxDamage 5.
 - type: entity
@@ -306,6 +315,26 @@
   components:
   - type: DatasetVocalizer
     dataset: TutorialPracticeMobCasualtyAds
+
+# Dead at spawn (210 total). One defib zap clears 40 asphyx → 170 < 200 → Critical.
+- type: entity
+  parent: [TutorialPracticeMob, TutorialPracticeMobSpeakingBase]
+  id: TutorialPracticeMobCorpse
+  name: Urist McCorpse
+  description: A practice corpse for defibrillator drills. Just dead enough to teach thresholds.
+  suffix: Tutorial, Corpse
+  components:
+  - type: TutorialPracticeMob
+    spawnDamage:
+      types:
+        Blunt: 160
+        Asphyxiation: 50
+  - type: Tag
+    tags:
+    - TutorialPracticeMob
+    - TutorialPracticeCorpse
+  - type: DatasetVocalizer
+    dataset: TutorialPracticeMobPatientAds
 
 - type: entity
   parent: [TutorialPracticeMobLightDamage, TutorialPracticeMobSpeakingBase]
@@ -480,14 +509,12 @@
     - DoorRemoteWhitelist
     - TutorialAirlock
 
-# Powered airlock for wire-hacking practice (screwdriver → open panel).
+# Powered engineering airlock for wire-hacking practice (pulse POWR → crowbar → cut).
 - type: entity
-  parent: AirlockMaint
+  parent: AirlockEngineering
   id: TutorialHackAirlock
   suffix: Tutorial, Hack
   components:
-  - type: ApcPowerReceiver
-    needsPower: false
   - type: Tag
     tags:
     - Airlock
@@ -734,17 +761,41 @@
     tags:
     - TutorialRollerBed
 
-# HoP desk visitors — scripted speak + ID drop (not HTN AI).
-# Passenger opening-block coach (scripted lines only — no idle vocalizer).
+# Soft-following coach for single-grid tutorials (spawned by TutorialServerRuleSystem).
 - type: entity
   parent: TutorialPracticeMob
-  id: TutorialPassengerTrainer
+  id: TutorialMentor
   name: Urist McMentor
-  description: A friendly practice mentor who teaches the basics. Empty-hand click them to hear the current tip again.
-  suffix: Tutorial, Trainer
+  description: A friendly practice mentor who follows you and teaches the current tip. Empty-hand click them to hear it again.
+  suffix: Tutorial, Mentor
   components:
   - type: Loadout
     prototypes: [VisitorLibrarian]
+  - type: TutorialMentor
+  - type: TutorialTrainer
+  - type: InputMover
+  - type: MobMover
+  - type: HTN
+    rootTask:
+      task: TutorialFollowCompound
+    blackboard:
+      FollowCloseRange: !type:Single
+        2.0
+      FollowRange: !type:Single
+        3.0
+      NavInteract: !type:Bool
+        true
+      MinimumIdleTime: !type:Single
+        0.5
+      MaximumIdleTime: !type:Single
+        1.5
+
+# Passenger opening-block coach with flavored lines (falls back to sub-goal text otherwise).
+- type: entity
+  parent: TutorialMentor
+  id: TutorialPassengerMentor
+  suffix: Tutorial, Mentor, Passenger
+  components:
   - type: TutorialTrainer
     lines:
     - subGoalId: meet-trainer
@@ -767,6 +818,12 @@
       dialogue: tutorial-passenger-trainer-crowbar-ready
     - subGoalId: pry-door
       dialogue: tutorial-passenger-trainer-pry
+
+# Legacy id kept as alias so old maps/refs do not break.
+- type: entity
+  parent: TutorialPassengerMentor
+  id: TutorialPassengerTrainer
+  categories: [ HideSpawnMenu ]
 
 - type: entity
   parent: TutorialPracticeMob

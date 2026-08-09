@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialSecurityOfficer
+  mentorName: Urist McBatong
   job: SecurityOfficer
   stub: false
   simplifiedEnvironment: true

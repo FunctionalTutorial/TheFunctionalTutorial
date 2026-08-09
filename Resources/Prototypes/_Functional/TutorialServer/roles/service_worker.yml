@@ -1,6 +1,7 @@
-# Service sampler â€” one kitchen section; mini-stations placed around the room (no stamps).
+# Service sampler - one kitchen section; mini-stations placed around the room (no stamps).
 - type: tutorialRole
   id: TutorialServiceWorker
+  mentorName: Urist McTemp
   job: ServiceWorker
   stub: false
   simplifiedEnvironment: true

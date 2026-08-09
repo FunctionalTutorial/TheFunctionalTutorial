@@ -1,20 +1,24 @@
 using Content.Server.Chat.Systems;
+using Content.Server.Popups;
 using Content.Shared._Functional.TutorialServer;
 using Content.Shared.Chat;
 using Content.Shared.Interaction;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
+using Content.Shared.Popups;
 using Robust.Shared.Timing;
 
 namespace Content.Server._Functional.TutorialServer;
 
 /// <summary>
-/// Speaks trainer lines when a same-map participant's sub-goal matches, on hug/interact, and on a 10s reminder.
+/// Speaks coach lines for mentors (and shared dialogue resolution), handles click-to-repeat /
+/// Acknowledge advance / stuck hints when there is no handheld guide.
 /// </summary>
 public sealed class TutorialTrainerSystem : EntitySystem
 {
     [Dependency] private readonly ChatSystem _chat = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly PopupSystem _popup = default!;
     [Dependency] private readonly TutorialServerRuleSystem _tutorial = default!;
 
     private static readonly TimeSpan ReminderInterval = TimeSpan.FromSeconds(10);
@@ -36,27 +40,20 @@ public sealed class TutorialTrainerSystem : EntitySystem
                 mobState.CurrentState is MobState.Dead or MobState.Critical)
                 continue;
 
-            var mapUid = trainerXform.MapUid;
-            if (mapUid == null)
+            if (!TryResolvePlayer(trainerUid, trainerXform, out var playerUid, out var part))
                 continue;
 
-            if (!TryFindParticipantOnMap(mapUid.Value, out var playerUid, out var part))
+            if (!TryResolveDialogue(trainerUid, trainer, playerUid, part, out var subGoalId, out var dialogue))
                 continue;
 
-            if (!_tutorial.TryGetCurrentSubGoal(playerUid, part, out var sub))
-                continue;
-
-            if (!TryGetLine(trainer, sub.Id, out var dialogue))
-                continue;
-
-            if (trainer.LastSpokenSubGoal != sub.Id)
+            if (trainer.LastSpokenSubGoal != subGoalId)
             {
-                Speak(trainerUid, trainer, sub.Id, dialogue);
+                Speak(trainerUid, trainer, subGoalId, dialogue);
                 continue;
             }
 
             if (_timing.CurTime >= trainer.NextReminderAt)
-                Speak(trainerUid, trainer, sub.Id, dialogue);
+                Speak(trainerUid, trainer, subGoalId, dialogue);
         }
     }
 
@@ -68,18 +65,113 @@ public sealed class TutorialTrainerSystem : EntitySystem
         if (!TryComp<TutorialParticipantComponent>(args.User, out var part))
             return;
 
-        if (!_tutorial.TryGetCurrentSubGoal(args.User, part, out var sub))
+        // Mentors only coach their bound player.
+        if (TryComp<TutorialMentorComponent>(ent, out var mentor) &&
+            mentor.PlayerUid != EntityUid.Invalid &&
+            mentor.PlayerUid != args.User)
             return;
 
-        if (!TryGetLine(ent.Comp, sub.Id, out var dialogue))
+        if (!TryResolveDialogue(ent, ent.Comp, args.User, part, out var subGoalId, out var dialogue))
             return;
 
-        // Do not mark handled — practice mobs can still play hug / InteractionPopup.
-        Speak(ent, ent.Comp, sub.Id, dialogue);
+        Speak(ent, ent.Comp, subGoalId, dialogue);
+
+        if (part.StepComplete == TutorialStepComplete.Acknowledge)
+        {
+            _tutorial.AdvanceSubGoal(args.User);
+            return;
+        }
+
+        // Waiting on a sensor: click shows the stuck hint when authored.
+        if (!string.IsNullOrEmpty(part.StuckHintText))
+            _popup.PopupEntity(part.StuckHintText, args.User, args.User, PopupType.Medium);
     }
 
-    private bool TryFindParticipantOnMap(EntityUid mapUid, out EntityUid playerUid, out TutorialParticipantComponent part)
+    /// <summary>
+    /// Resolves coach dialogue: trainer line override, else live sub-goal text.
+    /// </summary>
+    public bool TryResolveDialogue(
+        EntityUid coachUid,
+        TutorialTrainerComponent? trainer,
+        EntityUid playerUid,
+        TutorialParticipantComponent part,
+        out string subGoalId,
+        out string dialogue)
     {
+        subGoalId = string.Empty;
+        dialogue = string.Empty;
+
+        if (_tutorial.TryGetCurrentSubGoal(playerUid, part, out var sub))
+        {
+            subGoalId = sub.Id;
+            if (trainer != null && TryGetOverrideLine(trainer, sub.Id, out var overrideLoc))
+            {
+                dialogue = Loc.GetString(overrideLoc);
+                return !string.IsNullOrWhiteSpace(dialogue);
+            }
+
+            dialogue = Loc.GetString(sub.Text);
+            return !string.IsNullOrWhiteSpace(dialogue);
+        }
+
+        // Legacy flat steps.
+        if (part.StepCount <= 0 || string.IsNullOrEmpty(part.StepText))
+            return false;
+
+        subGoalId = $"legacy:{part.StepIndex}";
+        dialogue = part.StepText;
+        return true;
+    }
+
+    /// <summary>
+    /// Guide / mentor shared speak helper.
+    /// </summary>
+    public void SpeakAsCoach(EntityUid speakerUid, string subGoalId, string dialogue, Action<string, TimeSpan>? markSpoken)
+    {
+        _chat.TrySendInGameICMessage(
+            speakerUid,
+            dialogue,
+            InGameICChatType.Speak,
+            hideChat: false,
+            hideLog: true,
+            ignoreActionBlocker: true);
+
+        markSpoken?.Invoke(subGoalId, _timing.CurTime + ReminderInterval);
+    }
+
+    private void Speak(EntityUid trainerUid, TutorialTrainerComponent trainer, string subGoalId, string dialogue)
+    {
+        SpeakAsCoach(trainerUid, subGoalId, dialogue, (id, next) =>
+        {
+            trainer.LastSpokenSubGoal = id;
+            trainer.NextReminderAt = next;
+            Dirty(trainerUid, trainer);
+        });
+    }
+
+    private bool TryResolvePlayer(
+        EntityUid trainerUid,
+        TransformComponent trainerXform,
+        out EntityUid playerUid,
+        out TutorialParticipantComponent part)
+    {
+        if (TryComp<TutorialMentorComponent>(trainerUid, out var mentor) &&
+            mentor.PlayerUid != EntityUid.Invalid &&
+            !TerminatingOrDeleted(mentor.PlayerUid) &&
+            TryComp(mentor.PlayerUid, out part!))
+        {
+            playerUid = mentor.PlayerUid;
+            return true;
+        }
+
+        var mapUid = trainerXform.MapUid;
+        if (mapUid == null)
+        {
+            playerUid = default;
+            part = default!;
+            return false;
+        }
+
         var participants = EntityQueryEnumerator<TutorialParticipantComponent, TransformComponent>();
         while (participants.MoveNext(out playerUid, out part!, out var playerXform))
         {
@@ -92,7 +184,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
         return false;
     }
 
-    private static bool TryGetLine(TutorialTrainerComponent trainer, string subGoalId, out LocId dialogue)
+    private static bool TryGetOverrideLine(TutorialTrainerComponent trainer, string subGoalId, out LocId dialogue)
     {
         foreach (var line in trainer.Lines)
         {
@@ -105,22 +197,5 @@ public sealed class TutorialTrainerSystem : EntitySystem
 
         dialogue = default;
         return false;
-    }
-
-    private void Speak(EntityUid trainerUid, TutorialTrainerComponent trainer, string subGoalId, LocId dialogue)
-    {
-        var message = Loc.GetString(dialogue);
-        // ignoreActionBlocker: practice mobs can be SSD-slept; still coach the player in chat.
-        _chat.TrySendInGameICMessage(
-            trainerUid,
-            message,
-            InGameICChatType.Speak,
-            hideChat: false,
-            hideLog: true,
-            ignoreActionBlocker: true);
-
-        trainer.LastSpokenSubGoal = subGoalId;
-        trainer.NextReminderAt = _timing.CurTime + ReminderInterval;
-        Dirty(trainerUid, trainer);
     }
 }

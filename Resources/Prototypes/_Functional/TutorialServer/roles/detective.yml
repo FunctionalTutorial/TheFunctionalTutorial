@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialDetective
+  mentorName: Urist McNoir
   job: Detective
   stub: false
   simplifiedEnvironment: true

@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialSurgeryCyberMed
+  mentorName: Urist McCyberdoc
   job: MedicalDoctor
   stub: true # temporarily greyed pending manual test
   simplifiedEnvironment: true

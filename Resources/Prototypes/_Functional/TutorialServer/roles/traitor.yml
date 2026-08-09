@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialTraitor
+  mentorName: Urist McSyndicate
   job: Passenger
   antag: Traitor
   stub: false

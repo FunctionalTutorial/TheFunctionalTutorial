@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialCaptain
+  mentorName: Urist McDisk
   job: Captain
   stub: false
   simplifiedEnvironment: true

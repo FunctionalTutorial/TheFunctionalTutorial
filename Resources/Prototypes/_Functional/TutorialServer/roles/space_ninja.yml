@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialAntagSpaceNinja
+  mentorName: Urist McKatana
   job: Passenger
   antag: SpaceNinja
   stub: false

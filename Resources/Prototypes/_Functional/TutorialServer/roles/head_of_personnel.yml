@@ -1,6 +1,7 @@
 # Command crop zone origin sits in Cap quarters; HoP kit uses Saltern HoP-office offsets.
 - type: tutorialRole
   id: TutorialHeadOfPersonnel
+  mentorName: Urist McClipboard
   job: HeadOfPersonnel
   stub: false
   simplifiedEnvironment: true

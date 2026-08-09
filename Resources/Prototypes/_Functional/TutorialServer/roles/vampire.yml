@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialAntagVampire
+  mentorName: Urist McFang
   job: Passenger
   antag: Vampire
   stub: true # temporarily greyed pending manual test

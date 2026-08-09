@@ -35,6 +35,12 @@
   id: TutorialPracticeMob
 
 - type: Tag
+  id: TutorialPracticePatient
+
+- type: Tag
+  id: TutorialPracticeCorpse
+
+- type: Tag
   id: TutorialForensicsEvidence
 
 - type: Tag

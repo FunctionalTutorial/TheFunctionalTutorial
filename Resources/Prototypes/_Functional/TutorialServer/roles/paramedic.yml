@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialParamedic
+  mentorName: Urist McAmbulance
   job: Paramedic
   stub: false
   simplifiedEnvironment: true
@@ -38,6 +39,9 @@
   - id: HandheldHealthAnalyzer
     room: 0
     offset: -0.5, -1
+  - id: ClothingEyesHudMedical
+    room: 0
+    offset: -0.8, -1
   - id: TutorialStepMarker
     room: 0
     offset: 0, -1.5
@@ -61,6 +65,13 @@
       hint: tutorial-job-paramedic-sg-rollerbed-hint
       stuckHint: tutorial-job-paramedic-sg-rollerbed-stuck
       complete: Acknowledge
+    - id: hold-medhud
+      text: tutorial-job-paramedic-sg-medhud
+      complete: HoldItem
+      entity: ClothingEyesHudMedical
+    - id: medhud-tip
+      text: tutorial-job-paramedic-sg-medhud-tip
+      complete: Acknowledge
     - id: hold-epi
       text: tutorial-job-paramedic-sg-epi
       complete: HoldItem
@@ -68,8 +79,19 @@
   - id: rescue
     title: tutorial-job-paramedic-goal-rescue
     subGoals:
+    - id: hold-analyzer
+      text: tutorial-job-paramedic-sg-analyzer
+      complete: HoldItem
+      entity: HandheldHealthAnalyzer
+    - id: scan-patient
+      text: tutorial-job-paramedic-sg-scan
+      complete: InteractTargetHolding
+      entity: HandheldHealthAnalyzer
+      tag: TutorialPracticePatient
     - id: heal-dummy
       text: tutorial-job-paramedic-sg-heal
+      hint: tutorial-job-paramedic-sg-heal-hint
+      stuckHint: tutorial-job-paramedic-sg-heal-stuck
       complete: PracticeMobDamageBelow
       maxDamage: 25
     - id: buckle-patient

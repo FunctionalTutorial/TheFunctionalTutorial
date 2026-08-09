@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialAntagNukeops
+  mentorName: Urist McNuke
   job: Passenger
   antag: Nukeops
   stub: false

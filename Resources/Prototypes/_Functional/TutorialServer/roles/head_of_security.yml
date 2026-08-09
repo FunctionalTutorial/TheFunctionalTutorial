@@ -1,5 +1,6 @@
 - type: tutorialRole
   id: TutorialHeadOfSecurity
+  mentorName: Urist McRobust
   job: HeadOfSecurity
   stub: false
   simplifiedEnvironment: true
