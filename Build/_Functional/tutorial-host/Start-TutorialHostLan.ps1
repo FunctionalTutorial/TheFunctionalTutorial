@@ -29,6 +29,7 @@ function Write-Step([string]$msg) {
 }
 
 $serverDll = Join-Path $LiveRoot 'bin\Content.Server\Content.Server.dll'
+$clientDll = Join-Path $LiveRoot 'bin\Content.Client\Content.Client.dll'
 $clientZip = Join-Path $LiveRoot 'bin\Content.Server\Content.Client.zip'
 
 if (-not (Test-Path -LiteralPath $DotnetExe)) {
@@ -37,8 +38,24 @@ if (-not (Test-Path -LiteralPath $DotnetExe)) {
 if (-not (Test-Path -LiteralPath $serverDll)) {
     throw "Missing server dll: $serverDll (deploy a package first)"
 }
-if (-not (Test-Path -LiteralPath $clientZip)) {
-    Write-Warning "Missing $clientZip - launcher Direct Connect may fail to download client files."
+if (-not (Test-Path -LiteralPath $clientDll)) {
+    throw "Missing $clientDll - Magic ACZ needs bin/Content.Client next to the server build."
+}
+
+# Stale Hybrid ACZ zip wins over Magic ACZ and ships old Shared net types to launcher clients.
+if (Test-Path -LiteralPath $clientZip) {
+    $zipTime = (Get-Item -LiteralPath $clientZip).LastWriteTimeUtc
+    $dllTime = (Get-Item -LiteralPath $clientDll).LastWriteTimeUtc
+    if ($zipTime -lt $dllTime) {
+        Write-Step "Removing stale Content.Client.zip ($zipTime UTC) older than Content.Client.dll ($dllTime UTC)"
+        Remove-Item -LiteralPath $clientZip -Force
+    }
+    else {
+        Write-Host "Using Hybrid ACZ zip from $zipTime UTC"
+    }
+}
+else {
+    Write-Host "No Content.Client.zip — launcher clients will use Magic ACZ from bin/Content.Client"
 }
 
 Write-Step 'Stopping supervisor / relay / old SS14 (if any)'
@@ -49,7 +66,7 @@ foreach ($script in @('Stop-Supervisor.ps1', 'Stop-Relay.ps1', 'Stop-Ss14.ps1'))
     }
 }
 
-# Clear leftovers the stop scripts sometimes miss (stale relay PID is common)
+# Clear leftovers the stop scripts sometimes miss (stale relay PID / empty-cmdline dotnet).
 Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
     Where-Object {
         $_.CommandLine -and (
@@ -70,10 +87,31 @@ if (Test-Path -LiteralPath $relayPidFile) {
 
 Start-Sleep -Seconds 2
 
-$stillListening = Get-NetTCPConnection -LocalPort $Port, 1213 -State Listen -ErrorAction SilentlyContinue
-if ($stillListening) {
-    $stillListening | Format-Table LocalAddress, LocalPort, OwningProcess -AutoSize
-    throw "Port $Port and/or 1213 still in use. Close the owning process, then retry."
+# Avoid Get-NetTCPConnection here — it can hang on this host. Use netstat instead.
+function Get-ListenPids([int[]]$Ports) {
+    $pids = @{}
+    foreach ($line in (& netstat.exe -ano)) {
+        if ($line -notmatch 'LISTENING') { continue }
+        foreach ($p in $Ports) {
+            if ($line -match ":$p\s+" -and $line -match '(\d+)\s*$') {
+                $pids[[int]$Matches[1]] = $true
+            }
+        }
+    }
+    return @($pids.Keys)
+}
+
+$listenPids = Get-ListenPids @($Port, 1213)
+foreach ($pid in $listenPids) {
+    if ($pid -le 0) { continue }
+    Write-Host "Killing port holder PID $pid"
+    & taskkill.exe /PID $pid /T /F 2>$null | Out-Null
+}
+
+Start-Sleep -Seconds 1
+$still = Get-ListenPids @($Port, 1213)
+if ($still.Count -gt 0) {
+    throw ("Port $Port and/or 1213 still in use by PID(s): " + ($still -join ', '))
 }
 
 Write-Step "Starting TutorialServer on ${BindHost}:${Port} (hub.advertise=false)"

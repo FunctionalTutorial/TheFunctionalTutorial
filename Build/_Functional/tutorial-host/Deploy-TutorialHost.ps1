@@ -88,7 +88,16 @@ try {
         & robocopy.exe (Join-Path $RepoRoot "bin\Content.Server") $destBin /E /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
         if ($LASTEXITCODE -ge 8) { throw "robocopy bin/Content.Server failed (exit $LASTEXITCODE)" }
 
-        # Magic ACZ / launcher fallback: live/bin/Content.Client next to Content.Server.
+        # Hybrid ACZ prefers Content.Client.zip over Magic ACZ. A stale zip (common when only
+        # DLLs are rebuilt) makes launcher clients deserialize against old Shared net types and
+        # disconnect with "Failed to deserialize packet" on tutorial role select.
+        $stagedClientZip = Join-Path $destBin "Content.Client.zip"
+        if (Test-Path -LiteralPath $stagedClientZip) {
+            Write-Step "Removing staged Content.Client.zip so host uses Magic ACZ from bin/Content.Client"
+            Remove-Item -LiteralPath $stagedClientZip -Force
+        }
+
+        # Magic ACZ: live/bin/Content.Client (content root = live/, assemblies under bin/Content.Client).
         if (Test-Path -LiteralPath $clientDll) {
             Write-Step "Staging bin/Content.Client"
             $destClient = Join-Path $stageRoot "bin\Content.Client"
@@ -128,7 +137,9 @@ try {
         IncludesResources = (-not $BinOnly)
         ServerDllExists = (Test-Path -LiteralPath (Join-Path $stageRoot "bin\Content.Server\Content.Server.dll"))
         ClientDllExists = (Test-Path -LiteralPath (Join-Path $stageRoot "bin\Content.Client\Content.Client.dll"))
-        ClientZipExists = (Test-Path -LiteralPath (Join-Path $stageRoot "bin\Content.Server\Content.Client.zip"))
+        # Intentionally omitted: stale Hybrid ACZ zips break launcher clients. Host uses Magic ACZ.
+        ClientZipExists = $false
+        UsesMagicAcz = (Test-Path -LiteralPath (Join-Path $stageRoot "bin\Content.Client\Content.Client.dll"))
     }
     ($manifest | ConvertTo-Json) | Set-Content -LiteralPath (Join-Path $stageRoot "deploy-manifest.json") -Encoding UTF8
 
