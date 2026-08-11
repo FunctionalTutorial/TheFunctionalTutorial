@@ -35,12 +35,15 @@ public sealed partial class RulesManager
         var lastRead = await _dbManager.GetLastReadRules(e.Channel.UserId);
         var hasCooldown = lastRead > LastValidReadTime;
 
+        //Wizden - Begin: rules.enabled gates the connect popup for everyone
+        var rulesEnabled = _cfg.GetCVar(CCVars.RulesEnabled);
         var showRulesMessage = new SendRulesInformationMessage
         {
             PopupTime = _cfg.GetCVar(CCVars.RulesWaitTime),
             CoreRules = _cfg.GetCVar(CCVars.RulesFile),
-            ShouldShowRules = !isLocalhost && !hasCooldown,
+            ShouldShowRules = rulesEnabled && !isLocalhost && !hasCooldown,
         };
+        //Wizden - End
         _netManager.ServerSendMessage(showRulesMessage, e.Channel);
     }
 

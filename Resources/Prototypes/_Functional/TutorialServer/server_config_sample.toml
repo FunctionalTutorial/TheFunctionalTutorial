@@ -12,3 +12,7 @@ motd = "Join as any job to play a tutorial. Type /ghost and respawn to try a new
 [server]
 rules_file = "TutorialServerRules"
 uptime_restart_minutes = 1440
+
+[rules]
+# Connect-time rules acceptance popup. Admins can still use showrules.
+enabled = false

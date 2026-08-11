@@ -40,6 +40,10 @@ preload_grids = false
 [afk]
 time = 0
 
+#Wizden: connect-time rules popup off (rules.enabled defaults false; explicit for clarity)
+[rules]
+enabled = false
+
 [admin]
 afk_time = 0
 see_own_notes = true
