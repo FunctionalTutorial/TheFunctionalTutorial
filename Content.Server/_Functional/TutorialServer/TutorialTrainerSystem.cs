@@ -1,27 +1,22 @@
 using Content.Server.Chat.Systems;
-using Content.Server.Popups;
 using Content.Shared._Functional.TutorialServer;
 using Content.Shared.Chat;
 using Content.Shared.Interaction;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
-using Content.Shared.Popups;
-using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Server._Functional.TutorialServer;
 
 /// <summary>
 /// Speaks coach lines for mentors (and shared dialogue resolution), handles click-to-repeat /
 /// Acknowledge advance / stuck hints when there is no handheld guide.
+/// Speaks once per sub-goal change (not on a timer); muted while the guide UI is open.
 /// </summary>
 public sealed class TutorialTrainerSystem : EntitySystem
 {
     [Dependency] private readonly ChatSystem _chat = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
     [Dependency] private readonly TutorialServerRuleSystem _tutorial = default!;
-
-    private static readonly TimeSpan ReminderInterval = TimeSpan.FromSeconds(10);
 
     public override void Initialize()
     {
@@ -46,14 +41,19 @@ public sealed class TutorialTrainerSystem : EntitySystem
             if (!TryResolveDialogue(trainerUid, trainer, playerUid, part, out var subGoalId, out var dialogue))
                 continue;
 
-            if (trainer.LastSpokenSubGoal != subGoalId)
+            // Only speak when the sub-goal changes — no timed reminders.
+            if (trainer.LastSpokenSubGoal == subGoalId)
+                continue;
+
+            // Don't pile IC speech on top of an open tutorial prompt.
+            if (_tutorial.IsGuideUiOpen(playerUid))
             {
-                Speak(trainerUid, trainer, subGoalId, dialogue);
+                trainer.LastSpokenSubGoal = subGoalId;
+                Dirty(trainerUid, trainer);
                 continue;
             }
 
-            if (_timing.CurTime >= trainer.NextReminderAt)
-                Speak(trainerUid, trainer, subGoalId, dialogue);
+            Speak(trainerUid, trainer, playerUid, subGoalId, dialogue);
         }
     }
 
@@ -74,7 +74,8 @@ public sealed class TutorialTrainerSystem : EntitySystem
         if (!TryResolveDialogue(ent, ent.Comp, args.User, part, out var subGoalId, out var dialogue))
             return;
 
-        Speak(ent, ent.Comp, subGoalId, dialogue);
+        args.Handled = true;
+        Speak(ent, ent.Comp, args.User, subGoalId, dialogue);
 
         if (part.StepComplete == TutorialStepComplete.Acknowledge)
         {
@@ -84,7 +85,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
 
         // Waiting on a sensor: click shows the stuck hint when authored.
         if (!string.IsNullOrEmpty(part.StuckHintText))
-            _popup.PopupEntity(part.StuckHintText, args.User, args.User, PopupType.Medium);
+            _tutorial.SendTipChat(args.User, part.StuckHintText);
     }
 
     /// <summary>
@@ -124,27 +125,45 @@ public sealed class TutorialTrainerSystem : EntitySystem
     }
 
     /// <summary>
-    /// Guide / mentor shared speak helper.
+    /// Guide / mentor shared speak helper. Always speaks IC (speech bubble).
+    /// Keybind markup is stripped for the spoken line; resolved binds stay available via
+    /// stuck-hint tip chat / the guide UI, not a duplicate grey progress toast.
     /// </summary>
-    public void SpeakAsCoach(EntityUid speakerUid, string subGoalId, string dialogue, Action<string, TimeSpan>? markSpoken)
+    public void SpeakAsCoach(
+        EntityUid speakerUid,
+        EntityUid playerUid,
+        string subGoalId,
+        string dialogue,
+        Action<string>? markSpoken)
     {
-        _chat.TrySendInGameICMessage(
-            speakerUid,
-            dialogue,
-            InGameICChatType.Speak,
-            hideChat: false,
-            hideLog: true,
-            ignoreActionBlocker: true);
+        // playerUid reserved for future per-player coach delivery (e.g. whisper range).
+        _ = playerUid;
 
-        markSpoken?.Invoke(subGoalId, _timing.CurTime + ReminderInterval);
+        var spoken = FormattedMessage.RemoveMarkupPermissive(dialogue);
+        if (!string.IsNullOrWhiteSpace(spoken))
+        {
+            _chat.TrySendInGameICMessage(
+                speakerUid,
+                spoken,
+                InGameICChatType.Speak,
+                hideChat: false,
+                hideLog: true,
+                ignoreActionBlocker: true);
+        }
+
+        markSpoken?.Invoke(subGoalId);
     }
 
-    private void Speak(EntityUid trainerUid, TutorialTrainerComponent trainer, string subGoalId, string dialogue)
+    private void Speak(
+        EntityUid trainerUid,
+        TutorialTrainerComponent trainer,
+        EntityUid playerUid,
+        string subGoalId,
+        string dialogue)
     {
-        SpeakAsCoach(trainerUid, subGoalId, dialogue, (id, next) =>
+        SpeakAsCoach(trainerUid, playerUid, subGoalId, dialogue, id =>
         {
             trainer.LastSpokenSubGoal = id;
-            trainer.NextReminderAt = next;
             Dirty(trainerUid, trainer);
         });
     }

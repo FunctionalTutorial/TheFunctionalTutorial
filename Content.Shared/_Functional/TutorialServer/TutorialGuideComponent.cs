@@ -23,13 +23,13 @@ public sealed partial class TutorialGuideComponent : Component
     public int ViewIndex;
 
     /// <summary>
-    /// Sub-goal id of the last line spoken (for change detection + reminders).
+    /// Sub-goal id of the last line spoken (change detection; no timed reminders).
     /// </summary>
     [DataField]
     public string? LastSpokenSubGoal;
 
     /// <summary>
-    /// Next time the guide re-states the current objective aloud.
+    /// Unused legacy field kept for map/component compatibility.
     /// </summary>
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan NextReminderAt;

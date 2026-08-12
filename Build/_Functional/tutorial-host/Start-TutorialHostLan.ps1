@@ -4,7 +4,7 @@
   Stop supervisor/relay/old SS14, then run TutorialServer bound to the LAN IP.
 
 .DESCRIPTION
-  Intended for the physical Tutorial host (192.168.1.22) when you are at the keyboard
+  Intended for the physical Tutorial host (192.168.1.6) when you are at the keyboard
   and can Accept the Windows firewall prompt for dotnet.
 
   Does NOT touch windows-mcp or FileShare.
@@ -17,7 +17,7 @@ param(
     [string] $LiveRoot = 'D:\WizdenHost\live',
     [string] $ToolsRoot = 'D:\WizdenHost\tools',
     [string] $DotnetExe = 'D:\dotnet\dotnet.exe',
-    [string] $BindHost = '192.168.1.22',
+    [string] $BindHost = '192.168.1.6',
     [int] $Port = 1212,
     [int] $ReadyTimeoutSec = 180
 )
@@ -55,7 +55,7 @@ if (Test-Path -LiteralPath $clientZip) {
     }
 }
 else {
-    Write-Host "No Content.Client.zip — launcher clients will use Magic ACZ from bin/Content.Client"
+    Write-Host "No Content.Client.zip - launcher clients will use Magic ACZ from bin/Content.Client"
 }
 
 Write-Step 'Stopping supervisor / relay / old SS14 (if any)'
@@ -87,7 +87,7 @@ if (Test-Path -LiteralPath $relayPidFile) {
 
 Start-Sleep -Seconds 2
 
-# Avoid Get-NetTCPConnection here — it can hang on this host. Use netstat instead.
+# Avoid Get-NetTCPConnection here - it can hang on this host. Use netstat instead.
 function Get-ListenPids([int[]]$Ports) {
     $pids = @{}
     foreach ($line in (& netstat.exe -ano)) {
@@ -117,7 +117,7 @@ if ($still.Count -gt 0) {
 Write-Step "Starting TutorialServer on ${BindHost}:${Port} (hub.advertise=false)"
 Write-Host "WorkingDirectory=$LiveRoot"
 Write-Host 'Click Allow if Windows Firewall prompts for dotnet.'
-Write-Host 'Connect: ss14://192.168.1.22:1212  (LAN)  or  ss14://50.24.192.59:1212  (internet)'
+Write-Host 'Connect: ss14://192.168.1.6:1212  (LAN)  or  ss14://24.32.95.172:1212  (internet)'
 Write-Host 'Ctrl+C stops the server when you are done.'
 Write-Host ''
 

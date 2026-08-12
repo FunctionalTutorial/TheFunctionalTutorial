@@ -170,17 +170,52 @@ namespace Content.Client.LateJoin
                 Array.Sort(departments, DepartmentUIComparer.Instance);
 
                 _jobButtons[id] = new Dictionary<string, List<JobButton>>();
+                _jobCategories[id] = new Dictionary<string, BoxContainer>();
+                var stationAvailable = _gameTicker.JobsAvailable[id];
+
+                //Wizden - Begin: pin Passenger at the top of late-join (tutorial basics / new players)
+                const string passengerJobId = "Passenger";
+                var pinnedPassenger = false;
+                if (stationAvailable.ContainsKey(passengerJobId) &&
+                    _prototypeManager.TryIndex<JobPrototype>(passengerJobId, out var passengerProto))
+                {
+                    var startCategory = new BoxContainer
+                    {
+                        Orientation = LayoutOrientation.Vertical,
+                        Name = "StartHere",
+                        ToolTip = Loc.GetString("late-join-gui-start-here-label")
+                    };
+                    startCategory.AddChild(new PanelContainer
+                    {
+                        Children =
+                        {
+                            new Label
+                            {
+                                StyleClasses = { "LabelBig" },
+                                Text = Loc.GetString("late-join-gui-start-here-label")
+                            }
+                        }
+                    });
+                    _jobCategories[id]["StartHere"] = startCategory;
+                    jobList.AddChild(startCategory);
+                    AddJobButton(id, startCategory, passengerProto, stationAvailable[passengerJobId]);
+                    pinnedPassenger = true;
+                    firstCategory = false;
+                }
+                //Wizden - End
 
                 foreach (var department in departments)
                 {
                     var departmentName = Loc.GetString(department.Name);
-                    _jobCategories[id] = new Dictionary<string, BoxContainer>();
-                    var stationAvailable = _gameTicker.JobsAvailable[id];
                     var jobsAvailable = new List<JobPrototype>();
 
                     foreach (var jobId in department.Roles)
                     {
                         if (!stationAvailable.ContainsKey(jobId))
+                            continue;
+
+                        //Wizden: already listed under Start here
+                        if (pinnedPassenger && jobId == passengerJobId)
                             continue;
 
                         jobsAvailable.Add(_prototypeManager.Index<JobPrototype>(jobId));
@@ -229,71 +264,74 @@ namespace Content.Client.LateJoin
 
                     foreach (var prototype in jobsAvailable)
                     {
-                        var value = stationAvailable[prototype.ID];
-
-                        var jobLabel = new Label
-                        {
-                            Margin = new Thickness(5f, 0, 0, 0)
-                        };
-
-                        var jobButton = new JobButton(jobLabel, prototype.ID, prototype.LocalizedName, value);
-
-                        var jobSelector = new BoxContainer
-                        {
-                            Orientation = LayoutOrientation.Horizontal,
-                            HorizontalExpand = true
-                        };
-
-                        var icon = new TextureRect
-                        {
-                            TextureScale = new Vector2(2, 2),
-                            VerticalAlignment = VAlignment.Center
-                        };
-
-                        var jobIcon = _prototypeManager.Index(prototype.Icon);
-                        icon.Texture = _sprites.Frame0(jobIcon.Icon);
-                        jobSelector.AddChild(icon);
-
-                        jobSelector.AddChild(jobLabel);
-                        jobButton.AddChild(jobSelector);
-                        category.AddChild(jobButton);
-
-                        jobButton.OnPressed += _ => SelectedId.Invoke((id, jobButton.JobId));
-
-                        if (!_jobRequirements.IsAllowed(prototype, (HumanoidCharacterProfile?)_preferencesManager.Preferences?.SelectedCharacter, out var reason))
-                        {
-                            jobButton.Disabled = true;
-
-                            if (!reason.IsEmpty)
-                            {
-                                var tooltip = new Tooltip();
-                                tooltip.SetMessage(reason);
-                                jobButton.TooltipSupplier = _ => tooltip;
-                            }
-
-                            jobSelector.AddChild(new TextureRect
-                            {
-                                TextureScale = new Vector2(0.4f, 0.4f),
-                                Stretch = TextureRect.StretchMode.KeepCentered,
-                                Texture = _sprites.Frame0(new SpriteSpecifier.Texture(new ("/Textures/Interface/Nano/lock.svg.192dpi.png"))),
-                                HorizontalExpand = true,
-                                HorizontalAlignment = HAlignment.Right,
-                            });
-                        }
-                        else if (value == 0)
-                        {
-                            jobButton.Disabled = true;
-                        }
-
-                        if (!_jobButtons[id].ContainsKey(prototype.ID))
-                        {
-                            _jobButtons[id][prototype.ID] = new List<JobButton>();
-                        }
-
-                        _jobButtons[id][prototype.ID].Add(jobButton);
+                        AddJobButton(id, category, prototype, stationAvailable[prototype.ID]);
                     }
                 }
             }
+        }
+
+        private void AddJobButton(NetEntity station, BoxContainer category, JobPrototype prototype, int? value)
+        {
+            var jobLabel = new Label
+            {
+                Margin = new Thickness(5f, 0, 0, 0)
+            };
+
+            var jobButton = new JobButton(jobLabel, prototype.ID, prototype.LocalizedName, value);
+
+            var jobSelector = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal,
+                HorizontalExpand = true
+            };
+
+            var icon = new TextureRect
+            {
+                TextureScale = new Vector2(2, 2),
+                VerticalAlignment = VAlignment.Center
+            };
+
+            var jobIcon = _prototypeManager.Index(prototype.Icon);
+            icon.Texture = _sprites.Frame0(jobIcon.Icon);
+            jobSelector.AddChild(icon);
+
+            jobSelector.AddChild(jobLabel);
+            jobButton.AddChild(jobSelector);
+            category.AddChild(jobButton);
+
+            jobButton.OnPressed += _ => SelectedId.Invoke((station, jobButton.JobId));
+
+            if (!_jobRequirements.IsAllowed(prototype, (HumanoidCharacterProfile?)_preferencesManager.Preferences?.SelectedCharacter, out var reason))
+            {
+                jobButton.Disabled = true;
+
+                if (!reason.IsEmpty)
+                {
+                    var tooltip = new Tooltip();
+                    tooltip.SetMessage(reason);
+                    jobButton.TooltipSupplier = _ => tooltip;
+                }
+
+                jobSelector.AddChild(new TextureRect
+                {
+                    TextureScale = new Vector2(0.4f, 0.4f),
+                    Stretch = TextureRect.StretchMode.KeepCentered,
+                    Texture = _sprites.Frame0(new SpriteSpecifier.Texture(new ("/Textures/Interface/Nano/lock.svg.192dpi.png"))),
+                    HorizontalExpand = true,
+                    HorizontalAlignment = HAlignment.Right,
+                });
+            }
+            else if (value == 0)
+            {
+                jobButton.Disabled = true;
+            }
+
+            if (!_jobButtons[station].ContainsKey(prototype.ID))
+            {
+                _jobButtons[station][prototype.ID] = new List<JobButton>();
+            }
+
+            _jobButtons[station][prototype.ID].Add(jobButton);
         }
 
         private void JobsAvailableUpdated(IReadOnlyDictionary<NetEntity, Dictionary<ProtoId<JobPrototype>, int?>> updatedJobs)

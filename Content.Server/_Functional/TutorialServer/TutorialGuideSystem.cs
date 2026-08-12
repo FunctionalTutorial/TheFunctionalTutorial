@@ -1,25 +1,20 @@
-using Content.Server.Popups;
 using Content.Shared._Functional.TutorialServer;
-using Content.Shared.Popups;
 using Content.Shared.UserInterface;
 using Robust.Server.GameObjects;
 using Robust.Shared.Player;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Timing;
 
 namespace Content.Server._Functional.TutorialServer;
 
 /// <summary>
 /// Bound UI for the handheld Tutorial prompt (travel roles): checklist with Next/Hint, plus IC speech.
+/// Speaks once per sub-goal change (not on a timer); muted while the guide UI is open.
+/// When a mentor is in earshot, the mentor owns dialogue — this tablet stays quiet.
 /// </summary>
 public sealed class TutorialGuideSystem : EntitySystem
 {
     [Dependency] private readonly TutorialServerRuleSystem _tutorial = default!;
     [Dependency] private readonly TutorialTrainerSystem _coach = default!;
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
-    [Dependency] private readonly IPrototypeManager _protos = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
 
     public override void Initialize()
     {
@@ -50,14 +45,21 @@ public sealed class TutorialGuideSystem : EntitySystem
             if (!_coach.TryResolveDialogue(guideUid, trainer: null, playerUid, part, out var subGoalId, out var dialogue))
                 continue;
 
-            if (guide.LastSpokenSubGoal != subGoalId)
+            // Only speak when the sub-goal changes — no timed reminders.
+            if (guide.LastSpokenSubGoal == subGoalId)
+                continue;
+
+            // Don't pile coach speech on top of an open tutorial prompt.
+            // Hybrid cargo: mentor speaks while in range — tablet stays quiet.
+            if (_ui.IsUiOpen(guideUid, TutorialPromptUiKey.Key) ||
+                _tutorial.IsMentorCoachingInRange(playerUid))
             {
-                SpeakGuide(guideUid, guide, subGoalId, dialogue);
+                guide.LastSpokenSubGoal = subGoalId;
+                Dirty(guideUid, guide);
                 continue;
             }
 
-            if (_timing.CurTime >= guide.NextReminderAt)
-                SpeakGuide(guideUid, guide, subGoalId, dialogue);
+            SpeakGuide(guideUid, guide, playerUid, subGoalId, dialogue);
         }
     }
 
@@ -97,7 +99,7 @@ public sealed class TutorialGuideSystem : EntitySystem
     }
 
     /// <summary>
-    /// Shows the authored stuck hint popup without advancing curriculum.
+    /// Shows the authored stuck hint in chat without advancing curriculum.
     /// </summary>
     public bool TryShowStuckHint(EntityUid user)
     {
@@ -107,7 +109,7 @@ public sealed class TutorialGuideSystem : EntitySystem
         if (string.IsNullOrEmpty(part.StuckHintText))
             return false;
 
-        _popup.PopupEntity(part.StuckHintText, user, user, PopupType.Medium);
+        _tutorial.SendTipChat(user, part.StuckHintText);
         return true;
     }
 
@@ -135,7 +137,7 @@ public sealed class TutorialGuideSystem : EntitySystem
 
     /// <summary>
     /// Keeps an open guide UI in sync when curriculum progress changes (sensors, etc.).
-    /// Also toasts when the prompt is closed, or when there is no handheld guide (mentor roles).
+    /// Sends a closed-UI chat tip when no mentor is in earshot (mentor already speaks the step).
     /// </summary>
     public void OnParticipantProgressChanged(
         EntityUid mob,
@@ -159,6 +161,17 @@ public sealed class TutorialGuideSystem : EntitySystem
             }
         }
 
+        // Mentor in earshot: mentor speaks — skip grey "Next:" toast.
+        if (_tutorial.IsMentorCoachingInRange(mob))
+            return;
+
+        // Held guide tablet will speak this tip — don't also spam orange chat.
+        if (guideUid != EntityUid.Invalid &&
+            !TerminatingOrDeleted(guideUid) &&
+            TryGetHolderParticipant(guideUid, out var holder, out _) &&
+            holder == mob)
+            return;
+
         if (!TryComp<ActorComponent>(mob, out var actor))
             return;
 
@@ -166,7 +179,7 @@ public sealed class TutorialGuideSystem : EntitySystem
             return;
 
         var toast = Loc.GetString("tutorial-server-progress-toast", ("text", part.StepText));
-        _popup.PopupEntity(toast, mob, actor.PlayerSession, PopupType.Medium);
+        _tutorial.SendTipChat(actor.PlayerSession, toast);
     }
 
     private void SnapViewToProgress(Entity<TutorialGuideComponent> ent, EntityUid user)
@@ -198,45 +211,33 @@ public sealed class TutorialGuideSystem : EntitySystem
             return new TutorialPromptBuiState { HasTutorial = false };
         }
 
-        if (!TryGetRole(user, out var role))
-        {
-            return new TutorialPromptBuiState { HasTutorial = false };
-        }
-
+        // Participant HUD is the source of truth (includes injected chamber-pad steps).
         SnapViewToProgress(ent, user);
 
-        if (role.Goals.Count > 0)
+        if (part.GoalCount > 0)
         {
-            var liveGoal = Math.Clamp(part.GoalIndex, 0, Math.Max(role.Goals.Count - 1, 0));
             var liveSub = Math.Clamp(part.SubGoalIndex, 0, Math.Max(part.SubGoalCount - 1, 0));
-            var viewedGoal = role.Goals[liveGoal];
-            var stepCount = Math.Max(viewedGoal.SubGoals.Count, 1);
-
-            var subStates = new List<TutorialHudSubGoalState>(viewedGoal.SubGoals.Count);
-            for (var i = 0; i < viewedGoal.SubGoals.Count; i++)
+            var subStates = new List<TutorialHudSubGoalState>(part.SubGoalStates.Count);
+            foreach (var entry in part.SubGoalStates)
             {
                 subStates.Add(new TutorialHudSubGoalState
                 {
-                    Text = Loc.GetString(viewedGoal.SubGoals[i].Text),
-                    Completed = i < liveSub,
+                    Text = entry.Text,
+                    Completed = entry.Completed,
                 });
             }
-
-            var stepText = liveSub >= 0 && liveSub < viewedGoal.SubGoals.Count
-                ? Loc.GetString(viewedGoal.SubGoals[liveSub].Text)
-                : part.StepText;
 
             return new TutorialPromptBuiState
             {
                 HasTutorial = true,
-                GoalTitle = Loc.GetString(viewedGoal.Title),
+                GoalTitle = part.GoalTitle,
                 GoalIndex = part.GoalIndex,
-                GoalCount = role.Goals.Count,
-                ViewGoalIndex = liveGoal,
+                GoalCount = part.GoalCount,
+                ViewGoalIndex = part.GoalIndex,
                 ViewIndex = liveSub,
                 ProgressIndex = liveSub,
-                StepCount = stepCount,
-                StepText = stepText,
+                StepCount = Math.Max(part.SubGoalCount, 1),
+                StepText = part.StepText,
                 ViewComplete = part.StepComplete,
                 SubGoalStates = subStates,
                 HintText = part.HintText,
@@ -270,12 +271,16 @@ public sealed class TutorialGuideSystem : EntitySystem
         };
     }
 
-    private void SpeakGuide(EntityUid guideUid, TutorialGuideComponent guide, string subGoalId, string dialogue)
+    private void SpeakGuide(
+        EntityUid guideUid,
+        TutorialGuideComponent guide,
+        EntityUid playerUid,
+        string subGoalId,
+        string dialogue)
     {
-        _coach.SpeakAsCoach(guideUid, subGoalId, dialogue, (id, next) =>
+        _coach.SpeakAsCoach(guideUid, playerUid, subGoalId, dialogue, id =>
         {
             guide.LastSpokenSubGoal = id;
-            guide.NextReminderAt = next;
             Dirty(guideUid, guide);
         });
     }
@@ -305,26 +310,5 @@ public sealed class TutorialGuideSystem : EntitySystem
 
         playerUid = holder;
         return true;
-    }
-
-    private bool TryGetRole(EntityUid user, out TutorialRolePrototype role)
-    {
-        role = default!;
-
-        if (!TryComp<ActorComponent>(user, out var actor))
-            return false;
-
-        var query = EntityQueryEnumerator<TutorialServerRuleComponent>();
-        while (query.MoveNext(out _, out var rule))
-        {
-            if (!rule.Sessions.TryGetValue(actor.PlayerSession.UserId, out var session) ||
-                session.SelectedRoleId == null ||
-                !_protos.TryIndex(session.SelectedRoleId, out role!))
-                continue;
-
-            return true;
-        }
-
-        return false;
     }
 }

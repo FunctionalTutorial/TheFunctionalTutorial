@@ -39,9 +39,10 @@ public sealed partial class TutorialRolePrototype : IPrototype
     public bool Stub = true;
 
     /// <summary>
-    /// When true, after the private map loads: force APC receivers to not need power and
-    /// freeze grid atmospherics (fill-once, no LINDA/pipe/device ticks). Leave false for
-    /// engineering/cargo tutorials that teach live power, spacing, or EVA.
+    /// When true, after the private map loads: force APC receivers to not need power.
+    /// TEMPORARY: atmos freeze is currently skipped globally (odd behavior with fill-once /
+    /// no-LINDA); see <c>TutorialMapSystem.FreezeAtmosInSimplifiedEnvironment</c>. Leave false
+    /// for engineering/cargo tutorials that teach live power, spacing, or EVA.
     /// </summary>
     [DataField]
     public bool SimplifiedEnvironment;
@@ -170,17 +171,30 @@ public sealed partial class TutorialRolePrototype : IPrototype
     /// <summary>
     /// When true, the tutorial guide Bound UI opens as soon as the tablet is given.
     /// When false, open is deferred until chamber-pad check-in after the opening goal
-    /// (never synchronously from a UseInHand that ends that goal — e.g. Passenger drink).
+    /// (never synchronously from a UseInHand that ends that goal — e.g. Passenger drink),
+    /// or until a curriculum step force-opens it (e.g. Cargo Tech controls).
     /// </summary>
     [DataField]
     public bool AutoOpenGuide = true;
 
     /// <summary>
-    /// Display name for the soft-following mentor on single-grid roles (e.g. Urist McMalpractice).
-    /// Ignored for travel/off-grid roles that use the handheld coach instead.
+    /// Display name for the mentor (e.g. Urist McMalpractice). Used for single-grid coaches
+    /// and hybrid travel roles that also spawn a stationary mentor.
     /// </summary>
     [DataField]
     public string? MentorName;
+
+    /// <summary>
+    /// When true with a travel coach, also spawn a mentor body (e.g. bay QM briefing).
+    /// </summary>
+    [DataField]
+    public bool SpawnStationaryMentor;
+
+    /// <summary>
+    /// When false, the mentor does not HTN-follow or catch-up/snap to the player.
+    /// </summary>
+    [DataField]
+    public bool MentorFollows = true;
 }
 
 [DataDefinition]
@@ -418,6 +432,12 @@ public enum TutorialStepComplete : byte
 
     /// <summary>Player is providing shuttle throttle / strafe / rotate input while piloting.</summary>
     ShuttleThrottle,
+
+    /// <summary>
+    /// Player's flyable shuttle is within approach range of a
+    /// <see cref="TutorialDockStationComponent"/> whose StationId matches Marker.
+    /// </summary>
+    NearDockStation,
 
     /// <summary>Player's grid undocks from another grid.</summary>
     UndockShuttle,
@@ -699,4 +719,14 @@ public enum TutorialStepComplete : byte
     /// A tagged entity on the map has all power wires cut (<see cref="TutorialSubGoalData.Tag"/>).
     /// </summary>
     PowerWiresCut,
+
+    /// <summary>
+    /// A cargo order was added on the player's map (purchase / request path).
+    /// </summary>
+    CargoOrderAdded,
+
+    /// <summary>
+    /// Player is pulling an entity with <see cref="TutorialSubGoalData.Tag"/>.
+    /// </summary>
+    PullTag,
 }

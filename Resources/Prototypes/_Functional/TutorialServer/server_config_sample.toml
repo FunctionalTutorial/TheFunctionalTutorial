@@ -6,8 +6,12 @@ hostname = "The Functional Tutorial Server"
 defaultpreset = "TutorialServer"
 
 [chat]
-motd = "Join as any job to play a tutorial. Type /ghost and respawn to try a new tutorial"
+motd = "Press Join in the lobby, then pick a job (Passenger is first for the basics). Type /ghost and respawn or use Choose a tutorial to try another."
 # ooc.enabled / looc.enabled are also forced off by the TutorialServer rule at runtime.
+
+[shuttle]
+# Lobby has no StationEmergencyShuttle. TutorialServerRule also forces this to 0 at runtime.
+auto_call_time = 0
 
 [server]
 rules_file = "TutorialServerRules"

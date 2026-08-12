@@ -43,9 +43,11 @@ using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Maps;
 using Content.Shared.Mind;
+using Content.Shared.Objectives.Systems;
 using Content.Shared.Nutrition.EntitySystems;
 using Content.Shared.Physics;
 using Content.Shared.Preferences.Loadouts;
+using Content.Shared.Clothing.Components;
 using Content.Shared.Roles;
 using Content.Shared.Silicons.Borgs;
 using Content.Shared.Silicons.Borgs.Components;
@@ -63,6 +65,8 @@ using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -110,6 +114,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(cfg.GetCVar(CCVars.OocEnabled), Is.False);
             Assert.That(cfg.GetCVar(CCVars.LoocEnabled), Is.False);
             Assert.That(cfg.GetCVar(CCVars.DeadChatEnabled), Is.False);
+            Assert.That(cfg.GetCVar(CCVars.EmergencyShuttleAutoCallTime), Is.EqualTo(0),
+                "TutorialServer must disable emergency shuttle auto-call (lobby has no evac shuttle)");
             Assert.That(server.EntMan.Count<Content.Server.Shuttles.Components.StationCentcommComponent>(), Is.EqualTo(0),
                 "TutorialServer must not spawn CentComm");
         });
@@ -1173,6 +1179,7 @@ public sealed class TutorialServerTests : GameTest
             var completes = cargo.Goals.SelectMany(g => g.SubGoals).Select(s => s.Complete).ToArray();
             Assert.That(completes, Does.Contain(TutorialStepComplete.PilotShuttle));
             Assert.That(completes, Does.Contain(TutorialStepComplete.ShuttleThrottle));
+            Assert.That(completes, Does.Contain(TutorialStepComplete.NearDockStation));
             Assert.That(completes, Does.Contain(TutorialStepComplete.UndockShuttle));
             Assert.That(completes, Does.Contain(TutorialStepComplete.DockShuttle));
 
@@ -1183,6 +1190,10 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(throttleIdx, Is.GreaterThan(undockIdx),
                 "Cargo tutorial must undock before teaching shuttle throttle");
 
+            Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
+                .Any(s => s.Id == "fly-ats" && s.Complete == TutorialStepComplete.NearDockStation
+                          && s.Marker == "ats"));
+
             var markers = cargo.Goals.SelectMany(g => g.SubGoals)
                 .Where(s => s.Complete is TutorialStepComplete.DockShuttle or TutorialStepComplete.UndockShuttle)
                 .Select(s => s.Marker)
@@ -1190,13 +1201,174 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(markers, Does.Contain("cargo-bay"));
             Assert.That(markers, Does.Contain("ats"));
 
-            Assert.That(cargo.Goals.Any(g => g.Id == "sell"));
+            Assert.That(cargo.AutoOpenGuide, Is.False);
+            Assert.That(cargo.SpawnStationaryMentor, Is.True);
+            Assert.That(cargo.MentorFollows, Is.False);
+            Assert.That(cargo.MentorName, Is.EqualTo("Urist McQuartermaster"));
+
+            Assert.That(cargo.Goals.Any(g => g.Id == "order"));
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
-                .Any(s => s.Id == "sell-pallet" && s.Tag == "TutorialCargoSell"));
+                .Any(s => s.Id == "orders" && s.Tag == "TutorialCargoOrders"));
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
-                .Any(s => s.Id == "sell-goods" && s.Complete == TutorialStepComplete.CargoSold));
+                .Any(s => s.Id == "purchase" && s.Complete == TutorialStepComplete.CargoOrderAdded));
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
-                .Any(s => s.Id == "sell-bounty" && s.Complete == TutorialStepComplete.CargoBountyFulfilled));
+                .Any(s => s.Id == "confirm" && s.Complete == TutorialStepComplete.CargoOrderApproved));
+            Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
+                .Any(s => s.Id == "drag-crate" && s.Complete == TutorialStepComplete.PullTag
+                          && s.Tag == "TutorialCargoBayCrate"));
+            Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
+                .Any(s => s.Id == "board-shuttle" && s.Complete == TutorialStepComplete.ReachMarker
+                          && s.Marker == "cargo-shuttle"));
+            Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
+                .Any(s => s.Id == "controls" && s.Complete == TutorialStepComplete.Acknowledge));
+            Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
+                .Any(s => s.Id == "sell-crate" && s.Complete == TutorialStepComplete.CargoSold));
+            Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
+                .Any(s => s.Id == "retrieve" && s.Complete == TutorialStepComplete.PullTag
+                          && s.Tag == "TutorialCargoPurchase"));
+
+            var subIds = cargo.Goals.SelectMany(g => g.SubGoals).Select(s => s.Id).ToArray();
+            var sellIdx = Array.IndexOf(subIds, "sell-crate");
+            var retrieveIdx = Array.IndexOf(subIds, "retrieve");
+            Assert.That(sellIdx, Is.GreaterThanOrEqualTo(0));
+            Assert.That(retrieveIdx, Is.GreaterThan(sellIdx),
+                "Sell the hauled crate before retrieving the purchase");
+
+            // Trimmed curriculum: no long Acknowledge walls before sensors.
+            Assert.That(subIds, Does.Not.Contain("undock-explain"));
+            Assert.That(subIds, Does.Not.Contain("look-around"));
+            Assert.That(subIds, Does.Not.Contain("sell-pallet"));
+        });
+    }
+
+    [Test]
+    public async Task TutorialCurriculumObjectives_AppearInMindAndTrackProgress()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var minds = server.System<SharedMindSystem>();
+        var objectives = server.System<SharedObjectivesSystem>();
+        var proto = server.ProtoMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        // Cargo starts on an Acknowledge tip so we can advance goal 0 without sensors.
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialCargoTechnician", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            Assert.That(player.AttachedEntity, Is.Not.Null);
+            var mob = player.AttachedEntity!.Value;
+            var role = proto.Index<TutorialRolePrototype>("TutorialCargoTechnician");
+
+            Assert.That(minds.TryGetMind(mob, out var mindId, out var mind), Is.True);
+
+            var goalObjectives = mind!.Objectives
+                .Where(uid => server.EntMan.HasComponent<TutorialGoalConditionComponent>(uid))
+                .ToList();
+            Assert.That(goalObjectives.Count, Is.EqualTo(role.Goals.Count),
+                "Each curriculum goal should be a Character objective");
+
+            var first = goalObjectives
+                .Select(uid => (uid, cond: server.EntMan.GetComponent<TutorialGoalConditionComponent>(uid)))
+                .First(t => t.cond.GoalIndex == 0);
+
+            var progressBefore = objectives.GetProgress(first.uid, (mindId, mind));
+            Assert.That(progressBefore, Is.Not.Null);
+            Assert.That(progressBefore!.Value, Is.LessThan(1f));
+
+            Assert.That(server.EntMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
+            tutorial.AdvanceSubGoal(mob);
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(minds.TryGetMind(mob, out var mindId, out var mind), Is.True);
+            Assert.That(server.EntMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.GoalIndex, Is.GreaterThan(0), "Advancing cargo intro should complete welcome goal");
+
+            var first = mind!.Objectives
+                .Select(uid => (uid, cond: server.EntMan.GetComponentOrNull<TutorialGoalConditionComponent>(uid)))
+                .First(t => t.cond != null && t.cond.GoalIndex == 0);
+
+            var progress = objectives.GetProgress(first.uid, (mindId, mind));
+            Assert.That(progress, Is.Not.Null);
+            Assert.That(progress!.Value, Is.EqualTo(1f).Within(0.001f));
+        });
+    }
+
+    [Test]
+    public async Task TutorialTrainer_DoesNotAutoRemindOnTimer()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var timing = server.ResolveDependency<IGameTiming>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        string? spokenSubGoal = null;
+        EntityUid mentorUid = default;
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            TutorialSessionData? session = null;
+            var ruleQuery = server.EntMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            mentorUid = session!.MentorUid;
+            Assert.That(server.EntMan.TryGetComponent<TutorialTrainerComponent>(mentorUid, out var trainer));
+            spokenSubGoal = trainer!.LastSpokenSubGoal;
+            Assert.That(spokenSubGoal, Is.Not.Null.And.Not.Empty,
+                "Mentor should speak once when the first sub-goal becomes current");
+
+            // Old reminder cadence was 10s — advance time far past that.
+            trainer.NextReminderAt = timing.CurTime - TimeSpan.FromSeconds(1);
+            server.EntMan.Dirty(mentorUid, trainer);
+        });
+
+        await pair.RunTicksSync(30);
+
+        await server.WaitAssertion(() =>
+        {
+            var trainer = server.EntMan.GetComponent<TutorialTrainerComponent>(mentorUid);
+            Assert.That(trainer.LastSpokenSubGoal, Is.EqualTo(spokenSubGoal),
+                "Mentor must not re-speak the same tip on a timer");
         });
     }
 
@@ -1417,7 +1589,23 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(maps.TryLoadTutorialMap(cargo, out var mapUid, out var shuttleUid, out var spawn), Is.True);
             Assert.That(server.EntMan.HasComponent<Content.Server.Shuttles.Components.ShuttleComponent>(shuttleUid));
             Assert.That(server.EntMan.HasComponent<Content.Shared.Cargo.Components.CargoShuttleComponent>(shuttleUid));
-            Assert.That(spawn.EntityId, Is.EqualTo(shuttleUid));
+
+            EntityUid cargoBayUid = default;
+            var bayQuery = server.EntMan.AllEntityQueryEnumerator<TutorialDockStationComponent, TransformComponent>();
+            while (bayQuery.MoveNext(out var uid, out var station, out var xform))
+            {
+                if (xform.MapUid != server.EntMan.GetComponent<TransformComponent>(mapUid).MapUid)
+                    continue;
+                if (station.StationId == TutorialShuttleArenaSystem.CargoBayStationId)
+                    cargoBayUid = uid;
+            }
+
+            Assert.That(cargoBayUid.IsValid(), Is.True, "Cargo bay mini-station missing before spawn assert");
+            Assert.That(spawn.EntityId, Is.EqualTo(cargoBayUid), "Cargo Tech must spawn in the cargo bay");
+
+            Assert.That(server.EntMan.TryGetComponent<PhysicsComponent>(shuttleUid, out var shuttlePhysics), Is.True);
+            Assert.That(shuttlePhysics!.BodyType, Is.EqualTo(BodyType.Dynamic),
+                "Cargo arena shuttle must be Dynamic or thrusters cannot move it after undock");
 
             Assert.That(server.EntMan.TryGetComponent<GridAtmosphereComponent>(shuttleUid, out var shuttleAtmos), Is.True);
             Assert.That(shuttleAtmos!.Simulated, Is.True,
@@ -1427,7 +1615,7 @@ public sealed class TutorialServerTests : GameTest
             var consoleCount = 0;
             var thrusterCount = 0;
             var poweredHelm = false;
-            var cargoBay = false;
+            var hasCargoBay = false;
             var ats = false;
             var mapXform = server.EntMan.GetComponent<TransformComponent>(mapUid);
             var query = server.EntMan.AllEntityQueryEnumerator<TransformComponent>();
@@ -1456,7 +1644,7 @@ public sealed class TutorialServerTests : GameTest
                 if (server.EntMan.TryGetComponent<TutorialDockStationComponent>(uid, out var station))
                 {
                     if (station.StationId == TutorialShuttleArenaSystem.CargoBayStationId)
-                        cargoBay = true;
+                        hasCargoBay = true;
                     if (station.StationId == TutorialShuttleArenaSystem.AtsStationId)
                         ats = true;
                 }
@@ -1467,11 +1655,10 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(poweredHelm, Is.True,
                 "Cargo shuttle helm must be force-powered so TryPilot can grant control");
             Assert.That(thrusterCount, Is.GreaterThanOrEqualTo(1));
-            Assert.That(cargoBay, Is.True, "Cargo bay mini-station missing");
+            Assert.That(hasCargoBay, Is.True, "Cargo bay mini-station missing");
             Assert.That(ats, Is.True, "ATS mini-station missing");
 
             var atsHasBank = false;
-            var sellCrateUnanchored = false;
             var memberQuery = server.EntMan.AllEntityQueryEnumerator<Content.Shared.Station.Components.StationMemberComponent, TransformComponent>();
             while (memberQuery.MoveNext(out var gridEnt, out var member, out var memberXform))
             {
@@ -1489,21 +1676,66 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(atsHasBank, Is.True, "ATS grid should be a station member with a bank");
 
+            var tags = server.System<TagSystem>();
+            var bayHaulCrate = false;
+            var boardMarker = false;
+            var sellPadTiles = new HashSet<Vector2i>();
+            var markerQuery = server.EntMan.AllEntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
+            while (markerQuery.MoveNext(out _, out var stepMarker, out var markerXform))
+            {
+                if (markerXform.MapUid != mapXform.MapUid)
+                    continue;
+                if (stepMarker.MarkerId == TutorialShuttleArenaSystem.CargoShuttleBoardMarkerId &&
+                    markerXform.GridUid == shuttleUid)
+                    boardMarker = true;
+            }
+
             var crateQuery = server.EntMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
-            while (crateQuery.MoveNext(out var crateUid, out var meta, out var crateXform))
+            while (crateQuery.MoveNext(out var crateUid, out _, out var crateXform))
             {
                 if (crateXform.MapUid != mapXform.MapUid)
                     continue;
-                if (meta.EntityPrototype?.ID is not ("CrateGenericSteel" or "CrateHydroponics"))
-                    continue;
-                if (!crateXform.Anchored)
+
+                if (crateXform.GridUid == cargoBayUid &&
+                    tags.HasTag(crateUid, "TutorialCargoBayCrate") &&
+                    !crateXform.Anchored)
                 {
-                    sellCrateUnanchored = true;
-                    break;
+                    bayHaulCrate = true;
                 }
             }
 
-            Assert.That(sellCrateUnanchored, Is.True, "Sell crates must be unanchored on ATS sell pallets");
+            var padQuery = server.EntMan.AllEntityQueryEnumerator<Content.Server.Cargo.Components.CargoPalletComponent, TransformComponent>();
+            while (padQuery.MoveNext(out _, out var pallet, out var padXform))
+            {
+                if (padXform.MapUid != mapXform.MapUid || padXform.GridUid is not { } padGrid)
+                    continue;
+                if (!server.EntMan.TryGetComponent<TutorialDockStationComponent>(padGrid, out var dock) ||
+                    dock.StationId != TutorialShuttleArenaSystem.AtsStationId)
+                    continue;
+                if ((pallet.PalletType & Content.Server.Cargo.Components.BuySellType.Sell) == 0)
+                    continue;
+                sellPadTiles.Add((Vector2i) padXform.LocalPosition);
+            }
+
+            var crateOnAtsSellPad = false;
+            var atsCrateQuery = server.EntMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            while (atsCrateQuery.MoveNext(out _, out var meta, out var crateXform))
+            {
+                if (crateXform.MapUid != mapXform.MapUid || crateXform.Anchored)
+                    continue;
+                if (meta.EntityPrototype?.ID is not ("CrateGenericSteel" or "CrateHydroponics" or "CrateJanitorialCleanerGrenades"))
+                    continue;
+                if (crateXform.GridUid is not { } crateGrid ||
+                    !server.EntMan.TryGetComponent<TutorialDockStationComponent>(crateGrid, out var dock) ||
+                    dock.StationId != TutorialShuttleArenaSystem.AtsStationId)
+                    continue;
+                if (sellPadTiles.Contains((Vector2i) crateXform.LocalPosition))
+                    crateOnAtsSellPad = true;
+            }
+
+            Assert.That(bayHaulCrate, Is.True, "Bay needs an unanchored TutorialCargoBayCrate haul target");
+            Assert.That(boardMarker, Is.True, "Shuttle needs cargo-shuttle board marker");
+            Assert.That(crateOnAtsSellPad, Is.False, "ATS sell pads must not preload sellable crates");
 
             var docked = false;
             var dockQuery = server.EntMan.AllEntityQueryEnumerator<Content.Server.Shuttles.Components.DockingComponent, TransformComponent>();
@@ -1632,7 +1864,9 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(maps.TryLoadTutorialMap(chef, out var chefMap, out var chefGrid, out _), Is.True);
             Assert.That(server.EntMan.TryGetComponent<GridAtmosphereComponent>(chefGrid, out var chefAtmos), Is.True);
-            Assert.That(chefAtmos!.Simulated, Is.False, "Simplified roles should freeze grid atmos after fill");
+            // TEMPORARY: SimplifiedEnvironment atmos freeze is disabled (odd behavior); keep live sim.
+            Assert.That(chefAtmos!.Simulated, Is.True,
+                "TEMPORARY: SimplifiedEnvironment must leave atmos Simulated until freeze is safe again");
 
             var forcedReceiver = false;
             var receiverQuery = server.EntMan.AllEntityQueryEnumerator<ApcPowerReceiverComponent, TransformComponent>();
@@ -2478,19 +2712,22 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
-    public async Task TutorialGuide_TravelRoleGivesTalkingGuideWithoutMentor()
+    public async Task TutorialGuide_CargoHybridGivesGuideAndStationaryQm()
     {
         var pair = Pair;
         var server = pair.Server;
         var ticker = server.System<GameTicker>();
         var proto = server.ProtoMan;
+        var ui = server.System<UserInterfaceSystem>();
 
         await server.WaitAssertion(() =>
         {
             var cargo = proto.Index<TutorialRolePrototype>("TutorialCargoTechnician");
             Assert.That(TutorialServerRuleSystem.UsesTravelingCoach(cargo), Is.True);
+            Assert.That(cargo.SpawnStationaryMentor, Is.True);
             var salvage = proto.Index<TutorialRolePrototype>("TutorialSalvageSpecialist");
             Assert.That(TutorialServerRuleSystem.UsesTravelingCoach(salvage), Is.True);
+            Assert.That(salvage.SpawnStationaryMentor, Is.False);
         });
 
         await server.WaitPost(() =>
@@ -2527,17 +2764,33 @@ public sealed class TutorialServerTests : GameTest
             }
 
             Assert.That(session, Is.Not.Null);
-            Assert.That(session!.MentorUid, Is.EqualTo(EntityUid.Invalid), "Travel roles have no mentor body");
-            Assert.That(session.GuideUid, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(session!.GuideUid, Is.Not.EqualTo(EntityUid.Invalid));
             Assert.That(entMan.HasComponent<TutorialGuideComponent>(session.GuideUid));
             Assert.That(entMan.GetComponent<MetaDataComponent>(session.GuideUid).EntityName,
-                Is.EqualTo("Urist McPositronic"));
+                Is.EqualTo("Urist McTutorial"));
+            Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.False,
+                "Cargo defers guide open so the bay QM can speak");
+
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid), "Cargo hybrid spawns a bay QM");
+            Assert.That(entMan.HasComponent<TutorialMentorComponent>(session.MentorUid));
+            Assert.That(entMan.HasComponent<TutorialTrainerComponent>(session.MentorUid));
+            Assert.That(entMan.HasComponent<Content.Server.NPC.HTN.HTNComponent>(session.MentorUid), Is.False,
+                "Stationary QM must not HTN-follow");
+            Assert.That(entMan.GetComponent<MetaDataComponent>(session.MentorUid).EntityName,
+                Is.EqualTo("Urist McQuartermaster"));
+            Assert.That(entMan.GetComponent<MetaDataComponent>(session.MentorUid).EntityPrototype?.ID,
+                Is.EqualTo("TutorialCargoQmMentor"));
+            Assert.That(entMan.TryGetComponent<LoadoutComponent>(session.MentorUid, out var qmLoadout), Is.True);
+            Assert.That(qmLoadout!.StartingGear, Is.Not.Null);
+            Assert.That(qmLoadout.StartingGear!, Does.Contain(new ProtoId<StartingGearPrototype>("VisitorQM")),
+                "Cargo QM mentor must wear a full QM outfit, not accessory-only QuartermasterGear");
 
             var guideSys = server.System<TutorialGuideSystem>();
             var guide = new Entity<TutorialGuideComponent>(
                 session.GuideUid,
                 entMan.GetComponent<TutorialGuideComponent>(session.GuideUid));
 
+            ui.OpenUi(session.GuideUid, TutorialPromptUiKey.Key, mob);
             var state = guideSys.GetUiState(guide, mob);
             Assert.That(state.HasTutorial, Is.True);
             Assert.That(state.CanGoBack, Is.False);
@@ -2546,11 +2799,30 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(guideSys.TryGoNext(guide, mob), Is.True);
             Assert.That(entMan.TryGetComponent(mob, out part));
-            Assert.That(part!.SubGoalIndex, Is.EqualTo(1));
+            // Welcome has a single Acknowledge tip; Next moves to goal "order" / orders console.
+            Assert.That(part!.GoalIndex, Is.EqualTo(1));
+            Assert.That(part.StepComplete, Is.EqualTo(TutorialStepComplete.InteractTargetTag));
+            Assert.That(guideSys.TryGoNext(guide, mob), Is.False,
+                "InteractTargetTag tip cannot be skipped with Next");
+            state = guideSys.GetUiState(guide, mob);
+            Assert.That(state.CanGoNext, Is.False);
+            Assert.That(state.WaitingOnSensor, Is.True);
 
-            // Force into a sensor tip and confirm Next cannot skip it.
+            // Force into pilot / open-console and confirm Next still cannot skip sensors.
             var tutorialSys = server.System<TutorialServerRuleSystem>();
-            tutorialSys.AdvanceSubGoal(mob); // into pilot / open-console
+            tutorialSys.AdvanceSubGoal(mob); // purchase
+            tutorialSys.AdvanceSubGoal(mob); // confirm
+            tutorialSys.AdvanceSubGoal(mob); // drag-crate
+            tutorialSys.AdvanceSubGoal(mob); // board-shuttle
+            tutorialSys.AdvanceSubGoal(mob); // controls (force-opens guide)
+            Assert.That(entMan.TryGetComponent(mob, out part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
+            Assert.That(tutorialSys.TryGetCurrentSubGoal(mob, part, out var controlsSub));
+            Assert.That(controlsSub.Id, Is.EqualTo("controls"));
+            Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.True,
+                "Controls step must force-open the guide tablet");
+
+            tutorialSys.AdvanceSubGoal(mob); // open-console
             Assert.That(entMan.TryGetComponent(mob, out part));
             Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.PilotShuttle));
             Assert.That(guideSys.TryGoNext(guide, mob), Is.False);
@@ -2575,11 +2847,11 @@ public sealed class TutorialServerTests : GameTest
         });
         await pair.RunTicksSync(5);
 
-        // Travel-coach roles keep AutoOpenGuide on the talking tablet.
+        // Salvage keeps AutoOpenGuide on the talking tablet (Cargo defers open for the bay QM).
         await server.WaitPost(() =>
         {
             server.System<TutorialServerRuleSystem>()
-                .TrySelectRole(pair.Player!, "TutorialCargoTechnician", confirmedStub: false);
+                .TrySelectRole(pair.Player!, "TutorialSalvageSpecialist", confirmedStub: false);
         });
         await pair.RunTicksSync(60);
 
@@ -2733,9 +3005,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(player.AttachedEntity, Is.Not.Null);
             var mob = player.AttachedEntity!.Value;
             var entMan = server.EntMan;
-            var tutorial = server.System<TutorialServerRuleSystem>();
-            var hands = server.System<SharedHandsSystem>();
-            var timing = server.ResolveDependency<IGameTiming>();
+            var coach = server.System<TutorialTrainerSystem>();
 
             EntityUid? trainerUid = null;
             var trainers = entMan.EntityQueryEnumerator<TutorialTrainerComponent>();
@@ -2749,39 +3019,29 @@ public sealed class TutorialServerTests : GameTest
             var trainer = entMan.GetComponent<TutorialTrainerComponent>(trainerUid.Value);
             Assert.That(trainer.LastSpokenSubGoal, Is.EqualTo("meet-trainer"),
                 "Trainer should speak the opening line after spawn");
-            var firstReminder = trainer.NextReminderAt;
+
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(coach.TryResolveDialogue(trainerUid.Value, trainer, mob, part!, out var subGoalId, out var dialogue));
+            Assert.That(subGoalId, Is.EqualTo("meet-trainer"));
+            Assert.That(dialogue, Does.Contain("WASD (default)"),
+                "Passenger opening line names the default move keys for new players");
 
             var interact = new InteractHandEvent(mob, trainerUid.Value);
             entMan.EventBus.RaiseLocalEvent(trainerUid.Value, interact);
+            Assert.That(interact.Handled, Is.True,
+                "Empty-hand click / hug on mentor should handle and re-speak");
+
             trainer = entMan.GetComponent<TutorialTrainerComponent>(trainerUid.Value);
             Assert.That(trainer.LastSpokenSubGoal, Is.EqualTo("meet-trainer"));
-            Assert.That(trainer.NextReminderAt, Is.GreaterThan(firstReminder),
-                "Hug/interact should reset the reminder timer");
-
-            trainer.NextReminderAt = timing.CurTime - TimeSpan.FromSeconds(1);
         });
 
-        await pair.RunTicksSync(5);
-
-        await server.WaitAssertion(() =>
+        // Advance one tip and let the mentor speak the new line on the next Update.
+        await server.WaitPost(() =>
         {
-            var entMan = server.EntMan;
-            var timing = server.ResolveDependency<IGameTiming>();
-            EntityUid? trainerUid = null;
-            TutorialTrainerComponent? trainer = null;
-            var trainers = entMan.EntityQueryEnumerator<TutorialTrainerComponent>();
-            while (trainers.MoveNext(out var uid, out var comp))
-            {
-                trainerUid = uid;
-                trainer = comp;
-                break;
-            }
-
-            Assert.That(trainerUid, Is.Not.Null);
-            Assert.That(trainer, Is.Not.Null);
-            Assert.That(trainer!.NextReminderAt, Is.GreaterThan(timing.CurTime),
-                "Trainer should re-speak and schedule the next 10s reminder");
+            var mob = pair.Player!.AttachedEntity!.Value;
+            server.System<TutorialServerRuleSystem>().AdvanceSubGoal(mob);
         });
+        await pair.RunTicksSync(5);
 
         await server.WaitAssertion(() =>
         {
@@ -2791,8 +3051,20 @@ public sealed class TutorialServerTests : GameTest
             var tutorial = server.System<TutorialServerRuleSystem>();
             var hands = server.System<SharedHandsSystem>();
 
-            // Advance to drop-crowbar (meet -> pick -> drop).
-            tutorial.AdvanceSubGoal(mob);
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            var trainer = entMan.GetComponent<TutorialTrainerComponent>(session!.MentorUid);
+            Assert.That(trainer.LastSpokenSubGoal, Is.EqualTo("pick-crowbar"),
+                "Mentor must IC-speak the next tip after curriculum advances");
+
+            // Advance meet was already done; advance pick -> drop-crowbar.
             tutorial.AdvanceSubGoal(mob);
             Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
                 Is.EqualTo(TutorialStepComplete.DropItem));
@@ -3432,6 +3704,7 @@ public sealed class TutorialServerTests : GameTest
             }
 
             Assert.That(session, Is.Not.Null);
+            // Cargo starts with guide closed (AutoOpenGuide false); keep it closed for this assert.
             ui.CloseUi(session!.GuideUid, TutorialPromptUiKey.Key, mob);
 
             var guide = new Entity<TutorialGuideComponent>(
@@ -3445,8 +3718,8 @@ public sealed class TutorialServerTests : GameTest
             // Advance while closed should still move curriculum and resync when reopened.
             server.System<TutorialServerRuleSystem>().AdvanceSubGoal(mob);
             Assert.That(entMan.TryGetComponent(mob, out part));
-            Assert.That(part!.GoalIndex, Is.EqualTo(0));
-            Assert.That(part.SubGoalIndex, Is.EqualTo(1));
+            Assert.That(part!.GoalIndex, Is.EqualTo(1), "Intro Acknowledge advances into the order goal");
+            Assert.That(part.SubGoalIndex, Is.EqualTo(0));
 
             ui.OpenUi(session.GuideUid, TutorialPromptUiKey.Key, mob);
             var state = guideSys.GetUiState(guide, mob);
@@ -3505,6 +3778,59 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(entMan.TryGetComponent(mob, out part));
             Assert.That(part!.SubGoalIndex, Is.EqualTo(subBefore + 1),
                 "Empty-hand click on mentor should Acknowledge-advance");
+        });
+    }
+
+    [Test]
+    public async Task TutorialMentor_ProgressDoesNotSendToast()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            server.System<TutorialServerRuleSystem>()
+                .TrySelectRole(pair.Player!, "TutorialChef", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            var mob = player.AttachedEntity!.Value;
+            var entMan = server.EntMan;
+
+            TutorialSessionData? session = null;
+            TutorialServerRuleComponent? rule = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out rule))
+            {
+                if (rule.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(rule, Is.Not.Null);
+
+            // Clear any spawn-time bookkeeping so Advance is the only candidate to stamp the toast.
+            session.LastProgressPopup = TimeSpan.Zero;
+            rule!.Sessions[player.UserId] = session;
+
+            server.System<TutorialServerRuleSystem>().AdvanceSubGoal(mob);
+
+            Assert.That(rule.Sessions.TryGetValue(player.UserId, out session));
+            Assert.That(session!.LastProgressPopup, Is.EqualTo(TimeSpan.Zero),
+                "Mentor roles should not consume a closed-UI progress toast; the mentor speaks instead");
         });
     }
 
@@ -4578,18 +4904,15 @@ public sealed class TutorialServerTests : GameTest
             var mob = pair.Player!.AttachedEntity!.Value;
             Assert.That(server.EntMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
 
-            // Stop on undock-explain (Acknowledge) — before UndockShuttle is current.
-            for (var i = 0; i < 20; i++)
+            // Force through bay sensors until open-console (PilotShuttle) — before UndockShuttle.
+            for (var i = 0; i < 40; i++)
             {
                 if (!tutorial.TryGetCurrentSubGoal(mob, part!, out var sub))
                     break;
-                if (sub.Complete == TutorialStepComplete.Acknowledge &&
-                    sub.Id == "undock-explain")
+                if (sub.Complete == TutorialStepComplete.PilotShuttle &&
+                    sub.Id == "open-console")
                     break;
-                if (sub.Complete is TutorialStepComplete.Acknowledge or TutorialStepComplete.PilotShuttle)
-                    tutorial.AdvanceSubGoal(mob);
-                else
-                    break;
+                tutorial.AdvanceSubGoal(mob);
             }
         });
         await pair.RunTicksSync(5);
@@ -4599,10 +4922,10 @@ public sealed class TutorialServerTests : GameTest
             var mob = pair.Player!.AttachedEntity!.Value;
             Assert.That(server.EntMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
             Assert.That(tutorial.TryGetCurrentSubGoal(mob, part!, out var sub));
-            Assert.That(sub.Complete, Is.EqualTo(TutorialStepComplete.Acknowledge));
-            Assert.That(sub.Id, Is.EqualTo("undock-explain"));
+            Assert.That(sub.Complete, Is.EqualTo(TutorialStepComplete.PilotShuttle));
+            Assert.That(sub.Id, Is.EqualTo("open-console"));
 
-            var shuttle = server.EntMan.GetComponent<TransformComponent>(mob).GridUid;
+            var shuttle = FindCargoShuttleOnPlayerMap(server.EntMan, mob);
             Assert.That(shuttle, Is.Not.Null);
 
             EntityUid? oneDock = null;
@@ -4628,7 +4951,7 @@ public sealed class TutorialServerTests : GameTest
         await server.WaitAssertion(() =>
         {
             var mob = pair.Player!.AttachedEntity!.Value;
-            var shuttle = server.EntMan.GetComponent<TransformComponent>(mob).GridUid!.Value;
+            var shuttle = FindCargoShuttleOnPlayerMap(server.EntMan, mob)!.Value;
 
             foreach (var dock in docking.GetDocks(shuttle))
             {
@@ -4712,17 +5035,14 @@ public sealed class TutorialServerTests : GameTest
             var mob = pair.Player!.AttachedEntity!.Value;
             Assert.That(server.EntMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
 
-            // Advance through Acknowledge / PilotShuttle until UndockShuttle is current.
-            for (var i = 0; i < 20; i++)
+            // Force through bay/board sensors until UndockShuttle is current.
+            for (var i = 0; i < 40; i++)
             {
                 if (!tutorial.TryGetCurrentSubGoal(mob, part!, out var sub))
                     break;
                 if (sub.Complete == TutorialStepComplete.UndockShuttle)
                     break;
-                if (sub.Complete is TutorialStepComplete.Acknowledge or TutorialStepComplete.PilotShuttle)
-                    tutorial.AdvanceSubGoal(mob);
-                else
-                    break;
+                tutorial.AdvanceSubGoal(mob);
             }
         });
         await pair.RunTicksSync(5);
@@ -4735,7 +5055,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(tutorial.TryGetCurrentSubGoal(mob, part!, out var sub));
             Assert.That(sub.Complete, Is.EqualTo(TutorialStepComplete.UndockShuttle));
 
-            var shuttle = server.EntMan.GetComponent<TransformComponent>(mob).GridUid;
+            var shuttle = FindCargoShuttleOnPlayerMap(server.EntMan, mob);
             Assert.That(shuttle, Is.Not.Null);
 
             EntityUid bay = default;
@@ -4764,6 +5084,13 @@ public sealed class TutorialServerTests : GameTest
             }
 
             Assert.That(oneDock, Is.Not.Null);
+            Assert.That(CountJointsBetween(server.EntMan, shuttle.Value, bay), Is.GreaterThan(0),
+                "Expected dock weld joints before undock");
+            Assert.That(server.EntMan.TryGetComponent<PhysicsComponent>(shuttle.Value, out var preBody), Is.True);
+            Assert.That(preBody!.BodyType, Is.EqualTo(BodyType.Dynamic),
+                $"Shuttle must be Dynamic before undock (was {preBody.BodyType}); Static grids cannot fly after welds clear");
+            Assert.That(server.EntMan.TryGetComponent<ShuttleComponent>(shuttle.Value, out var shuttleComp), Is.True);
+            Assert.That(shuttleComp!.Enabled, Is.True);
             var dockComp = server.EntMan.GetComponent<DockingComponent>(oneDock.Value);
             docking.Undock(new Entity<DockingComponent>(oneDock.Value, dockComp));
         });
@@ -4778,7 +5105,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(sub.Complete, Is.Not.EqualTo(TutorialStepComplete.UndockShuttle),
                 "Undock goal should advance after clearing dual docks");
 
-            var shuttle = server.EntMan.GetComponent<TransformComponent>(mob).GridUid!.Value;
+            var shuttle = FindCargoShuttleOnPlayerMap(server.EntMan, mob)!.Value;
             foreach (var dock in docking.GetDocks(shuttle))
             {
                 if (dock.Comp.DockedWith is not { } other)
@@ -4791,6 +5118,176 @@ public sealed class TutorialServerTests : GameTest
                     Assert.Fail("Shuttle still docked to cargo-bay after undock cascade");
                 }
             }
+
+            EntityUid bayGrid = default;
+            var mapUid3 = server.EntMan.GetComponent<TransformComponent>(shuttle).MapUid;
+            var bayQuery = server.EntMan.AllEntityQueryEnumerator<TutorialDockStationComponent, TransformComponent>();
+            while (bayQuery.MoveNext(out var uid, out var station, out var xform))
+            {
+                if (xform.MapUid != mapUid3)
+                    continue;
+                if (station.StationId == TutorialShuttleArenaSystem.CargoBayStationId)
+                    bayGrid = uid;
+            }
+
+            Assert.That(bayGrid.IsValid(), Is.True);
+            Assert.That(CountJointsBetween(server.EntMan, shuttle, bayGrid), Is.EqualTo(0),
+                "Dock weld joints must be removed from physics when undocking; DockedWith-only cleanup leaves the shuttle pinned");
+
+            Assert.That(server.EntMan.TryGetComponent<PhysicsComponent>(shuttle, out var shuttleBody), Is.True);
+            Assert.That(shuttleBody!.BodyType, Is.EqualTo(BodyType.Dynamic),
+                "Cargo shuttle must remain a dynamic body after undock so thrusters can move it");
+        });
+    }
+
+    private static EntityUid? FindCargoShuttleOnPlayerMap(IEntityManager entMan, EntityUid mob)
+    {
+        var mapUid = entMan.GetComponent<TransformComponent>(mob).MapUid;
+        if (mapUid == null)
+            return null;
+
+        var query = entMan.AllEntityQueryEnumerator<Content.Shared.Cargo.Components.CargoShuttleComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out _, out var xform))
+        {
+            if (xform.MapUid == mapUid)
+                return uid;
+        }
+
+        return null;
+    }
+
+    private static int CountJointsBetween(IEntityManager entMan, EntityUid gridA, EntityUid gridB)
+    {
+        var count = 0;
+        if (!entMan.TryGetComponent<JointComponent>(gridA, out var joints))
+            return 0;
+
+        foreach (var joint in joints.GetJoints.Values)
+        {
+            if ((joint.BodyAUid == gridA && joint.BodyBUid == gridB) ||
+                (joint.BodyAUid == gridB && joint.BodyBUid == gridA))
+                count++;
+        }
+
+        return count;
+    }
+
+    [Test]
+    public async Task TutorialCargo_HybridSkipsToastWhenQmInRange()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            server.System<TutorialServerRuleSystem>()
+                .TrySelectRole(pair.Player!, "TutorialCargoTechnician", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            var mob = player.AttachedEntity!.Value;
+            var tutorial = server.System<TutorialServerRuleSystem>();
+            var entMan = server.EntMan;
+
+            TutorialSessionData? session = null;
+            TutorialServerRuleComponent? rule = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out rule))
+            {
+                if (rule.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(tutorial.IsMentorCoachingInRange(mob), Is.True,
+                "Bay QM should be in coach range at cargo spawn");
+
+            session.LastProgressPopup = TimeSpan.Zero;
+            rule!.Sessions[player.UserId] = session;
+
+            tutorial.AdvanceSubGoal(mob);
+
+            Assert.That(rule.Sessions.TryGetValue(player.UserId, out session));
+            Assert.That(session!.LastProgressPopup, Is.EqualTo(TimeSpan.Zero),
+                "Hybrid cargo must not tip-chat when the bay QM is already speaking");
+        });
+    }
+
+    [Test]
+    public async Task TutorialTechnicalAssistant_ChamberPadAfterHackDoor()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out _));
+
+            // Advance through welcome + full hack curriculum to the spacing chamber-pad step.
+            for (var i = 0; i < 32; i++)
+            {
+                Assert.That(tutorial.TryGetSession(mob, out var session));
+                if (session.GoalIndex == 2 && session.AwaitingChamberEntryPad)
+                    break;
+                Assert.That(session.GoalIndex, Is.LessThanOrEqualTo(2),
+                    "Should reach spacing pad before leaving the spacing goal");
+                tutorial.AdvanceSubGoal(mob);
+            }
+
+            Assert.That(tutorial.TryGetSession(mob, out var live));
+            Assert.That(live.GoalIndex, Is.EqualTo(2), "Spacing goal should be current");
+            Assert.That(live.AwaitingChamberEntryPad, Is.True, "Spacing should require the purple chamber pad");
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
+            Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.ReachMarker));
+            Assert.That(part.StepText, Does.Contain("purple").IgnoreCase);
+
+            var mobMap = entMan.GetComponent<TransformComponent>(mob).MapUid;
+            var foundPad = false;
+            var markers = entMan.EntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
+            while (markers.MoveNext(out var uid, out var marker, out var xform))
+            {
+                if (xform.MapUid != mobMap)
+                    continue;
+                if (marker.MarkerId != "chamber-1")
+                    continue;
+                foundPad = true;
+                Assert.That(entMan.HasComponent<PointLightComponent>(uid), Is.True,
+                    "Chamber pad should glow so players can see the purple X");
+                break;
+            }
+
+            Assert.That(foundPad, Is.True, "TA map must spawn chamber-1 purple X marker");
         });
     }
 

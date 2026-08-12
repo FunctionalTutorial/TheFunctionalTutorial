@@ -4,29 +4,31 @@
   Build Content.Server (+ Content.Client when present), package with Resources, upload to FileShare.
 
 .DESCRIPTION
-  Local-only deploy helper for DESKTOP-7SCFTK4 (192.168.1.22).
+  Local-only deploy helper for DESKTOP-7SCFTK4 (192.168.1.6).
   Does not touch the remote MCP (port 8000) or FileShare server (port 8765).
 
   Package lands at:
-    http://192.168.1.22:8765/incoming/tutorial-update.zip
+    http://192.168.1.6:8765/incoming/tutorial-update.zip
   Plus a marker:
     incoming/tutorial-update.ready
 
   The host supervisor (Watch-TutorialServer.ps1) applies the package:
   stop SS14 -> extract -> start SS14 (infra stays up).
 
+  Prefer -Configuration DebugOpt (Release treats Robust analyzers as errors).
+
 .EXAMPLE
   .\Deploy-TutorialHost.ps1
 
 .EXAMPLE
-  .\Deploy-TutorialHost.ps1 -SkipBuild -Configuration Release
+  .\Deploy-TutorialHost.ps1 -SkipBuild -Configuration DebugOpt
 #>
 param(
     [string] $RepoRoot = "",
-    [ValidateSet("Debug", "Release")]
-    [string] $Configuration = "Release",
+    [ValidateSet("Debug", "DebugOpt", "Release")]
+    [string] $Configuration = "DebugOpt",
     [switch] $SkipBuild,
-    [string] $BaseUrl = "http://192.168.1.22:8765",
+    [string] $BaseUrl = "http://192.168.1.6:8765",
     [string] $Token,
     [string] $TokenFile = "$env:USERPROFILE\.wizden-host-fileshare.token",
     [switch] $ResourcesOnly,

@@ -57,6 +57,10 @@ admins_count_in_playercount = false
 # Change this to have the changelog and rules "last seen" date stored separately from other servers.
 id = "unknown_server_id"
 
+#Wizden: connect-time rules acceptance popup (admins can still use showrules)
+[rules]
+enabled = false
+
 [events]
 # Controls if the game should run station events. (Meteors, Sleeper Syndicates ETC)
 enabled = true
@@ -65,7 +69,8 @@ enabled = true
 # Should the emergency shuttle be allowed to launch early by command staff?
 emergency_early_launch_allowed = false
 # Time in minutes after round start to auto-call the emergency shuttle. Set to zero to disable.
-auto_call_time = 90
+# TutorialServer lobby has no emergency shuttle — auto-call would crash DockEmergencyShuttle.
+auto_call_time = 0
 
 [console]
 # If this is true, people connecting from this computer will automatically be elevated to full admin privileges.

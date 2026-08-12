@@ -4,7 +4,7 @@
     MinSize="360 300"
     SetSize="420 360">
     <BoxContainer Orientation="Vertical" Margin="8" SeparationOverride="6">
-        <ScrollContainer VerticalExpand="True" HScrollEnabled="False" MinHeight="180">
+        <ScrollContainer Name="ContentScroll" VerticalExpand="True" HScrollEnabled="False" MinHeight="180">
             <BoxContainer Orientation="Vertical" HorizontalExpand="True" SeparationOverride="6">
                 <RichTextLabel Name="GoalLabel" HorizontalExpand="True" MaxWidth="390" />
                 <RichTextLabel Name="ChecklistLabel" HorizontalExpand="True" MaxWidth="390" />

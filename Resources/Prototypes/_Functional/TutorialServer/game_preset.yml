@@ -16,6 +16,8 @@
         mapNameTemplate: "Tutorial Lobby"
       - type: StationJobs
         availableJobs:
+          # Passenger first so late-join / station job maps surface the basics tutorial first.
+          Passenger: [ -1, -1 ]
           AtmosphericTechnician: [ -1, -1 ]
           Bartender: [ -1, -1 ]
           Borg: [ -1, -1 ]
@@ -35,7 +37,6 @@
           MedicalDoctor: [ -1, -1 ]
           Mime: [ -1, -1 ]
           Paramedic: [ -1, -1 ]
-          Passenger: [ -1, -1 ]
           Quartermaster: [ -1, -1 ]
           ResearchAssistant: [ -1, -1 ]
           ResearchDirector: [ -1, -1 ]

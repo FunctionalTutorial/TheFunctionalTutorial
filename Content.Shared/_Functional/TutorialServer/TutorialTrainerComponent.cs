@@ -16,13 +16,13 @@ public sealed partial class TutorialTrainerComponent : Component
     public List<TutorialTrainerLine> Lines = new();
 
     /// <summary>
-    /// Sub-goal id of the last line spoken (for change detection + reminders).
+    /// Sub-goal id of the last line spoken (change detection; no timed reminders).
     /// </summary>
     [DataField]
     public string? LastSpokenSubGoal;
 
     /// <summary>
-    /// Next time the trainer re-states the current objective.
+    /// Unused legacy field kept for map/component compatibility.
     /// </summary>
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan NextReminderAt;

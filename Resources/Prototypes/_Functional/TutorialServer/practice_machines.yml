@@ -472,8 +472,17 @@
   - type: Transform
   - type: TutorialStepMarker
   - type: Sprite
+    noRot: true
+    drawdepth: Overlays
     sprite: Markers/cross.rsi
-    state: pink
+    layers:
+    - state: pink
+      shader: unshaded
+  - type: PointLight
+    radius: 1.5
+    energy: 2.5
+    color: "#C050FF"
+    netsync: false
   - type: Clickable
   - type: InteractionOutline
 
@@ -789,6 +798,22 @@
         0.5
       MaximumIdleTime: !type:Single
         1.5
+
+# Stationary cargo-bay QM for Cargo Tech (no HTN follow). Speaks tips; click to repeat / Acknowledge.
+- type: entity
+  parent: TutorialPracticeMob
+  id: TutorialCargoQmMentor
+  name: Urist McQuartermaster
+  description: Your cargo bay quartermaster. They stay put and tell you what to do next. Empty-hand click them to hear it again.
+  suffix: Tutorial, Mentor, Cargo
+  components:
+  # VisitorQM is a full outfit (jumpsuit/cloak/hat). Job QuartermasterGear is accessories only.
+  - type: Loadout
+    prototypes: [VisitorQM]
+  - type: TutorialMentor
+  - type: TutorialTrainer
+  - type: InputMover
+  - type: MobMover
 
 # Passenger opening-block coach with flavored lines (falls back to sub-goal text otherwise).
 - type: entity

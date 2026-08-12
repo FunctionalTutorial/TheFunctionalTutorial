@@ -37,12 +37,12 @@ using Content.Shared.Humanoid.Prototypes;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
-using Content.Shared.Interaction.Components;
 using Content.Shared.Inventory;
 using Content.Shared.Item;
 using Content.Shared.Mind;
 using Content.Shared.Mind.Components;
 using Content.Shared.Mobs;
+using Content.Shared.Objectives.Systems;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Preferences;
 using Content.Shared.Preferences.Loadouts;
@@ -80,6 +80,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly JobSystem _jobs = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
     [Dependency] private readonly MindSystem _mind = default!;
+    [Dependency] private readonly SharedObjectivesSystem _objectives = default!;
+    [Dependency] private readonly TutorialGoalConditionSystem _goalObjectives = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
     [Dependency] private readonly PowerReceiverSystem _power = default!;
     [Dependency] private readonly RespawnRuleSystem _respawn = default!;
@@ -106,15 +108,25 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly NPCSystem _npc = default!;
     [Dependency] private readonly HTNSystem _htn = default!;
     [Dependency] private readonly TutorialMentorFollowSystem _mentorFollow = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private static readonly EntProtoId TutorialGuideProto = "TutorialGuide";
     private static readonly EntProtoId TutorialMentorProto = "TutorialMentor";
     private static readonly EntProtoId TutorialPassengerMentorProto = "TutorialPassengerMentor";
+    private static readonly EntProtoId TutorialCargoQmMentorProto = "TutorialCargoQmMentor";
     private static readonly EntProtoId TutorialChooseRoleActionProto = "ActionTutorialChooseRole";
     private static readonly EntProtoId StatusEffectSsdSleepingProto = "StatusEffectSSDSleeping";
     private static readonly EntProtoId TutorialHackAirlockProto = "TutorialHackAirlock";
+    private static readonly EntProtoId TutorialCurriculumGoalProto = "TutorialCurriculumGoal";
     private static readonly ProtoId<TutorialRolePrototype> TutorialPassengerRole = "TutorialPassenger";
+    private static readonly ProtoId<TutorialRolePrototype> TutorialCargoTechnicianRole = "TutorialCargoTechnician";
     private static readonly TimeSpan ProgressPopupCooldown = TimeSpan.FromSeconds(0.75);
+    private const string ControlsSubGoalId = "controls";
+
+    /// <summary>
+    /// IC speak range for mentor tips. Beyond this, hybrid travel roles fall back to tip chat.
+    /// </summary>
+    private const float MentorCoachRange = 10f;
 
     /// <summary>
     /// Sub-tile offsets so piled practice items stay visible (right-click still works; this
@@ -146,6 +158,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     private bool _prevDisallowLateJoin;
     private bool _prevRoleTimers;
     private bool _prevRoleWhitelist;
+    private int _prevAutoCallTime;
 
     public override void Initialize()
     {
@@ -289,6 +302,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _prevDisallowLateJoin = _cfg.GetCVar(CCVars.GameDisallowLateJoins);
         _prevRoleTimers = _cfg.GetCVar(CCVars.GameRoleTimers);
         _prevRoleWhitelist = _cfg.GetCVar(CCVars.GameRoleWhitelist);
+        _prevAutoCallTime = _cfg.GetCVar(CCVars.EmergencyShuttleAutoCallTime);
 
         _cfg.SetCVar(CCVars.OocEnabled, false);
         _cfg.SetCVar(CCVars.LoocEnabled, false);
@@ -296,6 +310,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _cfg.SetCVar(CCVars.GameDisallowLateJoins, false);
         _cfg.SetCVar(CCVars.GameRoleTimers, false);
         _cfg.SetCVar(CCVars.GameRoleWhitelist, false);
+        // Lobby has no StationEmergencyShuttle — auto-call docks an empty set and crashes (.Max).
+        _cfg.SetCVar(CCVars.EmergencyShuttleAutoCallTime, 0);
         _cvarsApplied = true;
     }
 
@@ -310,6 +326,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _cfg.SetCVar(CCVars.GameDisallowLateJoins, _prevDisallowLateJoin);
         _cfg.SetCVar(CCVars.GameRoleTimers, _prevRoleTimers);
         _cfg.SetCVar(CCVars.GameRoleWhitelist, _prevRoleWhitelist);
+        _cfg.SetCVar(CCVars.EmergencyShuttleAutoCallTime, _prevAutoCallTime);
         _cvarsApplied = false;
     }
 
@@ -707,6 +724,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         {
             foreach (var objectiveId in roleProto.PlaceholderObjectives)
                 _mind.TryAddObjective(mindId, mindComp, objectiveId);
+
+            AssignCurriculumObjectives(mindId, mindComp, roleProto);
         }
 
         SpawnPracticeEntities(roleProto, gridUid, spawnCoords);
@@ -769,9 +788,15 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         session.GuideAutoOpened = false;
 
         if (UsesTravelingCoach(roleProto))
+        {
             GiveTutorialGuide(mob, session, spawnCoords, player, roleProto);
+            if (roleProto.SpawnStationaryMentor)
+                GiveTutorialMentor(mob, session, spawnCoords, player, roleProto);
+        }
         else
+        {
             GiveTutorialMentor(mob, session, spawnCoords, player, roleProto);
+        }
     }
 
     private void GiveTutorialGuide(
@@ -782,7 +807,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         TutorialRolePrototype roleProto)
     {
         var guide = Spawn(TutorialGuideProto, spawnCoords);
-        EnsureComp<UnremoveableComponent>(guide);
+        // Droppable so travel tutorials can free a hand (Q / Drop).
         session.GuideUid = guide;
         // Off-hand (left) so the active right hand stays free for pickup practice.
         GiveTutorialGuideToOffHand(mob, guide);
@@ -807,7 +832,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     {
         var mentorProto = roleProto.ID == TutorialPassengerRole.Id
             ? TutorialPassengerMentorProto
-            : TutorialMentorProto;
+            : roleProto.ID == TutorialCargoTechnicianRole.Id
+                ? TutorialCargoQmMentorProto
+                : TutorialMentorProto;
 
         var mentor = Spawn(mentorProto, spawnCoords.Offset(roleProto.MentorSpawnOffset));
         var mentorComp = EnsureComp<TutorialMentorComponent>(mentor);
@@ -819,7 +846,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             : roleProto.MentorName;
         _meta.SetEntityName(mentor, mentorName);
 
-        if (TryComp<HTNComponent>(mentor, out var htn))
+        if (roleProto.MentorFollows && TryComp<HTNComponent>(mentor, out var htn))
         {
             _npc.SetBlackboard(mentor, NPCBlackboard.FollowTarget,
                 new EntityCoordinates(mob, Vector2.Zero), htn);
@@ -1090,14 +1117,15 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 existing.Add(spawn.Marker);
         }
 
-        // Marker offset beyond ReachMarker auto-complete range (1.5) from chamber center spawn.
-        var padOffset = new System.Numerics.Vector2(0f, -1.5f);
+        // Place just inside the chamber, toward the previous room's gate, so the glowing X is
+        // visible as soon as the player walks through (not buried under mid-room props).
         for (var i = 1; i < layout.ChamberCenters.Count; i++)
         {
             var markerId = TutorialRoomLayoutComponent.ChamberEntryMarkerId(i);
             if (!existing.Add(markerId))
                 continue;
 
+            var padOffset = ResolveChamberEntryPadOffset(layout, i);
             var coords = _tutorialRooms.GetChamberCoords(gridUid, i, padOffset);
             var ent = Spawn("TutorialStepMarker", coords);
             EnsureComp<TutorialSensorTargetComponent>(ent);
@@ -1118,6 +1146,26 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             Complete = TutorialStepComplete.ReachMarker,
             Marker = TutorialRoomLayoutComponent.ChamberEntryMarkerId(chamberIndex),
         };
+    }
+
+    /// <summary>
+    /// Offset from chamber center toward the previous chamber so the pad sits near the entry gate.
+    /// </summary>
+    private static System.Numerics.Vector2 ResolveChamberEntryPadOffset(
+        TutorialRoomLayoutComponent layout,
+        int chamberIndex)
+    {
+        var fallback = new System.Numerics.Vector2(0f, -1.5f);
+        if (chamberIndex <= 0 || chamberIndex >= layout.ChamberCenters.Count)
+            return fallback;
+
+        var fromPrev = layout.ChamberCenters[chamberIndex] - layout.ChamberCenters[chamberIndex - 1];
+        if (fromPrev.LengthSquared() < 0.01f)
+            return fallback;
+
+        // Step back from this chamber's center toward the gate (opposite of stamp direction).
+        var towardGate = -System.Numerics.Vector2.Normalize(fromPrev) * 2.5f;
+        return towardGate;
     }
 
     /// <summary>
@@ -1254,7 +1302,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// Returns true when a closed-UI progress toast may be shown (and records the timestamp).
+    /// Returns true when a closed-UI progress tip may be shown (and records the timestamp).
     /// </summary>
     public bool TryConsumeProgressPopup(ICommonSession player)
     {
@@ -1274,6 +1322,119 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         session.LastProgressPopup = now;
         rule.Sessions[player.UserId] = session;
         return true;
+    }
+
+    /// <summary>
+    /// True when the player's handheld guide Bound UI is currently open.
+    /// </summary>
+    public bool IsGuideUiOpen(EntityUid mob)
+    {
+        if (!TryGetSession(mob, out var session))
+            return false;
+
+        if (session.GuideUid == EntityUid.Invalid || TerminatingOrDeleted(session.GuideUid))
+            return false;
+
+        return _ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key);
+    }
+
+    /// <summary>
+    /// Sends a tip to the player's chat. Markup may include <c>[keybind]</c> tags resolved client-side.
+    /// </summary>
+    public void SendTipChat(EntityUid mob, string markup)
+    {
+        if (!TryComp<ActorComponent>(mob, out var actor))
+            return;
+
+        SendTipChat(actor.PlayerSession, markup);
+    }
+
+    /// <summary>
+    /// Sends a tip to the player's chat. Markup may include <c>[keybind]</c> tags resolved client-side.
+    /// </summary>
+    public void SendTipChat(ICommonSession player, string markup)
+    {
+        if (string.IsNullOrWhiteSpace(markup))
+            return;
+
+        RaiseNetworkEvent(new TutorialTipChatEvent { Markup = markup }, player.Channel);
+    }
+
+    public bool TryGetSession(EntityUid mob, out TutorialSessionData session)
+    {
+        session = default!;
+
+        if (!TryComp<ActorComponent>(mob, out var actor))
+            return false;
+
+        if (!TryGetActiveRule(out _, out var rule, out _))
+            return false;
+
+        return rule.Sessions.TryGetValue(actor.PlayerSession.UserId, out session!);
+    }
+
+    /// <summary>
+    /// True when a living mentor is on the same map within coach range of the player.
+    /// Hybrid cargo uses this so the bay QM and orange tip chat do not double the same step.
+    /// </summary>
+    public bool IsMentorCoachingInRange(EntityUid mob)
+    {
+        if (!TryGetSession(mob, out var session))
+            return false;
+
+        if (session.MentorUid == EntityUid.Invalid || TerminatingOrDeleted(session.MentorUid))
+            return false;
+
+        if (!TryComp(mob, out TransformComponent? mobXform) ||
+            !TryComp(session.MentorUid, out TransformComponent? mentorXform))
+            return false;
+
+        if (mobXform.MapUid == null || mobXform.MapUid != mentorXform.MapUid)
+            return false;
+
+        var delta = _transform.GetWorldPosition(mobXform) - _transform.GetWorldPosition(mentorXform);
+        return delta.Length() <= MentorCoachRange;
+    }
+
+    private void AssignCurriculumObjectives(EntityUid mindId, MindComponent mind, TutorialRolePrototype role)
+    {
+        if (role.Goals.Count == 0)
+            return;
+
+        for (var i = 0; i < role.Goals.Count; i++)
+        {
+            if (_objectives.TryCreateObjective(mindId, mind, TutorialCurriculumGoalProto) is not { } objectiveUid)
+                continue;
+
+            var cond = EnsureComp<TutorialGoalConditionComponent>(objectiveUid);
+            cond.GoalIndex = i;
+
+            var goal = role.Goals[i];
+            _meta.SetEntityName(objectiveUid, Loc.GetString(goal.Title));
+            var desc = goal.SubGoals.Count > 0
+                ? FormattedMessage.RemoveMarkupPermissive(Loc.GetString(goal.SubGoals[0].Text))
+                : Loc.GetString("tutorial-server-objective-goal-pending");
+            _meta.SetEntityDescription(objectiveUid, desc);
+
+            _mind.AddObjective(mindId, mind, objectiveUid);
+        }
+    }
+
+    private void SyncCurriculumObjectives(EntityUid mob, TutorialRolePrototype role, TutorialParticipantComponent part)
+    {
+        if (role.Goals.Count == 0)
+            return;
+
+        if (!_mind.TryGetMind(mob, out var mindId, out var mind))
+            return;
+
+        foreach (var objectiveUid in mind.Objectives)
+        {
+            if (!TryComp<TutorialGoalConditionComponent>(objectiveUid, out var cond))
+                continue;
+
+            _goalObjectives.SyncObjectiveText(objectiveUid, cond, role, part);
+        }
     }
 
     public void AdvanceSubGoal(EntityUid mob)
@@ -1406,18 +1567,53 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         Dirty(mob, part);
 
-        // Always notify: guide UI sync and/or closed-UI / mentor-role progress toasts.
+        SyncCurriculumObjectives(mob, role, part);
+
+        // Cargo Tech: force-open the tablet when controls becomes current (boarded the shuttle).
+        if (TryGetCurrentSubGoalId(role, session, out var subGoalId) &&
+            subGoalId == ControlsSubGoalId &&
+            session.GuideUid != EntityUid.Invalid &&
+            !TerminatingOrDeleted(session.GuideUid) &&
+            TryComp<TutorialGuideComponent>(session.GuideUid, out var guideComp))
+        {
+            // Push state before OpenUi so the client never paints an empty checklist window.
+            var guideSys = EntityManager.System<TutorialGuideSystem>();
+            var guideEnt = new Entity<TutorialGuideComponent>(session.GuideUid, guideComp);
+            _ui.SetUiState(session.GuideUid, TutorialPromptUiKey.Key, guideSys.GetUiState(guideEnt, mob));
+            _ui.OpenUi(session.GuideUid, TutorialPromptUiKey.Key, mob);
+            session.GuideAutoOpened = true;
+        }
+
+        // Always notify: guide UI sync and/or closed-UI progress tips (mentor roles speak instead).
         var ev = new TutorialParticipantProgressChangedEvent(session.GuideUid, oldGoalIndex, oldProgress);
         RaiseLocalEvent(mob, ref ev);
 
         // Chamber transitions can leave the mentor behind a sealed gate — give them time to walk
         // before TutorialMentorFollowSystem path-checks and (only if stuck) snaps.
-        if (session.MentorUid != EntityUid.Invalid &&
+        if (role.MentorFollows &&
+            session.MentorUid != EntityUid.Invalid &&
             !TerminatingOrDeleted(session.MentorUid) &&
             oldGoalIndex != session.GoalIndex)
         {
             _mentorFollow.RequestCatchUp(session.MentorUid, restart: true);
         }
+    }
+
+    private static bool TryGetCurrentSubGoalId(
+        TutorialRolePrototype role,
+        TutorialSessionData session,
+        out string subGoalId)
+    {
+        subGoalId = string.Empty;
+        if (session.AwaitingChamberEntryPad)
+            return false;
+        if (session.GoalIndex < 0 || session.GoalIndex >= role.Goals.Count)
+            return false;
+        var goal = role.Goals[session.GoalIndex];
+        if (session.SubGoalIndex < 0 || session.SubGoalIndex >= goal.SubGoals.Count)
+            return false;
+        subGoalId = goal.SubGoals[session.SubGoalIndex].Id;
+        return !string.IsNullOrEmpty(subGoalId);
     }
 
     private void OnAcknowledgeStep(TutorialAcknowledgeStepEvent ev, EntitySessionEventArgs args)

@@ -50,6 +50,12 @@
   id: TutorialCargoOrders
 
 - type: Tag
+  id: TutorialCargoPurchase
+
+- type: Tag
+  id: TutorialCargoBayCrate
+
+- type: Tag
   id: TutorialIdConsole
 
 - type: Tag

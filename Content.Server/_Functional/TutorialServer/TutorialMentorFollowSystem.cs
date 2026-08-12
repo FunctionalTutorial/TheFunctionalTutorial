@@ -44,6 +44,10 @@ public sealed class TutorialMentorFollowSystem : EntitySystem
             if (mentor.PlayerUid == EntityUid.Invalid || TerminatingOrDeleted(mentor.PlayerUid))
                 continue;
 
+            // Stationary bay coaches (no HTN) must not follow or snap.
+            if (!HasComp<HTNComponent>(mentorUid))
+                continue;
+
             if (!TryComp<TransformComponent>(mentor.PlayerUid, out var playerXform))
                 continue;
 

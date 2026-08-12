@@ -82,7 +82,13 @@ public sealed partial class TutorialMapSystem : EntitySystem
 
         if (loaded)
         {
-            _rooms.EnsureGridSupport(gridUid);
+            // Shuttle arenas use the primary grid as the flyable shuttle. TutorialInvisibleGridSupport
+            // includes StationAnchor (switchedOn), which calls ShuttleSystem.Disable and leaves the
+            // ship BodyType.Static forever — undock clears weld joints but thrusters still cannot
+            // move it. Dock pads already get inherent gravity in TutorialShuttleArenaSystem.
+            if (role.ShuttleArena == null)
+                _rooms.EnsureGridSupport(gridUid);
+
             _rooms.EnableInherentGravity(gridUid);
 
             // Charge APCs on every grid (shuttle arenas / salvage debris included).
@@ -108,7 +114,15 @@ public sealed partial class TutorialMapSystem : EntitySystem
     }
 
     /// <summary>
-    /// Force-power every APC receiver and freeze atmospherics on all grids of a tutorial map.
+    /// TEMPORARY: atmos freeze disabled — SimplifiedEnvironment only force-powers maps.
+    /// Freezing grid atmos (fill-once / no LINDA) was causing odd behavior; re-enable freeze
+    /// later via <see cref="FreezeAtmosInSimplifiedEnvironment"/> once that is sorted out.
+    /// </summary>
+    private const bool FreezeAtmosInSimplifiedEnvironment = false;
+
+    /// <summary>
+    /// Force-power every APC receiver on all grids of a tutorial map.
+    /// Atmos freeze is temporarily skipped (see <see cref="FreezeAtmosInSimplifiedEnvironment"/>).
     /// </summary>
     public void ApplySimplifiedEnvironment(EntityUid mapUid)
     {
@@ -116,6 +130,10 @@ public sealed partial class TutorialMapSystem : EntitySystem
             return;
 
         ForcePowerMap(mapUid);
+
+        // TEMPORARY: leave atmos simulating. Odd behavior was observed with freeze-on-load.
+        if (!FreezeAtmosInSimplifiedEnvironment)
+            return;
 
         var gridQuery = EntityQueryEnumerator<MapGridComponent, TransformComponent>();
         while (gridQuery.MoveNext(out var gridUid, out _, out var xform))

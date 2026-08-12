@@ -19,8 +19,10 @@ public sealed class TutorialCargoBootstrapSystem : EntitySystem
     private static readonly EntProtoId TradeStationProto = "TutorialCargoTradeStation";
     private static readonly ProtoId<TagPrototype> OrdersConsoleTag = "TutorialCargoOrders";
     private static readonly ProtoId<TagPrototype> SellPadTag = "TutorialCargoSell";
+    private static readonly ProtoId<TagPrototype> PurchaseTag = "TutorialCargoPurchase";
     private static readonly ProtoId<CargoAccountPrototype> CargoAccount = "Cargo";
     private static readonly ProtoId<CargoProductPrototype> SeedProduct = "JanitorialCleanerGrenades";
+    private static readonly EntProtoId FulfilledCrateProto = "CrateJanitorialCleanerGrenades";
 
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly StationSystem _station = default!;
@@ -119,31 +121,68 @@ public sealed class TutorialCargoBootstrapSystem : EntitySystem
 
     private void OnFulfillCargoOrder(ref FulfillCargoOrderEvent args)
     {
+        // Cargo bay shuttle arenas + QM practice both use TutorialCargoTradeStation.
+        // Stub fulfill so Approve works without telepads.
         if (!HasComp<TutorialCargoStationComponent>(args.Station.Owner))
             return;
 
         if (args.Handled)
             return;
 
-        // Stub fulfill so Approve can set Approved=true without buy pads.
         args.FulfillmentEntity = args.Station.Owner;
         args.Handled = true;
 
-        // Spawn a token product near the orders console for visibility.
+        var spawnCoords = FindBuyPadCoordinates(args.OrderConsole.Owner)
+            ?? FindOrdersConsoleCoordinates(args.Station.Owner);
+
+        if (spawnCoords == null)
+            return;
+
+        var crate = Spawn(FulfilledCrateProto, spawnCoords.Value);
+        if (TryComp<TransformComponent>(crate, out var crateXform) && crateXform.Anchored)
+            _transform.Unanchor(crate, crateXform);
+
+        _tags.AddTag(crate, PurchaseTag);
+    }
+
+    private EntityCoordinates? FindBuyPadCoordinates(EntityUid consoleUid)
+    {
+        if (!TryComp<TransformComponent>(consoleUid, out var consoleXform) ||
+            consoleXform.MapUid is not { } mapUid)
+            return null;
+
+        var query = EntityQueryEnumerator<CargoPalletComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var pallet, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            if (pallet.PalletType != BuySellType.Buy)
+                continue;
+
+            return xform.Coordinates;
+        }
+
+        return null;
+    }
+
+    private EntityCoordinates? FindOrdersConsoleCoordinates(EntityUid station)
+    {
         var query = EntityQueryEnumerator<TransformComponent>();
         while (query.MoveNext(out var uid, out var xform))
         {
             if (xform.GridUid == null)
                 continue;
 
-            if (_station.GetOwningStation(uid) != args.Station.Owner)
+            if (_station.GetOwningStation(uid) != station)
                 continue;
 
             if (!_tags.HasTag(uid, OrdersConsoleTag))
                 continue;
 
-            Spawn("CrateJanitorialCleanerGrenades", xform.Coordinates);
-            break;
+            return xform.Coordinates;
         }
+
+        return null;
     }
 }

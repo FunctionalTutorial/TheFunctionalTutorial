@@ -2,6 +2,7 @@ using Content.Server.Ame.Components;
 using Content.Server.Cargo.Components;
 using Content.Server.Cargo.Systems;
 using Content.Server.DeviceLinking.Components;
+using Content.Server.Station.Systems;
 using Content.Shared.Labels.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Nuke;
@@ -12,6 +13,7 @@ using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Events;
 using Content.Server.Shuttles.Systems;
 using Content.Server.Wires;
+using Content.Shared.Movement.Pulling.Components;
 using Content.Shared._Functional.TutorialServer;
 using Content.Shared.Nuke;
 using Content.Shared.Objectives.Components;
@@ -23,6 +25,7 @@ using Content.Shared.Ame.Components;
 using Content.Shared.Access.Components;
 using Content.Shared.Anomaly.Components;
 using Content.Shared.Buckle.Components;
+using Content.Shared.Cargo.Components;
 using Content.Shared.Chemistry.Components.SolutionManager;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Cuffs;
@@ -78,6 +81,9 @@ using Content.Shared.Zombies;
 using Robust.Server.GameObjects;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server._Functional.TutorialServer;
@@ -103,6 +109,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
     [Dependency] private readonly SharedActionsSystem _actions = default!;
     [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly DockingSystem _docking = default!;
+    [Dependency] private readonly SharedJointSystem _joints = default!;
+    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly ShuttleSystem _shuttles = default!;
+    [Dependency] private readonly StationSystem _station = default!;
     [Dependency] private TutorialServerRuleSystem _tutorial = default!;
 
     private readonly HashSet<EntityUid> _changelingDevoured = new();
@@ -116,6 +126,12 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
     private bool _undockCascade;
 
     private const float MarkerReachRange = 1.5f;
+
+    /// <summary>
+    /// Shuttle-to-dock approach distance for <see cref="TutorialStepComplete.NearDockStation"/>.
+    /// Cargo ATS sits ~67u east of the bay; this completes once the ship is clearly near the pad.
+    /// </summary>
+    private const float NearDockStationRange = 28f;
     private static readonly ProtoId<TagPrototype> TutorialRecyclerTag = "TutorialRecycler";
     private static readonly ProtoId<TagPrototype> TutorialDebrisLockerTag = "TutorialDebrisLocker";
     private static readonly ProtoId<TagPrototype> TutorialLatheTag = "TutorialLathe";
@@ -205,6 +221,9 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 case TutorialStepComplete.ShuttleThrottle:
                     if (TryComp<PilotComponent>(uid, out var pilot) && pilot.HeldButtons != ShuttleButtons.None)
                         _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.NearDockStation:
+                    TryCompleteNearDockStation(uid, xform, sub);
                     break;
                 case TutorialStepComplete.SpawnAnomaly:
                     if (HasSpawnedTutorialAnomaly(xform.MapUid))
@@ -360,6 +379,12 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 case TutorialStepComplete.StorePurchased:
                     if (HasStorePurchase(uid, sub))
                         _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.CargoOrderAdded:
+                    TryCompleteCargoOrderAdded(uid, xform);
+                    break;
+                case TutorialStepComplete.PullTag:
+                    TryCompletePullTag(uid, sub);
                     break;
                 case TutorialStepComplete.PracticeMobStunned:
                     if (IsPracticeMobStunned(xform.MapUid))
@@ -570,11 +595,57 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             if (!_tutorial.TryGetCurrentSubGoal(uid, part, out var sub))
                 continue;
 
+            // Fast approve can skip the poll on CargoOrderAdded — complete it first.
+            if (sub.Complete == TutorialStepComplete.CargoOrderAdded)
+            {
+                _tutorial.AdvanceSubGoal(uid);
+                if (!_tutorial.TryGetCurrentSubGoal(uid, part, out sub))
+                    continue;
+            }
+
             if (sub.Complete != TutorialStepComplete.CargoOrderApproved)
                 continue;
 
             _tutorial.AdvanceSubGoal(uid);
         }
+    }
+
+    private void TryCompleteCargoOrderAdded(EntityUid mob, TransformComponent xform)
+    {
+        if (xform.MapUid is not { } mapUid)
+            return;
+
+        var query = EntityQueryEnumerator<CargoOrderConsoleComponent, TransformComponent>();
+        while (query.MoveNext(out var consoleUid, out _, out var consoleXform))
+        {
+            if (consoleXform.MapUid != mapUid)
+                continue;
+
+            var station = _station.GetOwningStation(consoleUid);
+            if (station == null ||
+                !TryComp<StationCargoOrderDatabaseComponent>(station, out var db))
+                continue;
+
+            foreach (var _ in db.AllOrders)
+            {
+                _tutorial.AdvanceSubGoal(mob);
+                return;
+            }
+        }
+    }
+
+    private void TryCompletePullTag(EntityUid mob, TutorialSubGoalData sub)
+    {
+        if (string.IsNullOrEmpty(sub.Tag))
+            return;
+
+        if (!TryComp<PullerComponent>(mob, out var puller) || puller.Pulling is not { } pulled)
+            return;
+
+        if (!_tags.HasTag(pulled, (ProtoId<TagPrototype>) sub.Tag))
+            return;
+
+        _tutorial.AdvanceSubGoal(mob);
     }
 
     private void OnAlertLevelChanged(ref AlertLevelChangedEvent args)
@@ -909,6 +980,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             try
             {
                 UndockAllBetween(ev.GridAUid, ev.GridBUid);
+                // Belt-and-suspenders: clear any leftover physics welds and ensure the shuttle
+                // grid is Dynamic (Static shuttles feel "stuck" even with DockedWith cleared).
+                ClearJointsBetween(ev.GridAUid, ev.GridBUid);
+                EnsureFlyableAfterUndock(ev.GridAUid, ev.GridBUid);
             }
             finally
             {
@@ -939,15 +1014,96 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         }
     }
 
+    private void ClearJointsBetween(EntityUid gridA, EntityUid gridB)
+    {
+        if (!TryComp<JointComponent>(gridA, out var joints))
+            return;
+
+        foreach (var joint in joints.GetJoints.Values)
+        {
+            if ((joint.BodyAUid == gridA && joint.BodyBUid == gridB) ||
+                (joint.BodyAUid == gridB && joint.BodyBUid == gridA))
+                _joints.RemoveJoint(joint);
+        }
+    }
+
+    private void EnsureFlyableAfterUndock(EntityUid gridA, EntityUid gridB)
+    {
+        TryEnableShuttleGrid(gridA);
+        TryEnableShuttleGrid(gridB);
+    }
+
+    private void TryEnableShuttleGrid(EntityUid gridUid)
+    {
+        // Dock platforms stay Static; only the practice shuttle should become flyable.
+        if (HasComp<TutorialDockStationComponent>(gridUid))
+            return;
+
+        if (!TryComp<ShuttleComponent>(gridUid, out var shuttle))
+            return;
+
+        // ShuttleComponent is not networked — do not Dirty it.
+        shuttle.Enabled = true;
+        _shuttles.Enable(gridUid, shuttle: shuttle);
+        if (TryComp<PhysicsComponent>(gridUid, out var body) && body.BodyType != BodyType.Dynamic)
+        {
+            _physics.SetBodyType(gridUid, BodyType.Dynamic, body: body);
+            _physics.SetBodyStatus(gridUid, body, BodyStatus.InAir);
+            _physics.SetFixedRotation(gridUid, false, body: body);
+        }
+    }
+
     private void TryCompleteUndockShuttle(EntityUid uid, TransformComponent xform, TutorialSubGoalData sub)
     {
         if (xform.GridUid is not { } shuttle)
+            return;
+
+        // Player must be on the flyable practice shuttle — dock pads also have ShuttleComponent
+        // but are disabled/static, and standing on the bay must not idle-complete UndockShuttle.
+        if (!TryComp<ShuttleComponent>(shuttle, out var shuttleComp) || !shuttleComp.Enabled)
+            return;
+        if (HasComp<TutorialDockStationComponent>(shuttle))
             return;
 
         if (IsDockedToTutorialStation(shuttle, sub.Marker))
             return;
 
         _tutorial.AdvanceSubGoal(uid);
+    }
+
+    /// <summary>
+    /// Completes when the player's flyable shuttle is near a tutorial dock station (e.g. ATS).
+    /// </summary>
+    private void TryCompleteNearDockStation(EntityUid uid, TransformComponent xform, TutorialSubGoalData sub)
+    {
+        if (string.IsNullOrEmpty(sub.Marker))
+            return;
+
+        if (xform.GridUid is not { } shuttle)
+            return;
+
+        if (!TryComp<ShuttleComponent>(shuttle, out var shuttleComp) || !shuttleComp.Enabled)
+            return;
+        if (HasComp<TutorialDockStationComponent>(shuttle))
+            return;
+
+        var shuttlePos = _transform.GetWorldPosition(shuttle);
+        var stations = EntityQueryEnumerator<TutorialDockStationComponent, TransformComponent>();
+        while (stations.MoveNext(out _, out var station, out var stationXform))
+        {
+            if (!string.Equals(station.StationId, sub.Marker, StringComparison.Ordinal))
+                continue;
+
+            if (stationXform.MapID != xform.MapID)
+                continue;
+
+            var stationPos = _transform.GetWorldPosition(stationXform);
+            if ((stationPos - shuttlePos).Length() > NearDockStationRange)
+                continue;
+
+            _tutorial.AdvanceSubGoal(uid);
+            return;
+        }
     }
 
     /// <summary>
@@ -993,11 +1149,15 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 continue;
 
             // Optional station filter via Marker (e.g. cargo-bay / ats).
+            // Match when either docked grid is that station — player may be on the shuttle or pad.
             if (!string.IsNullOrEmpty(sub.Marker))
             {
-                var other = grid == gridA ? gridB : gridA;
-                if (!TryComp<TutorialDockStationComponent>(other, out var station) ||
-                    !string.Equals(station.StationId, sub.Marker, StringComparison.Ordinal))
+                var matchesStation =
+                    (TryComp<TutorialDockStationComponent>(gridA, out var stationA) &&
+                     string.Equals(stationA.StationId, sub.Marker, StringComparison.Ordinal)) ||
+                    (TryComp<TutorialDockStationComponent>(gridB, out var stationB) &&
+                     string.Equals(stationB.StationId, sub.Marker, StringComparison.Ordinal));
+                if (!matchesStation)
                     continue;
             }
 

@@ -6,6 +6,10 @@
   map: /Maps/_Functional/TutorialServer/Roles/CargoTechnician.yml
   shuttleArena: TutorialArenaCargoShuttle
   guidebook: Cargo
+  autoOpenGuide: false
+  spawnStationaryMentor: true
+  mentorFollows: false
+  mentorName: Urist McQuartermaster
   practiceSpawns: []
   goals:
   - id: welcome
@@ -14,8 +18,35 @@
     - id: intro
       text: tutorial-job-cargo-technician-sg-intro
       complete: Acknowledge
-    - id: look-around
-      text: tutorial-job-cargo-technician-sg-look-around
+  - id: order
+    title: tutorial-job-cargo-technician-goal-order
+    subGoals:
+    - id: orders
+      text: tutorial-job-cargo-technician-sg-orders
+      complete: InteractTargetTag
+      tag: TutorialCargoOrders
+    - id: purchase
+      text: tutorial-job-cargo-technician-sg-purchase
+      complete: CargoOrderAdded
+    - id: confirm
+      text: tutorial-job-cargo-technician-sg-confirm
+      complete: CargoOrderApproved
+  - id: haul
+    title: tutorial-job-cargo-technician-goal-haul
+    subGoals:
+    - id: drag-crate
+      text: tutorial-job-cargo-technician-sg-drag-crate
+      complete: PullTag
+      tag: TutorialCargoBayCrate
+  - id: board
+    title: tutorial-job-cargo-technician-goal-board
+    subGoals:
+    - id: board-shuttle
+      text: tutorial-job-cargo-technician-sg-board-shuttle
+      complete: ReachMarker
+      marker: cargo-shuttle
+    - id: controls
+      text: tutorial-job-cargo-technician-sg-controls
       complete: Acknowledge
   - id: pilot
     title: tutorial-job-cargo-technician-goal-pilot
@@ -26,9 +57,6 @@
   - id: undock-bay
     title: tutorial-job-cargo-technician-goal-undock-bay
     subGoals:
-    - id: undock-explain
-      text: tutorial-job-cargo-technician-sg-undock-explain
-      complete: Acknowledge
     - id: undock-bay
       text: tutorial-job-cargo-technician-sg-undock-bay
       complete: UndockShuttle
@@ -37,21 +65,16 @@
     title: tutorial-job-cargo-technician-goal-fly-ats
     subGoals:
     # Teach flight keys only after undock — dock welds pin the shuttle until then.
-    - id: controls
-      text: tutorial-job-cargo-technician-sg-controls
-      complete: Acknowledge
     - id: throttle
       text: tutorial-job-cargo-technician-sg-throttle
       complete: ShuttleThrottle
-    - id: fly-tips
+    - id: fly-ats
       text: tutorial-job-cargo-technician-sg-fly-ats
-      complete: Acknowledge
+      complete: NearDockStation
+      marker: ats
   - id: dock-ats
     title: tutorial-job-cargo-technician-goal-dock-ats
     subGoals:
-    - id: dock-ats-explain
-      text: tutorial-job-cargo-technician-sg-dock-ats-explain
-      complete: Acknowledge
     - id: dock-ats
       text: tutorial-job-cargo-technician-sg-dock-ats
       complete: DockShuttle
@@ -59,26 +82,17 @@
   - id: sell
     title: tutorial-job-cargo-technician-goal-sell
     subGoals:
-    - id: sell-explain
-      text: tutorial-job-cargo-technician-sg-sell-explain
-      complete: Acknowledge
-    - id: sell-pallet
-      text: tutorial-job-cargo-technician-sg-sell-pallet
-      complete: InteractTargetTag
-      tag: TutorialCargoSell
-    - id: sell-goods
-      text: tutorial-job-cargo-technician-sg-sell-goods
+    - id: sell-crate
+      text: tutorial-job-cargo-technician-sg-sell-crate
       complete: CargoSold
       minCount: 1
-    - id: bounty-tip
-      text: tutorial-job-cargo-technician-sg-bounty-tip
-      complete: Acknowledge
-    - id: sell-bounty
-      text: tutorial-job-cargo-technician-sg-sell-bounty
-      complete: CargoBountyFulfilled
-    - id: sell-tip
-      text: tutorial-job-cargo-technician-sg-sell-tip
-      complete: Acknowledge
+  - id: retrieve
+    title: tutorial-job-cargo-technician-goal-retrieve
+    subGoals:
+    - id: retrieve
+      text: tutorial-job-cargo-technician-sg-retrieve
+      complete: PullTag
+      tag: TutorialCargoPurchase
   - id: return-bay
     title: tutorial-job-cargo-technician-goal-return-bay
     subGoals:
@@ -86,9 +100,6 @@
       text: tutorial-job-cargo-technician-sg-undock-ats
       complete: UndockShuttle
       marker: ats
-    - id: fly-home
-      text: tutorial-job-cargo-technician-sg-fly-home
-      complete: Acknowledge
     - id: dock-bay
       text: tutorial-job-cargo-technician-sg-dock-bay
       complete: DockShuttle

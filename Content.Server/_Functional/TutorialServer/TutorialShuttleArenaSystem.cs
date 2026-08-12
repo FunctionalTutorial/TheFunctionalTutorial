@@ -17,12 +17,16 @@ using Content.Shared.Maps;
 using Content.Shared.Shuttles.Components;
 using Content.Shared.Storage.EntitySystems;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Tag;
 using Robust.Server.GameObjects;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
@@ -35,8 +39,11 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
 {
     public const string CargoBayStationId = "cargo-bay";
     public const string AtsStationId = "ats";
+    public const string CargoShuttleBoardMarkerId = "cargo-shuttle";
 
     private static readonly EntProtoId TutorialCargoTradeStationProto = "TutorialCargoTradeStation";
+    private static readonly EntProtoId TutorialStepMarkerProto = "TutorialStepMarker";
+    private static readonly ProtoId<TagPrototype> BayCrateTag = "TutorialCargoBayCrate";
 
     [Dependency] private readonly AtmosphereSystem _atmos = default!;
     [Dependency] private readonly CargoSystem _cargo = default!;
@@ -51,8 +58,10 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
     [Dependency] private readonly PowerReceiverSystem _power = default!;
     [Dependency] private readonly SharedStorageSystem _storage = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly ShuttleSystem _shuttles = default!;
     [Dependency] private readonly StationSystem _station = default!;
+    [Dependency] private readonly TagSystem _tags = default!;
     [Dependency] private readonly TileSystem _tile = default!;
 
     private static readonly ProtoId<CargoBountyPrototype> TutorialBounty = "BountyBread";
@@ -97,7 +106,9 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
         if (arena.IncludeAtsSell)
             EnsureComp<CargoShuttleComponent>(shuttleUid);
         PrepareGrid(shuttleUid);
-        EnsureTutorialSpawnOnShuttle(shuttleUid);
+        // Cargo Tech spawns in the bay; other shuttle arenas keep a shuttle spawn.
+        if (!arena.IncludeAtsSell)
+            EnsureTutorialSpawnOnShuttle(shuttleUid);
 
         var homeDock = arena.IncludeAtsSell
             ? BuildCargoBayStation(mapId, arena)
@@ -125,7 +136,8 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
                     shuttleUid = fallback.Value.Owner;
                     EnsureComp<ShuttleComponent>(shuttleUid);
                     PrepareGrid(shuttleUid);
-                    EnsureTutorialSpawnOnShuttle(shuttleUid);
+                    if (!arena.IncludeAtsSell)
+                        EnsureTutorialSpawnOnShuttle(shuttleUid);
                     config = _docking.GetDockingConfig(shuttleUid, homeDock);
                 }
             }
@@ -151,15 +163,33 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
             }
         }
 
-        spawnCoords = ResolveShuttleSpawn(shuttleUid);
+        // Dock platforms must stay Static; the practice shuttle must be Dynamic or thrusters
+        // cannot move it after undock (feels like "welds never released").
+        // Re-enable the shuttle after freezing pads — changing a welded pad to Static can leave
+        // the shuttle body Static in the same physics island until we force Dynamic again.
+        MakeStaticDockPlatform(homeDock);
+        MakeStaticDockPlatform(distantDock);
+        EnsureShuttleFlyable(shuttleUid);
+
+        if (arena.IncludeAtsSell)
+        {
+            EnsureTutorialSpawnOnCargoBay(homeDock);
+            EnsureShuttleBoardMarker(shuttleUid);
+            spawnCoords = ResolveGridSpawn(homeDock);
+        }
+        else
+        {
+            spawnCoords = ResolveShuttleSpawn(shuttleUid);
+        }
+
         Log.Info($"TUTORIAL_E2E: shuttle_arena_ready docked={docked} shuttle={shuttleUid} home={homeDock} distant={distantDock}");
         return true;
     }
 
     private void PrepareGrid(EntityUid gridUid)
     {
-        // Force-power is applied after load via TutorialMapSystem (shuttle arenas always;
-        // SimplifiedEnvironment also freezes atmos — cargo leaves that off for live space practice).
+        // Force-power is applied after load via TutorialMapSystem (shuttle arenas always).
+        // TEMPORARY: SimplifiedEnvironment atmos freeze is globally off (odd behavior).
 
         var gravity = EnsureComp<GravityComponent>(gridUid);
         _gravity.EnableGravity(gridUid, gravity);
@@ -172,6 +202,39 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
         EnsureComp<GasTileOverlayComponent>(gridUid);
         if (TryComp<MapGridComponent>(gridUid, out var gridComp))
             _atmos.RebuildGridAtmosphere((gridUid, Comp<GridAtmosphereComponent>(gridUid), gridComp));
+    }
+
+    /// <summary>
+    /// <see cref="ShuttleSystem"/> enables every grid as a Dynamic shuttle on init. Tutorial dock
+    /// pads should behave like stations so dual-dock welds pin against a Static body cleanly.
+    /// </summary>
+    private void MakeStaticDockPlatform(EntityUid gridUid)
+    {
+        if (!TryComp<ShuttleComponent>(gridUid, out var shuttle))
+            return;
+
+        // ShuttleComponent is not networked — do not Dirty it.
+        shuttle.Enabled = false;
+        _shuttles.Disable(gridUid);
+    }
+
+    /// <summary>
+    /// Grid load / FTLDock ordering can leave the shuttle physics body Static even with
+    /// <see cref="ShuttleComponent.Enabled"/> true — force Dynamic so undocked flight works.
+    /// </summary>
+    private void EnsureShuttleFlyable(EntityUid shuttleUid)
+    {
+        var shuttle = EnsureComp<ShuttleComponent>(shuttleUid);
+        // ShuttleComponent is not networked — do not Dirty it.
+        shuttle.Enabled = true;
+        EnsureComp<FixturesComponent>(shuttleUid);
+        var body = EnsureComp<PhysicsComponent>(shuttleUid);
+
+        _shuttles.Enable(shuttleUid, shuttle: shuttle);
+        // Always force — Enable can no-op if Resolve fails during map init ordering.
+        _physics.SetBodyType(shuttleUid, BodyType.Dynamic, body: body);
+        _physics.SetBodyStatus(shuttleUid, body, BodyStatus.InAir);
+        _physics.SetFixedRotation(shuttleUid, false, body: body);
     }
 
     private EntityUid BuildTrainerShuttle(MapId mapId, TutorialShuttleArenaPrototype arena)
@@ -238,12 +301,17 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
         station.StationId = arena.HomeStationId;
         Dirty(gridUid, station);
 
+        // Own a cargo trade station so the order console can purchase / approve.
+        var tradeStation = Spawn(TutorialCargoTradeStationProto, MapCoordinates.Nullspace);
+        _station.AddGridToStation(tradeStation, gridUid, name: "Tutorial Cargo Bay");
+
         SpawnAnchored("DefaultStationBeaconCargoBay", gridUid, new Vector2i(7, 9));
-        SpawnAnchored("ComputerCargoOrders", gridUid, new Vector2i(4, 8));
+        SpawnAnchored("TutorialComputerCargoOrders", gridUid, new Vector2i(4, 8));
         SpawnAnchored("ComputerCargoBounty", gridUid, new Vector2i(6, 8));
         SpawnAnchored("ChairOfficeLight", gridUid, new Vector2i(4, 7));
         SpawnAnchored("OreProcessor", gridUid, new Vector2i(11, 7));
-        SpawnAnchored("CrateGenericSteel", gridUid, new Vector2i(9, 3));
+        // Pullable sell crate for early haul practice (must not start on ATS sell pads).
+        SpawnBaySellCrate("CrateGenericSteel", gridUid, new Vector2i(9, 3));
         SpawnAnchored("CratePlastic", gridUid, new Vector2i(10, 3));
         SpawnAnchored("CrateGenericSteel", gridUid, new Vector2i(11, 3));
         SpawnAnchored("ConveyorBelt", gridUid, new Vector2i(8, 5));
@@ -277,9 +345,7 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
         SpawnAnchored("CargoPalletSell", gridUid, new Vector2i(4, 4));
         SpawnAnchored("CargoPalletBuy", gridUid, new Vector2i(8, 4));
         SpawnAnchored("CargoPalletBuy", gridUid, new Vector2i(9, 4));
-        // Sellable goods must sit on sell pallets and stay unanchored (CargoSystem skips anchored).
-        SpawnSellableCrate("CrateGenericSteel", gridUid, new Vector2i(3, 4));
-        SpawnSellableCrate("CrateHydroponics", gridUid, new Vector2i(4, 4));
+        // No preloaded sell crates on pads — Cargo Tech must haul a bay crate to sell.
         SpawnAnchored("HolopadCargoAts", gridUid, new Vector2i(6, 7));
         SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(3, 7));
         SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(9, 7));
@@ -289,7 +355,7 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
         var tradeStation = Spawn(TutorialCargoTradeStationProto, MapCoordinates.Nullspace);
         _station.AddGridToStation(tradeStation, gridUid, name: "Tutorial ATS");
 
-        // Bounty crate starts OFF the sell pads so the first sale doesn't complete it.
+        // Bounty crate stays OFF the sell pads (optional prop; not required for Cargo Tech).
         SpawnBountyCrate(tradeStation, gridUid, new Vector2i(6, 3));
 
         return gridUid;
@@ -426,6 +492,55 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
         EnsureComp<TutorialSpawnPointComponent>(spawn);
     }
 
+    private void EnsureTutorialSpawnOnCargoBay(EntityUid bayUid)
+    {
+        var existing = EntityQueryEnumerator<TutorialSpawnPointComponent, TransformComponent>();
+        while (existing.MoveNext(out _, out _, out var xform))
+        {
+            if (xform.GridUid == bayUid)
+                return;
+        }
+
+        // Near the orders console / practice crates.
+        var spawn = Spawn("SpawnPointLatejoin", new EntityCoordinates(bayUid, new Vector2(5.5f, 6.5f)));
+        EnsureComp<TutorialSpawnPointComponent>(spawn);
+    }
+
+    private void EnsureShuttleBoardMarker(EntityUid shuttleUid)
+    {
+        var existing = EntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
+        while (existing.MoveNext(out _, out var marker, out var xform))
+        {
+            if (xform.GridUid == shuttleUid && marker.MarkerId == CargoShuttleBoardMarkerId)
+                return;
+        }
+
+        Vector2 pos;
+        var seat = FindProtoOnGrid(shuttleUid, "ChairPilotSeat");
+        var helm = FindProtoOnGrid(shuttleUid, "ComputerShuttle")
+                   ?? FindProtoOnGrid(shuttleUid, "ComputerShuttleSyndie");
+        if (seat != null && TryComp(seat.Value, out TransformComponent? seatXform))
+            pos = seatXform.Coordinates.Position + new Vector2(1f, 0f);
+        else if (helm != null && TryComp(helm.Value, out TransformComponent? helmXform))
+            pos = helmXform.Coordinates.Position + new Vector2(0f, -1f);
+        else if (TryComp<MapGridComponent>(shuttleUid, out var grid))
+            pos = grid.LocalAABB.Center;
+        else
+            pos = new Vector2(3.5f, 3.5f);
+
+        var markerUid = Spawn(TutorialStepMarkerProto, new EntityCoordinates(shuttleUid, pos));
+        var markerComp = EnsureComp<TutorialStepMarkerComponent>(markerUid);
+        markerComp.MarkerId = CargoShuttleBoardMarkerId;
+        Dirty(markerUid, markerComp);
+    }
+
+    private EntityUid SpawnBaySellCrate(EntProtoId proto, EntityUid gridUid, Vector2i tile)
+    {
+        var uid = SpawnSellableCrate(proto, gridUid, tile);
+        _tags.AddTag(uid, BayCrateTag);
+        return uid;
+    }
+
     private EntityUid? FindProtoOnGrid(EntityUid gridUid, string protoId)
     {
         var query = EntityQueryEnumerator<MetaDataComponent, TransformComponent>();
@@ -461,13 +576,18 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
 
     private EntityCoordinates ResolveShuttleSpawn(EntityUid shuttleUid)
     {
+        return ResolveGridSpawn(shuttleUid, fallback: new Vector2(2.5f, 3.5f));
+    }
+
+    private EntityCoordinates ResolveGridSpawn(EntityUid gridUid, Vector2? fallback = null)
+    {
         var query = EntityQueryEnumerator<TutorialSpawnPointComponent, TransformComponent>();
-        while (query.MoveNext(out var uid, out _, out var xform))
+        while (query.MoveNext(out _, out _, out var xform))
         {
-            if (xform.GridUid == shuttleUid)
+            if (xform.GridUid == gridUid)
                 return xform.Coordinates;
         }
 
-        return new EntityCoordinates(shuttleUid, new Vector2(2.5f, 3.5f));
+        return new EntityCoordinates(gridUid, fallback ?? new Vector2(5.5f, 6.5f));
     }
 }
