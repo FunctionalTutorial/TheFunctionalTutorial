@@ -82,6 +82,40 @@ public sealed partial class TutorialSessionData
     /// </summary>
     [DataField]
     public bool AwaitingChamberEntryPad;
+
+    /// <summary>
+    /// When the current sub-goal became active. Drives
+    /// <see cref="TutorialSubGoalData.AutoAdvanceSeconds"/> narration beats.
+    /// </summary>
+    [DataField]
+    public TimeSpan SubGoalStartedAt;
+
+    /// <summary>
+    /// Pad the <see cref="TutorialMentorMode.Holopad"/> mentor is currently projected from, so
+    /// re-projection only fires when she actually has somewhere new to go.
+    /// </summary>
+    [DataField]
+    public EntityUid MentorHoloPad;
+
+    /// <summary>
+    /// Chamber that pad belongs to. Moving between chambers is unconditional; moving between pads
+    /// inside one is not.
+    /// </summary>
+    [DataField]
+    public int MentorHoloRoom = -1;
+
+    /// <summary>
+    /// Control hint for the current sub-goal, held back until the coach has finished her lines so
+    /// the banner does not compete with her for the player's attention.
+    /// </summary>
+    [DataField]
+    public string? PendingControlHint;
+
+    /// <summary>
+    /// True once <see cref="PendingControlHint"/> has been pushed to the client for this sub-goal.
+    /// </summary>
+    [DataField]
+    public bool ControlHintShown;
 }
 
 public enum TutorialSessionState : byte

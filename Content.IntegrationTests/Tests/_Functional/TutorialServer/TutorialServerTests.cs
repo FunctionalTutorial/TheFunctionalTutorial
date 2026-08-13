@@ -990,7 +990,7 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
-    public async Task TutorialRolePicker_OrdersPassengerThenDepartmentsThenAntagsAndOmitsErt()
+    public async Task TutorialRolePicker_OrdersBasicsThenPassengerThenDepartmentsThenAntagsAndOmitsErt()
     {
         var pair = Pair;
         var server = pair.Server;
@@ -1004,7 +1004,9 @@ public sealed class TutorialServerTests : GameTest
 
             var entries = tutorial.BuildPickerEntries();
             Assert.That(entries, Is.Not.Empty);
-            Assert.That(entries[0].RoleId, Is.EqualTo("TutorialPassenger"));
+            // Basic Controls sits above Passenger so a first-time player starts with movement.
+            Assert.That(entries[0].RoleId, Is.EqualTo("TutorialBasics"));
+            Assert.That(entries[1].RoleId, Is.EqualTo("TutorialPassenger"));
             Assert.That(entries.Any(e => e.RoleId.Contains("ERT", StringComparison.OrdinalIgnoreCase)), Is.False);
 
             var firstAntag = entries.FindIndex(e => e.Category == "Wizden antagonists");

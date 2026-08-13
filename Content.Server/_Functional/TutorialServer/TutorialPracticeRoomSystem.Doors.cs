@@ -4,6 +4,7 @@ using Content.Server.Power.Components;
 using Content.Shared._Functional.TutorialServer;
 using Content.Shared.Doors.Components;
 using Content.Shared.Gravity;
+using Content.Shared.Prying.Components;
 using Content.Shared.Power.Components;
 using Content.Shared.Power.EntitySystems;
 using Robust.Shared.Map;
@@ -20,6 +21,41 @@ public sealed partial class TutorialPracticeRoomSystem
     private static readonly EntProtoId TutorialAirlockMaintProto = "TutorialAirlockMaint";
 
     [Dependency] private readonly SharedBatterySystem _battery = default!;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<TutorialGateDoorComponent, MapInitEvent>(OnGateMapInit);
+        SubscribeLocalEvent<TutorialToolOnlyPryComponent, BeforePryEvent>(OnBeforePry);
+    }
+
+    /// <summary>
+    /// Refuses a bare-handed pry. <c>StrongPry</c> is false only when nothing with a
+    /// <c>Prying</c> component was involved, so a crowbar still goes through.
+    /// </summary>
+    private void OnBeforePry(Entity<TutorialToolOnlyPryComponent> ent, ref BeforePryEvent args)
+    {
+        if (args.StrongPry)
+            return;
+
+        // No message: the bare-hand path in PryingSystem discards it, and the coach has already
+        // told the player the door is dead and where the crowbar is.
+        args.Cancelled = true;
+    }
+
+    /// <summary>
+    /// Bolts a gate shut as it initialises. Runtime-stamped suites get this from
+    /// <see cref="SpawnGateDoor"/>, but a hand-authored map places its gates directly, and an
+    /// unbolted gate would leave every chamber open from the first second of the tutorial.
+    /// </summary>
+    private void OnGateMapInit(Entity<TutorialGateDoorComponent> ent, ref MapInitEvent args)
+    {
+        // Crowbar-practice gates stay closed but unbolted; already-unlocked ones stay open.
+        if (ent.Comp.Unlocked || ent.Comp.RequirePry)
+            return;
+
+        SealGate(ent.Owner);
+    }
 
     /// <summary>
     /// Spawns the invisible station-anchor + gravity-generator helper on a tutorial grid.

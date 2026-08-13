@@ -108,6 +108,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly NPCSystem _npc = default!;
     [Dependency] private readonly HTNSystem _htn = default!;
     [Dependency] private readonly TutorialMentorFollowSystem _mentorFollow = default!;
+    [Dependency] private readonly TutorialHoloMentorSystem _holoMentor = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private static readonly EntProtoId TutorialGuideProto = "TutorialGuide";
@@ -640,21 +641,26 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// 0 = Passenger/Assistant basics, 1 = departments, 2 = server-specific, 3 = wizden antagonists.
+    /// 0 = Start Here (controls), 1 = Passenger/Assistant basics, 2 = departments,
+    /// 3 = server-specific, 4 = wizden antagonists.
     /// </summary>
     private static int GetPickerCategoryOrder(TutorialRolePickerEntry entry)
     {
-        if (entry.RoleId == "TutorialPassenger")
+        // Someone who has never played should land on the controls tutorial first.
+        if (string.Equals(entry.Category, "Start Here", StringComparison.OrdinalIgnoreCase))
             return 0;
+
+        if (entry.RoleId == "TutorialPassenger")
+            return 1;
 
         if (string.Equals(entry.Category, "Wizden antagonists", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(entry.Category, "Antagonist", StringComparison.OrdinalIgnoreCase))
-            return 3;
+            return 4;
 
         if (string.Equals(entry.Category, "Server specific", StringComparison.OrdinalIgnoreCase))
-            return 2;
+            return 3;
 
-        return 1;
+        return 2;
     }
 
     private static bool IsErtTutorialRole(TutorialRolePrototype proto)
@@ -748,6 +754,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         session.SubGoalIndex = 0;
         session.Completed = false;
         session.AwaitingChamberEntryPad = false;
+        // Sessions are reused across role reselects; forget where the last coach was projected.
+        session.MentorHoloPad = EntityUid.Invalid;
+        session.MentorHoloRoom = -1;
         rule.Sessions[player.UserId] = session;
 
         // Chamber 0 starts open. Later chambers unlock only when a goal sets EnterRoom
@@ -757,6 +766,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         EnsureComp<TutorialParticipantComponent>(mob);
         RefreshParticipantHud(mob, roleProto, session);
         GiveTutorialCoach(mob, session, spawnCoords, player, roleProto);
+        // The HUD refresh above ran before the coach existed, so place a holopad coach now.
+        _holoMentor.RefreshProjection(mob, roleProto, session);
         EnsureTutorialChooseAction(mob);
         rule.Sessions[player.UserId] = session;
 
@@ -830,11 +841,13 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         ICommonSession player,
         TutorialRolePrototype roleProto)
     {
-        var mentorProto = roleProto.ID == TutorialPassengerRole.Id
-            ? TutorialPassengerMentorProto
-            : roleProto.ID == TutorialCargoTechnicianRole.Id
-                ? TutorialCargoQmMentorProto
-                : TutorialMentorProto;
+        // Roles may name their own mentor body; the id chain stays for the two that predate the field.
+        var mentorProto = roleProto.MentorEntity
+            ?? (roleProto.ID == TutorialPassengerRole.Id
+                ? TutorialPassengerMentorProto
+                : roleProto.ID == TutorialCargoTechnicianRole.Id
+                    ? TutorialCargoQmMentorProto
+                    : TutorialMentorProto);
 
         var mentor = Spawn(mentorProto, spawnCoords.Offset(roleProto.MentorSpawnOffset));
         var mentorComp = EnsureComp<TutorialMentorComponent>(mentor);
@@ -853,8 +866,12 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             _htn.Replan(htn);
         }
 
-        _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-mentor-tip"));
-        _popup.PopupEntity(Loc.GetString("tutorial-server-mentor-highlight"), mentor, player, PopupType.Medium);
+        // Holopad coaches introduce themselves in character; no "follow the mentor" chatter.
+        if (roleProto.MentorMode != TutorialMentorMode.Holopad)
+        {
+            _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-mentor-tip"));
+            _popup.PopupEntity(Loc.GetString("tutorial-server-mentor-highlight"), mentor, player, PopupType.Medium);
+        }
     }
 
     /// <summary>
@@ -1020,6 +1037,15 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 var marker = EnsureComp<TutorialStepMarkerComponent>(ent);
                 marker.MarkerId = spawn.Marker;
                 Dirty(ent, marker);
+            }
+
+            // Stamped pads all carry the prototype's default room, which would leave a holopad
+            // coach projecting to wherever the player already is instead of the chamber the next
+            // goal sends them to. Record the chamber this pad was actually placed in.
+            if (TryComp<TutorialHoloPointComponent>(ent, out var holoPoint))
+            {
+                holoPoint.Room = spawn.Room;
+                Dirty(ent, holoPoint);
             }
 
             if (spawn.AlwaysPowered)
@@ -1246,6 +1272,27 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
+    /// Resolves the tutorial role a participant is currently running.
+    /// </summary>
+    public bool TryGetRole(EntityUid mob, out TutorialRolePrototype role)
+    {
+        role = default!;
+
+        if (!TryGetSession(mob, out var session) || session.SelectedRoleId == null)
+            return false;
+
+        return ProtoMan.TryIndex(session.SelectedRoleId, out role!);
+    }
+
+    /// <summary>
+    /// Chamber index the player is expected to be in for their current goal.
+    /// </summary>
+    public int ResolveCurrentRoom(TutorialRolePrototype role, TutorialSessionData session)
+    {
+        return ResolveGoalEnterRoom(role, session.GoalIndex) ?? 0;
+    }
+
+    /// <summary>
     /// Resolves the active sub-goal for a tutorial participant (goals curriculum or legacy steps).
     /// </summary>
     public bool TryGetCurrentSubGoal(EntityUid mob, TutorialParticipantComponent part, out TutorialSubGoalData subGoal)
@@ -1360,6 +1407,64 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         RaiseNetworkEvent(new TutorialTipChatEvent { Markup = markup }, player.Channel);
     }
 
+    /// <summary>
+    /// Pushes the on-screen control hint for the current sub-goal, or hides the banner when the
+    /// step teaches no control. <paramref name="locId"/> markup may include <c>[keybind]</c> tags,
+    /// which the client resolves against the player's own bindings.
+    /// </summary>
+    /// <summary>
+    /// Shown in the control-hint banner when the curriculum runs out.
+    /// </summary>
+    private const string TutorialFinishedHint = "tutorial-server-tutorial-finished-hint";
+
+    public void SendControlHint(EntityUid mob, string? locId)
+    {
+        if (!TryComp<ActorComponent>(mob, out var actor))
+            return;
+
+        var show = !string.IsNullOrEmpty(locId);
+        RaiseNetworkEvent(
+            new TutorialControlHintEvent
+            {
+                Markup = show ? Loc.GetString(locId!) : string.Empty,
+                Show = show,
+            },
+            actor.PlayerSession.Channel);
+    }
+
+    /// <summary>
+    /// Time the player's current sub-goal has been active. Used for narration beats that
+    /// auto-advance before the player has been taught to click anything.
+    /// </summary>
+    public bool TryGetSubGoalElapsed(EntityUid mob, out TimeSpan elapsed)
+    {
+        elapsed = TimeSpan.Zero;
+
+        if (!TryGetSession(mob, out var session))
+            return false;
+
+        elapsed = _timing.CurTime - session.SubGoalStartedAt;
+        return true;
+    }
+
+    /// <summary>
+    /// True while this sub-goal's control hint is still waiting on the coach to finish.
+    /// </summary>
+    public bool HasPendingControlHint(EntityUid mob)
+        => TryGetSession(mob, out var session) && !session.ControlHintShown;
+
+    /// <summary>
+    /// Pushes the held-back control hint to the client. No-op once already shown.
+    /// </summary>
+    public void ShowPendingControlHint(EntityUid mob)
+    {
+        if (!TryGetSession(mob, out var session) || session.ControlHintShown)
+            return;
+
+        session.ControlHintShown = true;
+        SendControlHint(mob, session.PendingControlHint);
+    }
+
     public bool TryGetSession(EntityUid mob, out TutorialSessionData session)
     {
         session = default!;
@@ -1462,6 +1567,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         var oldProgress = role.Goals.Count > 0 ? part.SubGoalIndex : part.StepIndex;
         part.SubGoalStates.Clear();
 
+        // Locale id of the on-screen control hint for the sub-goal that ends up current.
+        string? controlHint = null;
+
         if (role.Goals.Count > 0)
         {
             part.GoalCount = role.Goals.Count;
@@ -1510,6 +1618,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 else if (session.SubGoalIndex >= 0 && session.SubGoalIndex < goal.SubGoals.Count)
                 {
                     var sub = goal.SubGoals[session.SubGoalIndex];
+                    controlHint = sub.ControlHint;
                     part.StepText = Loc.GetString(sub.Text);
                     part.StepComplete = sub.Complete;
                     part.HintText = string.IsNullOrEmpty(sub.Hint) ? string.Empty : Loc.GetString(sub.Hint);
@@ -1567,6 +1676,12 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         Dirty(mob, part);
 
+        // Held back until the coach stops talking — see TutorialGoalSensorSystem.TryReleaseControlHint.
+        // Two things competing for the player's eye at once is how they end up reading neither.
+        session.PendingControlHint = controlHint;
+        session.ControlHintShown = false;
+        SendControlHint(mob, null);
+
         SyncCurriculumObjectives(mob, role, part);
 
         // Cargo Tech: force-open the tablet when controls becomes current (boarded the shuttle).
@@ -1584,9 +1699,14 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             session.GuideAutoOpened = true;
         }
 
+        session.SubGoalStartedAt = _timing.CurTime;
+
         // Always notify: guide UI sync and/or closed-UI progress tips (mentor roles speak instead).
         var ev = new TutorialParticipantProgressChangedEvent(session.GuideUid, oldGoalIndex, oldProgress);
         RaiseLocalEvent(mob, ref ev);
+
+        // Holopad coaches skip the walk entirely: they re-project at the new chamber's pad.
+        _holoMentor.RefreshProjection(mob, role, session);
 
         // Chamber transitions can leave the mentor behind a sealed gate — give them time to walk
         // before TutorialMentorFollowSystem path-checks and (only if stuck) snaps.
@@ -1669,7 +1789,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 {
                     session.Completed = true;
                     rule.Sessions[player.UserId] = session;
-                    CompleteTutorial(player);
+                    CompleteTutorial(player, session);
                     return;
                 }
 
@@ -1699,7 +1819,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         {
             session.Completed = true;
             rule.Sessions[player.UserId] = session;
-            CompleteTutorial(player);
+            CompleteTutorial(player, session);
             return;
         }
 
@@ -1707,10 +1827,22 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         RefreshParticipantHud(mob, role, session);
     }
 
-    private void CompleteTutorial(ICommonSession player)
+    private void CompleteTutorial(ICommonSession player, TutorialSessionData session)
     {
         // Stay on the practice map with Choose a tutorial — do not force-respawn to the picker.
         _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-tutorial-finished"));
+
+        var mob = session.BodyUid;
+        if (mob == EntityUid.Invalid || TerminatingOrDeleted(mob))
+            return;
+
+        // Same banner the control hints use: chat is where the player has been told to stop
+        // looking by this point in the tutorial.
+        session.PendingControlHint = TutorialFinishedHint;
+        session.ControlHintShown = true;
+        SendControlHint(mob, TutorialFinishedHint);
+
+        _holoMentor.EndProjection(session, Transform(mob).MapUid);
     }
 
     private void OnMobStateChanged(MobStateChangedEvent args)

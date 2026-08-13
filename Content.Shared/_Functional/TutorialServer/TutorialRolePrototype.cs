@@ -195,6 +195,53 @@ public sealed partial class TutorialRolePrototype : IPrototype
     /// </summary>
     [DataField]
     public bool MentorFollows = true;
+
+    /// <summary>
+    /// Entity prototype spawned as the mentor body. Falls back to the built-in
+    /// <c>TutorialMentor</c> humanoid when unset.
+    /// </summary>
+    [DataField]
+    public EntProtoId? MentorEntity;
+
+    /// <summary>
+    /// How the mentor keeps up with the player. <see cref="TutorialMentorMode.Walk"/> uses the
+    /// HTN soft-follow; <see cref="TutorialMentorMode.Holopad"/> re-projects the mentor at the
+    /// <see cref="TutorialHoloPointComponent"/> of the room the player is currently in.
+    /// </summary>
+    [DataField]
+    public TutorialMentorMode MentorMode = TutorialMentorMode.Walk;
+}
+
+/// <summary>
+/// How a tutorial mentor accompanies the player between rooms.
+/// </summary>
+[Serializable, NetSerializable]
+public enum TutorialMentorMode : byte
+{
+    /// <summary>HTN soft-follow (see <c>TutorialMentorFollowSystem</c>).</summary>
+    Walk,
+
+    /// <summary>Re-projected at each room's holopad; never physically moves.</summary>
+    Holopad,
+}
+
+/// <summary>
+/// Posture a player must be in for a posture-qualified sub-goal to complete.
+/// </summary>
+[Serializable, NetSerializable]
+public enum TutorialPosture : byte
+{
+    /// <summary>No posture requirement.</summary>
+    Any,
+
+    /// <summary>Upright and sprinting or walking.</summary>
+    Standing,
+
+    /// <summary>Upright with the walk modifier held (not sprinting).</summary>
+    Walking,
+
+    /// <summary>Knocked down / crawling.</summary>
+    Crawling,
 }
 
 [DataDefinition]
@@ -244,6 +291,51 @@ public sealed partial class TutorialSubGoalData
     /// </summary>
     [DataField]
     public string? StuckHint;
+
+    /// <summary>
+    /// Optional locale id for the on-screen control hint banner. This is the ONLY channel that
+    /// should mention keys, and it should say nothing else — e.g.
+    /// <c>Use [keybind="MoveUp"][keybind="MoveLeft"][keybind="MoveDown"][keybind="MoveRight"] to move.</c>
+    /// Markup is resolved client-side, so the player sees their own bindings.
+    /// </summary>
+    [DataField]
+    public string? ControlHint;
+
+    /// <summary>
+    /// Posture the player must hold for <see cref="TutorialStepComplete.ReachMarker"/> to count.
+    /// Lets one marker beat teach "walk there" or "crawl there" without a new completion kind.
+    /// </summary>
+    [DataField]
+    public TutorialPosture Posture = TutorialPosture.Any;
+
+    /// <summary>
+    /// When set on an <see cref="TutorialStepComplete.Acknowledge"/> sub-goal, the step advances
+    /// on its own this many seconds after the coach speaks. Used for narration beats that land
+    /// before the player has been taught to click anything.
+    /// </summary>
+    [DataField]
+    public float? AutoAdvanceSeconds;
+
+    /// <summary>
+    /// Spoken by the coach when the player fails this drill: breaking its <see cref="Posture"/>,
+    /// or reaching <see cref="RetryMarker"/> without having satisfied the sub-goal at all.
+    /// </summary>
+    [DataField]
+    public LocId? RetryLine;
+
+    /// <summary>
+    /// Marker that counts as failing this sub-goal if the player reaches it while the sub-goal is
+    /// still current. Catches the player who walks the length of a drill without ever engaging
+    /// with it, which no completion condition can detect on its own.
+    /// </summary>
+    [DataField]
+    public string? RetryMarker;
+
+    /// <summary>
+    /// Marker the player is returned to when the drill is failed, so they retry it from the top.
+    /// </summary>
+    [DataField]
+    public string? RetryReturnMarker;
 
     [DataField]
     public TutorialStepComplete Complete = TutorialStepComplete.Acknowledge;
@@ -729,4 +821,40 @@ public enum TutorialStepComplete : byte
     /// Player is pulling an entity with <see cref="TutorialSubGoalData.Tag"/>.
     /// </summary>
     PullTag,
+
+    /// <summary>Player pressed a directional movement key.</summary>
+    PlayerMoved,
+
+    /// <summary>Player moved with the walk modifier engaged (not sprinting).</summary>
+    PlayerWalking,
+
+    /// <summary>Player is knocked down / crawling.</summary>
+    PlayerCrawling,
+
+    /// <summary>Player stood back up after crawling.</summary>
+    PlayerStanding,
+
+    /// <summary>
+    /// Player climbed onto something, optionally matching <see cref="TutorialSubGoalData.Tag"/>.
+    /// </summary>
+    PlayerClimbed,
+
+    /// <summary>
+    /// Player buckled into a strap, optionally matching <see cref="TutorialSubGoalData.Tag"/>.
+    /// </summary>
+    PlayerBuckled,
+
+    /// <summary>Player unbuckled themselves.</summary>
+    PlayerUnbuckled,
+
+    /// <summary>
+    /// Player pointed at something, optionally matching <see cref="TutorialSubGoalData.Tag"/>.
+    /// </summary>
+    PlayerPointed,
+
+    /// <summary>Player rotated their camera away from the default orientation.</summary>
+    CameraRotated,
+
+    /// <summary>Player returned a rotated camera to the default orientation.</summary>
+    CameraResetDone,
 }
