@@ -146,26 +146,37 @@ public sealed partial class TutorialPracticeRoomSystem : EntitySystem
     }
 
     /// <summary>
-    /// Unbolts and opens every gate door whose unlock goal index is &lt;= <paramref name="goalIndex"/>.
+    /// Brings every gate on the grid in line with <paramref name="goalIndex"/>: gates the player
+    /// has earned are unbolted and opened, gates they have not are shut and bolted.
     /// </summary>
+    /// <remarks>
+    /// The bolting half is deliberately re-asserted on every goal advance rather than trusted to
+    /// happen once at map init. It costs nothing when the gates are already correct, and it means
+    /// no combination of map authoring, load order or a door left open in the editor can hand the
+    /// player the next chamber early.
+    /// </remarks>
     public void UnlockGatesForGoal(EntityUid gridUid, int goalIndex)
     {
-        if (!TryComp<TutorialRoomLayoutComponent>(gridUid, out var layout))
-            return;
-
-        foreach (var doorUid in layout.GateDoors)
+        foreach (var doorUid in EnumerateGateDoors(gridUid))
         {
             if (!Exists(doorUid) || TerminatingOrDeleted(doorUid))
                 continue;
 
-            if (!TryComp<TutorialGateDoorComponent>(doorUid, out var gate) || gate.Unlocked)
+            if (!TryComp<TutorialGateDoorComponent>(doorUid, out var gate))
+                continue;
+
+            // Crowbar-practice gates are never touched: closed, unbolted, opened only by prying.
+            if (gate.RequirePry)
                 continue;
 
             if (goalIndex < gate.UnlockAtGoalIndex)
+            {
+                if (!gate.Unlocked)
+                    SealGate(doorUid);
                 continue;
+            }
 
-            // Crowbar-practice gates stay closed until the player pries them.
-            if (gate.RequirePry)
+            if (gate.Unlocked)
                 continue;
 
             gate.Unlocked = true;
@@ -176,6 +187,84 @@ public sealed partial class TutorialPracticeRoomSystem : EntitySystem
 
             _doors.TryOpen(doorUid);
         }
+    }
+
+    /// <summary>
+    /// Shuts and bolts a gate the player has not reached yet.
+    /// </summary>
+    public void SealGate(EntityUid doorUid)
+    {
+        if (TryComp<DoorComponent>(doorUid, out var door) && door.State != DoorState.Closed)
+            _doors.TryClose(doorUid, door);
+
+        if (!TryComp<DoorBoltComponent>(doorUid, out var bolt))
+            return;
+
+        if (bolt.BoltsDown)
+        {
+            // Already sealed from the prototype; the lights still need syncing, because nothing
+            // has raised a state change on this door yet.
+            _doors.UpdateBoltLightStatus((doorUid, bolt));
+            return;
+        }
+
+        _doors.SetBoltsDown((doorUid, bolt), true);
+    }
+
+    /// <summary>
+    /// Swaps the gate that unlocks at <paramref name="unlockAtGoal"/> for a crowbar-practice door.
+    /// </summary>
+    /// <remarks>
+    /// Stamping copies one source chamber, so every divider gets the same gate prototype. Rather
+    /// than thread a per-gate override through the whole stamp path, the one pry gate is converted
+    /// afterwards — <see cref="SpawnGateDoor"/> then applies the unpowered/unbolted/never-auto-open
+    /// treatment for us.
+    /// </remarks>
+    public bool TryConvertGateToPryDoor(EntityUid gridUid, int unlockAtGoal, EntProtoId pryProto)
+    {
+        if (!TryComp<TutorialRoomLayoutComponent>(gridUid, out var layout))
+            return false;
+
+        for (var i = 0; i < layout.GateDoors.Count; i++)
+        {
+            var existing = layout.GateDoors[i];
+            if (!Exists(existing) || TerminatingOrDeleted(existing))
+                continue;
+
+            if (!TryComp<TutorialGateDoorComponent>(existing, out var gate) ||
+                gate.UnlockAtGoalIndex != unlockAtGoal)
+                continue;
+
+            var tile = _map.TileIndicesFor(gridUid, Comp<MapGridComponent>(gridUid), Transform(existing).Coordinates);
+            // Immediate, not queued: the replacement goes in the same tile this tick, and a
+            // queued-delete door would linger in the wall and in gate lookups until end of tick.
+            Del(existing);
+
+            layout.GateDoors[i] = SpawnGateDoor(pryProto, gridUid, tile, unlockAtGoal);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Gate doors on this grid. Runtime-stamped suites record them on the grid as they are built;
+    /// hand-authored maps have no layout component, so their mapped gates are found by query.
+    /// </summary>
+    private IEnumerable<EntityUid> EnumerateGateDoors(EntityUid gridUid)
+    {
+        if (TryComp<TutorialRoomLayoutComponent>(gridUid, out var layout))
+            return layout.GateDoors;
+
+        var doors = new List<EntityUid>();
+        var query = EntityQueryEnumerator<TutorialGateDoorComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out _, out var xform))
+        {
+            if (xform.GridUid == gridUid)
+                doors.Add(uid);
+        }
+
+        return doors;
     }
 
     /// <summary>
@@ -401,6 +490,22 @@ public sealed partial class TutorialPracticeRoomSystem : EntitySystem
     {
         var coords = new EntityCoordinates(gridUid, tile.X + 0.5f, tile.Y + 0.5f);
         return Spawn(proto, coords);
+    }
+
+    /// <summary>
+    /// Fills a grid with standard air if it has none, exactly as the fixgridatmos command does.
+    /// </summary>
+    /// <remarks>
+    /// A grid saved straight out of the map editor carries an empty <c>GridAtmosphere</c>, so a
+    /// hand-authored tutorial map is a vacuum unless the mapper remembered to run fixgridatmos
+    /// before saving. Grids that already hold gas are left alone.
+    /// </remarks>
+    public void EnsureBreathableAtmosphere(EntityUid gridUid)
+    {
+        if (TryComp<GridAtmosphereComponent>(gridUid, out var atmos) && atmos.Tiles.Count > 0)
+            return;
+
+        FillRoomAtmosphere(gridUid);
     }
 
     private void FillRoomAtmosphere(EntityUid gridUid)

@@ -142,6 +142,11 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
         var ok = TryStampCopies(srcGrid, copyCount, gate, fillAtmosphere, stampDir,
             out mapUid, out gridUid, out spawnCoords, practicePathTargets, lightFacingOffsetDegrees);
         QueueDel(srcMap);
+
+        // Every divider gets the same gate from the stamp; convert the one crowbar-practice gate.
+        if (ok && room?.PryGateAtGoalIndex is { } pryGoal)
+            _rooms.TryConvertGateToPryDoor(gridUid, pryGoal, room.PryGateDoor);
+
         return ok;
     }
 

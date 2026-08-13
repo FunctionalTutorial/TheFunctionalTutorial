@@ -39,6 +39,7 @@ tutorial-server-prompt-past-step = Previously completed step {$index}.
 
 
 tutorial-server-tutorial-finished = Tutorial finished. Use the Choose a tutorial action (click the dollar sign on the left side of the game window) to pick another role.
+tutorial-server-tutorial-finished-hint = Tutorial finished. Use the [color=#FFD24A][bold]Choose a tutorial[/bold][/color] action to pick another.
 tutorial-stub-explore-gear = This is a stub tutorial. Explore your gear and the practice room.
 tutorial-stub-ghost-when-done = When finished, use the Choose a tutorial action (click the dollar sign on the left side of the game window) to pick another tutorial.
 tutorial-server-rules-title = Tutorial Server Rules

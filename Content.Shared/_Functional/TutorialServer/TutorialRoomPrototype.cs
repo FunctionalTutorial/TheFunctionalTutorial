@@ -111,6 +111,21 @@ public sealed partial class TutorialRoomPrototype : IPrototype
     public EntProtoId GateDoor = "Airlock";
 
     /// <summary>
+    /// Unlock-goal index of the one gate that is crowbar practice instead of an automatic gate.
+    /// That gate spawns as <see cref="PryGateDoor"/>: closed, unbolted and unpowered, and never
+    /// auto-opened by <c>UnlockGatesForGoal</c>. Leave unset for suites with no pry drill.
+    /// </summary>
+    [DataField]
+    public int? PryGateAtGoalIndex;
+
+    /// <summary>
+    /// Door prototype used for <see cref="PryGateAtGoalIndex"/>. Must be an intentionally
+    /// unpowered airlock, or the power-forcing pass will make it open normally.
+    /// </summary>
+    [DataField]
+    public EntProtoId PryGateDoor = "TutorialAirlockMaint";
+
+    /// <summary>
     /// Static department furniture placed relative to chamber centers.
     /// </summary>
     [DataField]

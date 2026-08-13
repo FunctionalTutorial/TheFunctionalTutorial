@@ -512,6 +512,8 @@
   - type: ApcPowerReceiver
     needsPower: false
     powerDisabled: true
+  # Airlocks inherit PryUnpowered, so without this the crowbar drill can be skipped bare-handed.
+  - type: TutorialToolOnlyPry
   - type: Tag
     tags:
     - Airlock

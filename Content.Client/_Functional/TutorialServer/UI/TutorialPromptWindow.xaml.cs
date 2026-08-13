@@ -126,7 +126,9 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
             return;
         }
 
-        // Permissive markup so [keybind] tags resolve via KeyBindTag.
-        label.SetMarkupPermissive(text);
+        // Permissive markup so [keybind] tags resolve via KeyBindTag. SetMarkupPermissive would
+        // fall through to RichTextEntry.DefaultTags, which does not include keybind and would
+        // render the key as an empty gap — pass tagsAllowed: null to permit every registered tag.
+        label.SetMessage(FormattedMessage.FromMarkupPermissive(text), tagsAllowed: null);
     }
 }

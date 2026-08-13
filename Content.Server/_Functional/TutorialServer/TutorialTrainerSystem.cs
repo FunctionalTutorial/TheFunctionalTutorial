@@ -4,6 +4,7 @@ using Content.Shared.Chat;
 using Content.Shared.Interaction;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Content.Server._Functional.TutorialServer;
@@ -16,6 +17,8 @@ namespace Content.Server._Functional.TutorialServer;
 public sealed class TutorialTrainerSystem : EntitySystem
 {
     [Dependency] private readonly ChatSystem _chat = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly TutorialServerRuleSystem _tutorial = default!;
 
     public override void Initialize()
@@ -28,6 +31,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
     {
         base.Update(frameTime);
 
+        var now = _timing.CurTime;
         var trainers = EntityQueryEnumerator<TutorialTrainerComponent, TransformComponent>();
         while (trainers.MoveNext(out var trainerUid, out var trainer, out var trainerXform))
         {
@@ -41,20 +45,99 @@ public sealed class TutorialTrainerSystem : EntitySystem
             if (!TryResolveDialogue(trainerUid, trainer, playerUid, part, out var subGoalId, out var dialogue))
                 continue;
 
-            // Only speak when the sub-goal changes — no timed reminders.
-            if (trainer.LastSpokenSubGoal == subGoalId)
-                continue;
-
-            // Don't pile IC speech on top of an open tutorial prompt.
-            if (_tutorial.IsGuideUiOpen(playerUid))
+            // Only queue when the sub-goal changes — no timed reminders.
+            if (trainer.LastSpokenSubGoal != subGoalId)
             {
                 trainer.LastSpokenSubGoal = subGoalId;
+                trainer.PendingLines.Clear();
+                trainer.NextLineAt = null;
+
+                // Don't pile IC speech on top of an open tutorial prompt.
+                if (!_tutorial.IsGuideUiOpen(playerUid))
+                {
+                    foreach (var line in ResolveSegment(trainer, subGoalId, dialogue))
+                        trainer.PendingLines.Enqueue(line);
+                }
+
                 Dirty(trainerUid, trainer);
-                continue;
             }
 
-            Speak(trainerUid, trainer, playerUid, subGoalId, dialogue);
+            if (trainer.PendingLines.Count == 0)
+                continue;
+
+            // Coaches with a speak range wait for the player to walk up to them once, and then talk
+            // for as long as they are stationed there. Re-checking the range every segment silenced
+            // her for the rest of a chamber the moment a drill sent the player down a lane; a
+            // holopad coach only has to be arrived at, and that is what re-projecting into the next
+            // chamber resets.
+            if (trainer.NextLineAt == null)
+            {
+                if (!trainer.PlayerArrived)
+                {
+                    if (!IsPlayerInSpeakRange(trainer, trainerXform, playerUid))
+                        continue;
+
+                    trainer.PlayerArrived = true;
+                }
+
+                var opening = trainer.HasSpoken ? trainer.StartDelay : trainer.StartDelay + trainer.SessionStartDelay;
+                trainer.NextLineAt = now + opening;
+                Dirty(trainerUid, trainer);
+            }
+
+            if (now < trainer.NextLineAt.Value)
+                continue;
+
+            var next = trainer.PendingLines.Dequeue();
+            trainer.NextLineAt = now + ResolveNextLineDelay(trainer);
+            trainer.HasSpoken = true;
+            Dirty(trainerUid, trainer);
+
+            SpeakLine(trainerUid, playerUid, subGoalId, next.Text);
+
+            if (next.ShowControlHint)
+                _tutorial.ShowPendingControlHint(playerUid);
         }
+    }
+
+    /// <summary>
+    /// True while a coach still owes the player words for <paramref name="subGoalId"/>: lines
+    /// queued, a gap running, or the segment not picked up from the goal change yet.
+    /// </summary>
+    public bool IsMidSegment(EntityUid mentor, string subGoalId)
+    {
+        if (!TryComp<TutorialTrainerComponent>(mentor, out var trainer))
+            return false;
+
+        // The segment is enqueued by this system's own Update, which may not have run since the
+        // sub-goal changed. Until it has, she is about to start rather than finished.
+        if (!string.Equals(trainer.LastSpokenSubGoal, subGoalId, StringComparison.Ordinal))
+            return true;
+
+        return trainer.PendingLines.Count > 0 ||
+               (trainer.NextLineAt is { } next && _timing.CurTime < next);
+    }
+
+    /// <summary>
+    /// Speaks a one-off correction outside the sub-goal script, rate limited so a player who keeps
+    /// breaking a drill is corrected once rather than continuously.
+    /// </summary>
+    public void TrySpeakInterjection(EntityUid mentor, EntityUid player, LocId line)
+    {
+        if (!TryComp<TutorialTrainerComponent>(mentor, out var trainer))
+            return;
+
+        var now = _timing.CurTime;
+        if (trainer.NextInterjectionAt is { } ready && now < ready)
+            return;
+
+        var text = Loc.GetString(line);
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        trainer.NextInterjectionAt = now + trainer.InterjectionCooldown;
+        Dirty(mentor, trainer);
+        SpeakAsCoach(mentor, player, string.Empty, text, null);
     }
 
     private void OnInteractHand(Entity<TutorialTrainerComponent> ent, ref InteractHandEvent args)
@@ -75,7 +158,22 @@ public sealed class TutorialTrainerSystem : EntitySystem
             return;
 
         args.Handled = true;
-        Speak(ent, ent.Comp, args.User, subGoalId, dialogue);
+
+        // Mid-segment: clicking pulls the next line forward for players who read faster than the
+        // coach talks, rather than repeating what they just heard.
+        if (ent.Comp.PendingLines.Count > 0)
+        {
+            var next = ent.Comp.PendingLines.Dequeue();
+            ent.Comp.NextLineAt = _timing.CurTime + ResolveNextLineDelay(ent.Comp);
+            Dirty(ent.Owner, ent.Comp);
+            SpeakLine(ent, args.User, subGoalId, next.Text);
+
+            if (next.ShowControlHint)
+                _tutorial.ShowPendingControlHint(args.User);
+            return;
+        }
+
+        SpeakLine(ent, args.User, subGoalId, dialogue);
 
         if (part.StepComplete == TutorialStepComplete.Acknowledge)
         {
@@ -154,18 +252,86 @@ public sealed class TutorialTrainerSystem : EntitySystem
         markSpoken?.Invoke(subGoalId);
     }
 
-    private void Speak(
+    private void SpeakLine(
         EntityUid trainerUid,
-        TutorialTrainerComponent trainer,
         EntityUid playerUid,
         string subGoalId,
         string dialogue)
     {
-        SpeakAsCoach(trainerUid, playerUid, subGoalId, dialogue, id =>
+        SpeakAsCoach(trainerUid, playerUid, subGoalId, dialogue, null);
+    }
+
+    /// <summary>
+    /// All authored lines for a sub-goal in order, or the resolved fallback when none are authored.
+    /// </summary>
+    private List<TutorialPendingLine> ResolveSegment(
+        TutorialTrainerComponent trainer,
+        string subGoalId,
+        string fallback)
+    {
+        var lines = new List<TutorialPendingLine>();
+        foreach (var line in trainer.Lines)
         {
-            trainer.LastSpokenSubGoal = id;
-            Dirty(trainerUid, trainer);
-        });
+            if (!string.Equals(line.SubGoalId, subGoalId, StringComparison.Ordinal))
+                continue;
+
+            var text = Loc.GetString(line.Dialogue);
+            if (!string.IsNullOrWhiteSpace(text))
+                lines.Add(new TutorialPendingLine(text, line.ShowControlHint));
+        }
+
+        if (lines.Count == 0 && !string.IsNullOrWhiteSpace(fallback))
+            lines.Add(new TutorialPendingLine(fallback, false));
+
+        return lines;
+    }
+
+    private bool IsPlayerInSpeakRange(
+        TutorialTrainerComponent trainer,
+        TransformComponent trainerXform,
+        EntityUid playerUid)
+    {
+        if (trainer.SpeakRange is not { } range)
+            return true;
+
+        if (!TryComp<TransformComponent>(playerUid, out var playerXform) ||
+            playerXform.MapID != trainerXform.MapID)
+            return false;
+
+        var delta = _transform.GetWorldPosition(playerXform) - _transform.GetWorldPosition(trainerXform);
+        return delta.Length() <= range;
+    }
+
+    /// <summary>
+    /// Gap before the line at the head of the queue, scaled by how long *that* line is.
+    /// </summary>
+    /// <remarks>
+    /// Scaling the pause to the line just spoken had it backwards: someone typing spends the long
+    /// silence composing the long message, not recovering from it. With nothing left to say the gap
+    /// collapses to the floor, since it only has to let the closing line be read.
+    /// </remarks>
+    private static TimeSpan ResolveNextLineDelay(TutorialTrainerComponent trainer)
+    {
+        if (!trainer.PendingLines.TryPeek(out var upcoming))
+            return trainer.MinLineDelay;
+
+        var typed = TimeSpan.FromSeconds(upcoming.Text.Length * trainer.SecondsPerCharacter);
+        if (typed < trainer.MinLineDelay)
+            typed = trainer.MinLineDelay;
+
+        return typed > trainer.MaxLineDelay ? trainer.MaxLineDelay : typed;
+    }
+
+    /// <summary>
+    /// Clears the arrival gate, so this coach waits for the player to walk up to her again.
+    /// </summary>
+    public void ResetArrival(EntityUid trainerUid)
+    {
+        if (!TryComp<TutorialTrainerComponent>(trainerUid, out var trainer) || !trainer.PlayerArrived)
+            return;
+
+        trainer.PlayerArrived = false;
+        Dirty(trainerUid, trainer);
     }
 
     private bool TryResolvePlayer(

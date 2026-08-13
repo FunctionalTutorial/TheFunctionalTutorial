@@ -78,6 +78,10 @@ public sealed partial class TutorialMapSystem : EntitySystem
         else if (TryLoadTutorialMap(role.Map, out mapUid, out gridUid, out spawnCoords))
         {
             loaded = true;
+            // Procedural rooms fill their own air; a hand-authored map arrives as a vacuum unless
+            // the mapper ran fixgridatmos before saving, which is not something a tutorial map
+            // should be able to get wrong.
+            _rooms.EnsureBreathableAtmosphere(gridUid);
         }
 
         if (loaded)

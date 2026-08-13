@@ -187,6 +187,8 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         SubscribeLocalEvent<TutorialParticipantComponent, DevourDoAfterEvent>(
             OnDragonDevoured,
             after: [typeof(DevourSystem)]);
+
+        InitializeControls();
     }
 
     public override void Update(float frameTime)
@@ -198,6 +200,9 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         {
             if (!_tutorial.TryGetCurrentSubGoal(uid, part, out var sub))
                 continue;
+
+            TryReleaseControlHint(uid);
+            TryFailAtRetryMarker(uid, xform, sub);
 
             switch (sub.Complete)
             {
@@ -411,6 +416,21 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 case TutorialStepComplete.BorgModuleSelected:
                     if (IsBorgModuleSelected(uid, sub))
                         _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.Acknowledge:
+                case TutorialStepComplete.PlayerCrawling:
+                case TutorialStepComplete.PlayerStanding:
+                case TutorialStepComplete.PlayerBuckled:
+                case TutorialStepComplete.PlayerUnbuckled:
+                case TutorialStepComplete.CameraRotated:
+                case TutorialStepComplete.CameraResetDone:
+                    UpdateControlSensors(uid, sub);
+                    break;
+                case TutorialStepComplete.PlayerMoved:
+                case TutorialStepComplete.PlayerWalking:
+                case TutorialStepComplete.PlayerClimbed:
+                case TutorialStepComplete.PlayerPointed:
+                    // Discrete actions — handled by the event subscriptions in the Controls partial.
                     break;
             }
         }
@@ -1405,27 +1425,58 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         if (string.IsNullOrEmpty(sub.Marker))
             return;
 
-        var mapId = xform.MapID;
-        if (mapId == MapId.Nullspace)
+        if (!IsAtMarker(xform, sub.Marker))
             return;
 
-        var mobPos = _transform.GetWorldPosition(xform);
-        var markerQuery = EntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
-        while (markerQuery.MoveNext(out _, out var marker, out var markerXform))
+        // "Walk there" / "crawl there" beats only count when the player arrives in that posture.
+        // Arriving wrong is the moment the drill failed, so it is the moment to say so — silently
+        // refusing to advance just reads as a broken tutorial.
+        if (!MatchesPosture(mob, sub.Posture))
         {
-            if (marker.MarkerId != sub.Marker)
-                continue;
-
-            if (markerXform.MapID != mapId)
-                continue;
-
-            var markerPos = _transform.GetWorldPosition(markerXform);
-            if ((markerPos - mobPos).Length() > MarkerReachRange)
-                continue;
-
-            _tutorial.AdvanceSubGoal(mob);
+            FailDrill(mob, sub);
             return;
         }
+
+        _tutorial.AdvanceSubGoal(mob);
+    }
+
+    /// <summary>
+    /// True when the player is standing within reach of the named marker.
+    /// </summary>
+    private bool IsAtMarker(TransformComponent xform, string markerId)
+    {
+        var mapId = xform.MapID;
+        if (mapId == MapId.Nullspace)
+            return false;
+
+        var mobPos = _transform.GetWorldPosition(xform);
+        var query = EntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
+        while (query.MoveNext(out _, out var marker, out var markerXform))
+        {
+            if (marker.MarkerId != markerId || markerXform.MapID != mapId)
+                continue;
+
+            if ((_transform.GetWorldPosition(markerXform) - mobPos).Length() <= MarkerReachRange)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool TryGetMarkerCoords(MapId mapId, string markerId, out EntityCoordinates coords)
+    {
+        coords = default;
+        var query = EntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
+        while (query.MoveNext(out _, out var marker, out var markerXform))
+        {
+            if (marker.MarkerId != markerId || markerXform.MapID != mapId)
+                continue;
+
+            coords = markerXform.Coordinates;
+            return true;
+        }
+
+        return false;
     }
 
     private void TryCompleteFromPossession(EntityUid mob, TutorialSubGoalData sub)

@@ -147,3 +147,16 @@
 
 - type: Tag
   id: TutorialCargoSell
+
+# Basic Controls curriculum (TutorialBasics).
+- type: Tag
+  id: TutorialClimbTable
+
+- type: Tag
+  id: TutorialChair
+
+- type: Tag
+  id: TutorialPointTarget
+
+- type: Tag
+  id: TutorialDoorPowered
