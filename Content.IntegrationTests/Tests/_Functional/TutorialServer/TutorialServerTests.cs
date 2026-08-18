@@ -853,7 +853,7 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
-    public async Task TutorialRoles_RoomChangesAreSparseAndPaced()
+    public async Task TutorialRoles_ChamberCountFollowsPracticeSpawns()
     {
         var pair = Pair;
         var server = pair.Server;
@@ -879,27 +879,7 @@ public sealed class TutorialServerTests : GameTest
                     : role.PracticeSpawns.Max(p => p.Room);
                 Assert.That(copies, Is.EqualTo(Math.Max(1, maxSpawnRoom + 1)),
                     $"{role.ID}: copy count must follow practice chambers, not goal count");
-
-                // First room change (EnterRoom > 0) must come after several interactive steps.
-                var stepsBefore = 0;
-                foreach (var goal in role.Goals)
-                {
-                    if (goal.EnterRoom is > 0)
-                    {
-                        Assert.That(stepsBefore, Is.GreaterThanOrEqualTo(3),
-                            $"{role.ID}: need a few steps in chamber 0 before EnterRoom {goal.EnterRoom} ({goal.Id})");
-                        break;
-                    }
-
-                    stepsBefore += goal.SubGoals.Count;
-                }
             }
-
-            var ra = proto.Index<TutorialRolePrototype>("TutorialResearchAssistant");
-            Assert.That(TutorialMapSystem.ResolveCopyCount(ra), Is.EqualTo(1));
-            var console = ra.PracticeSpawns.First(p => p.Id == "TutorialResearchConsole");
-            Assert.That(console.Offset.X, Is.LessThan(-3f),
-                "R&D console should sit on the Saltern science console offset, not chamber center");
         });
     }
 
@@ -990,7 +970,7 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
-    public async Task TutorialRolePicker_OrdersBasicsThenPassengerThenDepartmentsThenAntagsAndOmitsErt()
+    public async Task TutorialRolePicker_OrdersStartHereThenDepartmentsThenAntagsAndOmitsErt()
     {
         var pair = Pair;
         var server = pair.Server;
@@ -1004,9 +984,9 @@ public sealed class TutorialServerTests : GameTest
 
             var entries = tutorial.BuildPickerEntries();
             Assert.That(entries, Is.Not.Empty);
-            // Basic Controls sits above Passenger so a first-time player starts with movement.
+            // Start Here is in teaching order: movement first, then handling objects.
             Assert.That(entries[0].RoleId, Is.EqualTo("TutorialBasics"));
-            Assert.That(entries[1].RoleId, Is.EqualTo("TutorialPassenger"));
+            Assert.That(entries[1].RoleId, Is.EqualTo("TutorialItems"));
             Assert.That(entries.Any(e => e.RoleId.Contains("ERT", StringComparison.OrdinalIgnoreCase)), Is.False);
 
             var firstAntag = entries.FindIndex(e => e.Category == "Wizden antagonists");

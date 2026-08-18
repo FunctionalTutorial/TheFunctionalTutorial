@@ -160,3 +160,30 @@
 
 - type: Tag
   id: TutorialDoorPowered
+
+# Items and Survival curriculum (TutorialItems).
+- type: Tag
+  id: TutorialExamineTarget
+
+- type: Tag
+  id: TutorialGearLocker
+
+- type: Tag
+  id: TutorialDisposal
+
+- type: Tag
+  id: TutorialPullCrate
+
+- type: Tag
+  id: TutorialFirelock
+
+# Both tools carry this, so the two pick-up drills are one sensor with a count and no fixed order.
+- type: Tag
+  id: TutorialGirderTool
+
+- type: Tag
+  id: TutorialGirder
+
+# On BoxSurvival itself, so it covers every species and departmental variant at once.
+- type: Tag
+  id: TutorialSurvivalBox

@@ -169,6 +169,14 @@ public sealed partial class TutorialPracticeRoomSystem : EntitySystem
             if (gate.RequirePry)
                 continue;
 
+            // Sub-goal gates open partway through a chamber; seal only, RefreshSubGoalGates opens.
+            if (!string.IsNullOrEmpty(gate.UnlockAtSubGoalId))
+            {
+                if (!gate.Unlocked)
+                    SealGate(doorUid);
+                continue;
+            }
+
             if (goalIndex < gate.UnlockAtGoalIndex)
             {
                 if (!gate.Unlocked)
@@ -176,17 +184,47 @@ public sealed partial class TutorialPracticeRoomSystem : EntitySystem
                 continue;
             }
 
-            if (gate.Unlocked)
+            UnlockGate(doorUid, gate);
+        }
+    }
+
+    /// <summary>
+    /// Opens every gate keyed to a sub-goal the player has now reached. <paramref name="reached"/>
+    /// is passed in because the curriculum lives in the rule system.
+    /// </summary>
+    public void RefreshSubGoalGates(EntityUid gridUid, Func<string, bool> reached)
+    {
+        foreach (var doorUid in EnumerateGateDoors(gridUid))
+        {
+            if (!Exists(doorUid) || TerminatingOrDeleted(doorUid))
                 continue;
 
-            gate.Unlocked = true;
-            Dirty(doorUid, gate);
+            if (!TryComp<TutorialGateDoorComponent>(doorUid, out var gate))
+                continue;
 
-            if (TryComp<DoorBoltComponent>(doorUid, out var bolt))
-                _doors.SetBoltsDown((doorUid, bolt), false);
+            if (gate.Unlocked || gate.RequirePry || string.IsNullOrEmpty(gate.UnlockAtSubGoalId))
+                continue;
 
-            _doors.TryOpen(doorUid);
+            if (!reached(gate.UnlockAtSubGoalId))
+                continue;
+
+            UnlockGate(doorUid, gate);
         }
+    }
+
+    /// <summary>Unbolts and opens a gate, once.</summary>
+    private void UnlockGate(EntityUid doorUid, TutorialGateDoorComponent gate)
+    {
+        if (gate.Unlocked)
+            return;
+
+        gate.Unlocked = true;
+        Dirty(doorUid, gate);
+
+        if (TryComp<DoorBoltComponent>(doorUid, out var bolt))
+            _doors.SetBoltsDown((doorUid, bolt), false);
+
+        _doors.TryOpen(doorUid);
     }
 
     /// <summary>

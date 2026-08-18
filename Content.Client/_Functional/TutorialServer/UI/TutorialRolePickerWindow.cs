@@ -118,14 +118,22 @@ public sealed class TutorialRolePickerWindow : DefaultWindow
                 });
             }
 
+            // Blocked wins the label; "unfinished" would send them off to wait for a fix.
+            var label = role.BlockedForSpecies
+                ? Loc.GetString("tutorial-server-picker-species-entry", ("name", role.DisplayName))
+                : role.Stub
+                    ? Loc.GetString("tutorial-server-picker-stub-entry", ("name", role.DisplayName))
+                    : role.DisplayName;
+
             var button = new Button
             {
-                Text = role.Stub
-                    ? Loc.GetString("tutorial-server-picker-stub-entry", ("name", role.DisplayName))
-                    : role.DisplayName,
+                Text = label,
                 HorizontalExpand = true,
-                Disabled = false,
-                ModulateSelfOverride = role.Stub ? Color.Gray : null,
+                Disabled = role.BlockedForSpecies,
+                ModulateSelfOverride = role.Stub || role.BlockedForSpecies ? Color.Gray : null,
+                ToolTip = role.BlockedForSpecies
+                    ? Loc.GetString("tutorial-server-picker-species-tooltip")
+                    : null,
                 Margin = string.IsNullOrEmpty(role.SubCategory)
                     ? default
                     : new Thickness(16, 0, 0, 0),

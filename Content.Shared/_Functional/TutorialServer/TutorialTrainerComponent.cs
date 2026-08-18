@@ -39,6 +39,13 @@ public sealed partial class TutorialTrainerComponent : Component
     public TimeSpan? NextLineAt;
 
     /// <summary>
+    /// Lines of <see cref="LastSpokenSubGoal"/> said out loud, reset when the segment changes, so a
+    /// staged effect can land on a line of the script rather than on a stopwatch.
+    /// </summary>
+    [ViewVariables]
+    public int LinesSpoken;
+
+    /// <summary>
     /// How close the player must get before the coach starts a queued segment. Null speaks as soon
     /// as the sub-goal becomes current, which is what walking mentors want since they follow you.
     /// A holopad coach uses a small radius so the player walks up to them rather than catching
@@ -102,10 +109,12 @@ public sealed partial class TutorialTrainerComponent : Component
     public TimeSpan MinLineDelay = TimeSpan.Zero;
 
     /// <summary>
-    /// Ceiling on the gap between consecutive lines, however long the line is.
+    /// Ceiling on the gap between consecutive lines, however long the line is. Default is the
+    /// lifetime of a speech bubble (<c>SpeechBubble.TotalTime</c>), so the next line lands as the
+    /// last one fades rather than leaving the player staring at an empty screen.
     /// </summary>
     [DataField]
-    public TimeSpan MaxLineDelay = TimeSpan.FromSeconds(9);
+    public TimeSpan MaxLineDelay = TimeSpan.FromSeconds(4);
 
     /// <summary>
     /// Added per character of the line that is coming next, approximating someone typing it out.
@@ -119,6 +128,21 @@ public sealed partial class TutorialTrainerComponent : Component
     /// </summary>
     [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
     public TimeSpan NextReminderAt;
+}
+
+/// <summary>
+/// How far through a sub-goal's script a coach is.
+/// </summary>
+public enum TutorialCoachSpeech : byte
+{
+    /// <summary>No coach, or she has said everything this beat needs.</summary>
+    Done,
+
+    /// <summary>A segment is queued but has not started: nobody has walked into earshot yet.</summary>
+    Waiting,
+
+    /// <summary>Mid-script: a line is out, or the gap before the next one is running.</summary>
+    Speaking,
 }
 
 /// <summary>

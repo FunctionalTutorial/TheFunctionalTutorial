@@ -51,6 +51,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
                 trainer.LastSpokenSubGoal = subGoalId;
                 trainer.PendingLines.Clear();
                 trainer.NextLineAt = null;
+                trainer.LinesSpoken = 0;
 
                 // Don't pile IC speech on top of an open tutorial prompt.
                 if (!_tutorial.IsGuideUiOpen(playerUid))
@@ -91,6 +92,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
             var next = trainer.PendingLines.Dequeue();
             trainer.NextLineAt = now + ResolveNextLineDelay(trainer);
             trainer.HasSpoken = true;
+            trainer.LinesSpoken++;
             Dirty(trainerUid, trainer);
 
             SpeakLine(trainerUid, playerUid, subGoalId, next.Text);
@@ -101,21 +103,57 @@ public sealed class TutorialTrainerSystem : EntitySystem
     }
 
     /// <summary>
-    /// True while a coach still owes the player words for <paramref name="subGoalId"/>: lines
-    /// queued, a gap running, or the segment not picked up from the goal change yet.
+    /// How many lines of <paramref name="subGoalId"/> this player's coach has spoken. False when no
+    /// coach is on that segment, which callers must read as "no cue is coming", not as zero.
     /// </summary>
-    public bool IsMidSegment(EntityUid mentor, string subGoalId)
+    public bool TryGetLinesSpoken(EntityUid player, string subGoalId, out int spoken)
+    {
+        spoken = 0;
+
+        var coaches = EntityQueryEnumerator<TutorialTrainerComponent, TutorialMentorComponent>();
+        while (coaches.MoveNext(out _, out var trainer, out var mentor))
+        {
+            if (mentor.PlayerUid != player)
+                continue;
+
+            // A different segment means her count belongs to another beat.
+            if (!string.Equals(trainer.LastSpokenSubGoal, subGoalId, StringComparison.Ordinal))
+                return false;
+
+            spoken = trainer.LinesSpoken;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Where a coach is in <paramref name="subGoalId"/>'s script. Callers that hold something back
+    /// until she is done need <see cref="TutorialCoachSpeech.Waiting"/> separated from
+    /// <see cref="TutorialCoachSpeech.Speaking"/>: only the former can go on forever, so only the
+    /// former may be timed out.
+    /// </summary>
+    public TutorialCoachSpeech ResolveSegmentState(EntityUid mentor, string subGoalId)
     {
         if (!TryComp<TutorialTrainerComponent>(mentor, out var trainer))
-            return false;
+            return TutorialCoachSpeech.Done;
 
         // The segment is enqueued by this system's own Update, which may not have run since the
         // sub-goal changed. Until it has, she is about to start rather than finished.
         if (!string.Equals(trainer.LastSpokenSubGoal, subGoalId, StringComparison.Ordinal))
-            return true;
+            return TutorialCoachSpeech.Waiting;
 
-        return trainer.PendingLines.Count > 0 ||
-               (trainer.NextLineAt is { } next && _timing.CurTime < next);
+        // Lines queued with no clock running means nobody has walked into earshot yet.
+        if (trainer.PendingLines.Count > 0 && trainer.NextLineAt == null)
+            return TutorialCoachSpeech.Waiting;
+
+        if (trainer.PendingLines.Count > 0 ||
+            (trainer.NextLineAt is { } next && _timing.CurTime < next))
+        {
+            return TutorialCoachSpeech.Speaking;
+        }
+
+        return TutorialCoachSpeech.Done;
     }
 
     /// <summary>

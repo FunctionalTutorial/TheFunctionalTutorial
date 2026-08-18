@@ -216,54 +216,71 @@ public sealed class TutorialBasicsTests : GameTest
     }
 
     /// <summary>
-    /// The chambers the curriculum sends the player into must all exist as gated rooms, and the
-    /// props each drill needs must be spawned into the right one.
+    /// Every marker and tag a drill names has to be somewhere on the map the player lands in, or
+    /// that drill sits there with nothing in the world able to complete it.
     /// </summary>
     [Test]
-    public async Task TutorialBasics_EveryDrillChamberHasItsProps()
+    public async Task TutorialBasics_MapCarriesEveryDrillTarget()
     {
         var server = Pair.Server;
+        var maps = server.System<TutorialMapSystem>();
+        var tags = server.System<TagSystem>();
+        var entMan = server.EntMan;
         var protos = server.ProtoMan;
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(protos.TryIndex<TutorialRolePrototype>(RoleId, out var role), Is.True);
+            var role = protos.Index<TutorialRolePrototype>(RoleId);
+            Assert.That(maps.TryLoadTutorialMap(role, out var mapUid, out var gridUid, out _), Is.True);
 
-            var spawnsByRoom = new Dictionary<int, List<string>>();
-            foreach (var spawn in role!.PracticeSpawns)
+            var markersOnMap = new HashSet<string>();
+            var markerQuery = entMan.EntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
+            while (markerQuery.MoveNext(out _, out var marker, out var xform))
             {
-                if (!spawnsByRoom.TryGetValue(spawn.Room, out var list))
-                    spawnsByRoom[spawn.Room] = list = new List<string>();
-
-                list.Add(spawn.Id.Id);
+                if (xform.GridUid == gridUid)
+                    markersOnMap.Add(marker.MarkerId);
             }
+
+            var onMap = new List<EntityUid>();
+            var all = entMan.EntityQueryEnumerator<TransformComponent>();
+            while (all.MoveNext(out var uid, out var xform))
+            {
+                if (xform.GridUid == gridUid)
+                    onMap.Add(uid);
+            }
+
+            var subs = role.Goals.SelectMany(g => g.SubGoals).ToList();
 
             Assert.Multiple(() =>
             {
-                // One projector per chamber, or the coach cannot follow the player through.
-                for (var room = 0; room < role.Goals.Count; room++)
+                foreach (var wanted in subs
+                             .SelectMany(s => new[] { s.Marker, s.RetryMarker, s.RetryReturnMarker })
+                             .Where(m => !string.IsNullOrEmpty(m))
+                             .Distinct())
                 {
-                    Assert.That(spawnsByRoom.TryGetValue(room, out var props) && props.Contains("TutorialHolopad"),
-                        Is.True, $"chamber {room} has no TutorialHolopad for the coach to project from");
+                    Assert.That(markersOnMap, Does.Contain(wanted),
+                        $"no TutorialStepMarker for '{wanted}' on the map");
                 }
 
-                Assert.That(spawnsByRoom[3], Does.Contain("TutorialClimbTable"));
-                Assert.That(spawnsByRoom[4], Does.Contain("TutorialTrainingChair"));
-                Assert.That(spawnsByRoom[5], Does.Contain("TutorialPointCrate"));
-                Assert.That(spawnsByRoom[6], Does.Contain("TutorialBasicsDoor"));
-                Assert.That(spawnsByRoom[6], Does.Contain("Crowbar"));
+                foreach (var tag in subs.Select(s => s.Tag).Where(t => !string.IsNullOrEmpty(t)).Distinct())
+                {
+                    Assert.That(onMap.Any(uid => tags.HasTag(uid, tag!)), Is.True,
+                        $"nothing on the map carries '{tag}', so the drill that wants it cannot finish");
+                }
             });
+
+            maps.UnloadTutorialMap(mapUid);
         });
     }
 
     /// <summary>
-    /// Regression: the coach used to trail a room behind, because every stamped holopad kept the
+    /// Regression: the coach used to trail a room behind, because every holopad kept the
     /// prototype's default room index. With no room ever matching, projection fell back to
     /// "nearest pad to the player", which is the room they are leaving rather than the one the
     /// next goal sends them to.
     /// </summary>
     [Test]
-    public async Task TutorialBasics_StampedHolopadsKnowTheirChamber()
+    public async Task TutorialBasics_EveryChamberHasItsOwnHolopad()
     {
         var pair = Pair;
         var server = pair.Server;
@@ -273,11 +290,10 @@ public sealed class TutorialBasicsTests : GameTest
         await server.WaitPost(() =>
         {
             ticker.SetGamePreset("TutorialServer");
-            ticker.StartGameRule("TutorialServer", out _);
             ticker.StartRound();
         });
-        await pair.RunTicksSync(5);
 
+        await pair.RunTicksSync(30);
         await server.WaitPost(() => tutorial.TrySelectRole(pair.Player!, RoleId, confirmedStub: false));
         await pair.RunTicksSync(120);
 
@@ -307,29 +323,70 @@ public sealed class TutorialBasicsTests : GameTest
             }
 
             var role = server.ProtoMan.Index<TutorialRolePrototype>(RoleId);
-            var expected = role.PracticeSpawns
-                .Where(p => p.Id == "TutorialHolopad")
-                .Select(p => p.Room)
-                .OrderBy(r => r)
-                .ToList();
 
-            Assert.That(rooms.OrderBy(r => r), Is.EqualTo(expected),
-                "each chamber's holopad must carry its own room index, or the coach cannot lead the player");
-            Assert.That(rooms.Distinct().Count(), Is.EqualTo(rooms.Count),
-                "two pads sharing a room index means one chamber has none");
+            Assert.Multiple(() =>
+            {
+                for (var chamber = 0; chamber < role.Goals.Count; chamber++)
+                {
+                    Assert.That(rooms, Does.Contain(chamber),
+                        $"chamber {chamber} has no holopad for the coach to project from");
+                }
+
+                // Several pads in one chamber is fine: projection picks the nearest, so she moves
+                // up a long chamber as the player works through it. A pad advertising a chamber
+                // that does not exist is not, since she would project into nothing.
+                foreach (var room in rooms.Distinct())
+                {
+                    Assert.That(room, Is.LessThan(role.Goals.Count),
+                        $"a holopad claims chamber {room}, which the curriculum does not have");
+                }
+            });
         });
     }
 
     /// <summary>
-    /// Regression: the crowbar gate used to spawn as an ordinary powered airlock, so it opened on
+    /// Every beat the player has to act on leaves something in the banner: the key where one is
+    /// taught, the objective line otherwise. Beats that end themselves leave it blank.
+    /// </summary>
+    [Test]
+    public async Task TutorialBasics_BannerMatchesWhatEachBeatAsksFor()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartRound();
+        });
+
+        await pair.RunTicksSync(30);
+        await server.WaitPost(() => tutorial.TrySelectRole(pair.Player!, RoleId, confirmedStub: false));
+        await pair.RunTicksSync(120);
+
+        await server.WaitAssertion(() =>
+        {
+            TutorialCurriculumAssertions.BannerMatchesWhatTheBeatAsksFor(
+                tutorial,
+                server.EntMan,
+                pair.Player!.AttachedEntity!.Value,
+                server.ProtoMan.Index<TutorialRolePrototype>(RoleId));
+        });
+    }
+
+    /// <summary>
+    /// Regression: the crowbar door used to spawn as an ordinary powered airlock, so it opened on
     /// its own and the pry sub-goal could never be satisfied.
     /// </summary>
     [Test]
-    public async Task TutorialBasics_CrowbarGateIsUnpoweredAndNeverAutoOpens()
+    public async Task TutorialBasics_CrowbarDoorIsUnpoweredAndNeverAutoOpens()
     {
         var server = Pair.Server;
         var maps = server.System<TutorialMapSystem>();
         var rooms = server.System<TutorialPracticeRoomSystem>();
+        var tags = server.System<TagSystem>();
         var entMan = server.EntMan;
         var protos = server.ProtoMan;
 
@@ -338,36 +395,43 @@ public sealed class TutorialBasicsTests : GameTest
             var role = protos.Index<TutorialRolePrototype>(RoleId);
             Assert.That(maps.TryLoadTutorialMap(role, out var mapUid, out var gridUid, out _), Is.True);
 
-            var pryGates = new List<EntityUid>();
-            var autoGates = new List<EntityUid>();
-            var query = entMan.EntityQueryEnumerator<TutorialGateDoorComponent, TransformComponent>();
-            while (query.MoveNext(out var uid, out var gate, out var xform))
+            // The pry sub-goal completes on InteractTargetTag with this tag, so that is the door.
+            var pryDoors = new List<EntityUid>();
+            var doorQuery = entMan.EntityQueryEnumerator<DoorComponent, TransformComponent>();
+            while (doorQuery.MoveNext(out var uid, out _, out var xform))
             {
-                if (xform.GridUid != gridUid)
-                    continue;
-
-                (gate.RequirePry ? pryGates : autoGates).Add(uid);
+                if (xform.GridUid == gridUid && tags.HasTag(uid, "TutorialAirlock"))
+                    pryDoors.Add(uid);
             }
 
-            Assert.That(pryGates, Has.Count.EqualTo(1), "exactly one gate should be crowbar practice");
-            var pryGate = pryGates[0];
+            Assert.That(pryDoors, Has.Count.EqualTo(1), "exactly one door should be crowbar practice");
+            var pryDoor = pryDoors[0];
 
-            var tags = server.System<TagSystem>();
             Assert.Multiple(() =>
             {
-                // The pry sub-goal completes on InteractTargetTag with this tag.
-                Assert.That(tags.HasTag(pryGate, "TutorialAirlock"), Is.True);
-                Assert.That(entMan.TryGetComponent<ApcPowerReceiverComponent>(pryGate, out var power), Is.True);
-                Assert.That(power!.PowerDisabled, Is.True, "a powered gate would just open on click");
+                Assert.That(entMan.TryGetComponent<ApcPowerReceiverComponent>(pryDoor, out var power), Is.True);
+                Assert.That(power!.PowerDisabled, Is.True, "a powered door would just open on click");
+                Assert.That(entMan.HasComponent<TutorialToolOnlyPryComponent>(pryDoor), Is.True,
+                    "airlocks inherit PryUnpowered, so without this the drill can be skipped bare-handed");
             });
 
-            // Advancing all the way to the last goal must still leave the pry gate shut.
+            // Advancing all the way to the last goal must still leave the pry door shut, while the
+            // ordinary chamber gates open.
+            var autoGates = new List<EntityUid>();
+            var gateQuery = entMan.EntityQueryEnumerator<TutorialGateDoorComponent, TransformComponent>();
+            while (gateQuery.MoveNext(out var uid, out _, out var xform))
+            {
+                if (xform.GridUid == gridUid)
+                    autoGates.Add(uid);
+            }
+
+            Assert.That(autoGates, Is.Not.Empty, "the chambers are not gated at all");
             rooms.UnlockGatesForGoal(gridUid, role.Goals.Count);
 
             Assert.Multiple(() =>
             {
-                Assert.That(entMan.GetComponent<DoorComponent>(pryGate).State, Is.Not.EqualTo(DoorState.Open),
-                    "crowbar gate must not auto-open");
+                Assert.That(entMan.GetComponent<DoorComponent>(pryDoor).State, Is.Not.EqualTo(DoorState.Open),
+                    "crowbar door must not auto-open");
                 foreach (var gate in autoGates)
                 {
                     Assert.That(entMan.GetComponent<TutorialGateDoorComponent>(gate).Unlocked, Is.True,

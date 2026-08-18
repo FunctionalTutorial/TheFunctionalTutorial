@@ -32,6 +32,7 @@ using Content.Shared.FixedPoint;
 using Content.Shared.GameTicking;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Ghost;
+using Content.Server.Preferences.Managers;
 using Content.Shared.Humanoid;
 using Content.Shared.Humanoid.Prototypes;
 using Content.Shared.IdentityManagement;
@@ -71,6 +72,7 @@ namespace Content.Server._Functional.TutorialServer;
 public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRuleComponent>
 {
     [Dependency] private readonly IChatManager _chat = default!;
+    [Dependency] private readonly IDependencyCollection _deps = default!;
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IPlayerManager _players = default!;
     [Dependency] private readonly IPrototypeManager _protos = default!;
@@ -87,6 +89,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly RespawnRuleSystem _respawn = default!;
     [Dependency] private readonly SharedVisualBodySystem _visualBody = default!;
     [Dependency] private readonly StationSpawningSystem _stationSpawning = default!;
+    [Dependency] private IServerPreferencesManager _prefsManager = default!;
     [Dependency] private readonly StationSystem _station = default!;
     [Dependency] private readonly TutorialMapSystem _tutorialMaps = default!;
     [Dependency] private readonly TutorialPracticeRoomSystem _tutorialRooms = default!;
@@ -453,6 +456,12 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (!ProtoMan.TryIndex<TutorialRolePrototype>(roleId, out var roleProto))
             return;
 
+        if (IsRoleBlockedForPlayer(player, roleProto))
+        {
+            _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-role-species-blocked"));
+            return;
+        }
+
         if (roleProto.Stub && !confirmedStub)
         {
             _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-stub-confirm-needed"));
@@ -586,7 +595,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             _openPickers.Remove(player.UserId);
         }
 
-        var entries = BuildPickerEntries();
+        var entries = BuildPickerEntries(player);
         var eui = new TutorialRolePickerEui(this, entries);
         _openPickers[player.UserId] = eui;
         _eui.OpenEui(eui, player);
@@ -614,8 +623,11 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     /// Builds the role-picker list: Passenger first, then departments, server-specific,
     /// antagonists last. ERT packages are omitted.
     /// </summary>
-    public List<TutorialRolePickerEntry> BuildPickerEntries()
+    /// <param name="player">Whose species decides what comes back blocked; null lists everything.</param>
+    public List<TutorialRolePickerEntry> BuildPickerEntries(ICommonSession? player = null)
     {
+        var species = GetSelectedSpecies(player);
+
         var list = new List<TutorialRolePickerEntry>();
         foreach (var proto in ProtoMan.EnumeratePrototypes<TutorialRolePrototype>())
         {
@@ -629,6 +641,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 Category = proto.Category,
                 SubCategory = proto.SubCategory,
                 Stub = proto.Stub,
+                Order = proto.PickerOrder,
+                BlockedForSpecies = species != null && proto.BlockedSpecies.Contains(species.Value),
             });
         }
 
@@ -636,8 +650,60 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             .OrderBy(e => GetPickerCategoryOrder(e))
             .ThenBy(e => e.Category, StringComparer.Ordinal)
             .ThenBy(e => e.SubCategory ?? string.Empty, StringComparer.Ordinal)
+            .ThenBy(e => e.Order)
             .ThenBy(e => e.DisplayName, StringComparer.Ordinal)
             .ToList();
+    }
+
+    /// <summary>Species on the character this player currently has selected, if any.</summary>
+    private ProtoId<SpeciesPrototype>? GetSelectedSpecies(ICommonSession? player)
+    {
+        if (player == null)
+            return null;
+
+        if (!_prefsManager.TryGetCachedPreferences(player.UserId, out var prefs))
+            return null;
+
+        return prefs.SelectedCharacter.Species;
+    }
+
+    /// <summary>
+    /// Swaps a blocked species out of the profile the body is about to be built from. The picker
+    /// reads the saved slot, which a randomised character is not, so it has to be caught here too.
+    /// EnsureValid re-derives appearance and loadouts so the corrected profile stays coherent.
+    /// </summary>
+    private HumanoidCharacterProfile CoerceBlockedSpecies(
+        ICommonSession player,
+        HumanoidCharacterProfile profile,
+        TutorialRolePrototype roleProto)
+    {
+        if (roleProto.BlockedSpecies.Count == 0 || !roleProto.BlockedSpecies.Contains(profile.Species))
+            return profile;
+
+        var fallback = HumanoidCharacterProfile.DefaultSpecies;
+        if (roleProto.BlockedSpecies.Contains(fallback))
+        {
+            Log.Error($"tutorialRole {roleProto.ID} blocks its own fallback species; spawning {profile.Species} anyway");
+            return profile;
+        }
+
+        Log.Info($"TUTORIAL: {player.Name} spawned as {profile.Species} into {roleProto.ID}, which blocks it; using {fallback}");
+
+        var corrected = profile.WithSpecies(fallback);
+        corrected.EnsureValid(player, _deps);
+        return corrected;
+    }
+
+    /// <summary>
+    /// True when this player's character cannot take the role. Checked again on selection, since
+    /// the picker list is only a suggestion as far as the client is concerned.
+    /// </summary>
+    public bool IsRoleBlockedForPlayer(ICommonSession player, TutorialRolePrototype roleProto)
+    {
+        if (roleProto.BlockedSpecies.Count == 0)
+            return false;
+
+        return GetSelectedSpecies(player) is { } species && roleProto.BlockedSpecies.Contains(species);
     }
 
     /// <summary>
@@ -708,6 +774,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (roleProto.SpawnOffset != System.Numerics.Vector2.Zero)
             spawnCoords = spawnCoords.Offset(roleProto.SpawnOffset);
 
+        profile = CoerceBlockedSpecies(player, profile, roleProto);
+
         var mob = roleProto.SpawnEntity != null
             ? Spawn(roleProto.SpawnEntity.Value, spawnCoords)
             : roleProto.StartingGear != null
@@ -754,6 +822,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         session.SubGoalIndex = 0;
         session.Completed = false;
         session.AwaitingChamberEntryPad = false;
+        session.LastChattedHint = null;
         // Sessions are reused across role reselects; forget where the last coach was projected.
         session.MentorHoloPad = EntityUid.Invalid;
         session.MentorHoloRoom = -1;
@@ -1133,6 +1202,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     /// </summary>
     private void SpawnChamberEntryPads(EntityUid gridUid, TutorialRolePrototype roleProto)
     {
+        // Opted out: don't leave unreferenced glowing markers lying in every chamber.
+        if (!roleProto.ChamberEntryPads)
+            return;
+
         if (!TryComp<TutorialRoomLayoutComponent>(gridUid, out var layout))
             return;
 
@@ -1225,6 +1298,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     /// </summary>
     private bool ShouldAwaitChamberEntryPad(TutorialSessionData session, TutorialRolePrototype role)
     {
+        if (!role.ChamberEntryPads)
+            return false;
+
         var goalIndex = session.GoalIndex;
         if (goalIndex <= 0 || goalIndex >= role.Goals.Count)
             return false;
@@ -1417,6 +1493,19 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     /// </summary>
     private const string TutorialFinishedHint = "tutorial-server-tutorial-finished-hint";
 
+    /// <summary>
+    /// Stands in for a sub-goal once the curriculum runs out, until the session is closed off.
+    /// </summary>
+    private const string CompleteText = "tutorial-server-complete";
+
+    /// <summary>
+    /// A beat that ends itself once the coach has finished asks nothing of the player, so it gets
+    /// no banner: the objective line only says "listen", and it would still be up after she had
+    /// stopped. Acknowledge beats that wait to be clicked through do get one.
+    /// </summary>
+    private static bool IsSelfAdvancingNarration(TutorialSubGoalData sub)
+        => sub.Complete == TutorialStepComplete.Acknowledge && sub.AutoAdvanceSeconds != null;
+
     public void SendControlHint(EntityUid mob, string? locId)
     {
         if (!TryComp<ActorComponent>(mob, out var actor))
@@ -1463,6 +1552,30 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         session.ControlHintShown = true;
         SendControlHint(mob, session.PendingControlHint);
+        EchoControlHintToChat(mob, session);
+    }
+
+    /// <summary>
+    /// Repeats the banner into chat as it goes up, so an instruction the player looked away from
+    /// is still somewhere they can scroll back to.
+    /// </summary>
+    /// <remarks>
+    /// Skips the terminal hints: <see cref="CompleteTutorial"/> dispatches its own sign-off, and
+    /// echoing these would leave two endings in the log.
+    /// </remarks>
+    private void EchoControlHintToChat(EntityUid mob, TutorialSessionData session)
+    {
+        var hint = session.PendingControlHint;
+        if (string.IsNullOrEmpty(hint) ||
+            hint == TutorialFinishedHint ||
+            hint == CompleteText ||
+            hint == session.LastChattedHint)
+        {
+            return;
+        }
+
+        session.LastChattedHint = hint;
+        SendTipChat(mob, Loc.GetString(hint));
     }
 
     public bool TryGetSession(EntityUid mob, out TutorialSessionData session)
@@ -1610,6 +1723,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 {
                     var padRoom = ResolveGoalEnterRoom(role, session.GoalIndex) ?? session.GoalIndex;
                     var pad = CreateChamberEntryPadSubGoal(padRoom);
+                    controlHint = pad.Text;
                     part.StepText = Loc.GetString(pad.Text);
                     part.StepComplete = pad.Complete;
                     part.HintText = Loc.GetString(pad.Hint!);
@@ -1619,6 +1733,11 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 {
                     var sub = goal.SubGoals[session.SubGoalIndex];
                     controlHint = sub.ControlHint;
+
+                    // No control to teach still gets a banner: the objective line is already the
+                    // short imperative the player needs, and a blank corner reads as "nothing to do".
+                    if (string.IsNullOrEmpty(controlHint) && !IsSelfAdvancingNarration(sub))
+                        controlHint = sub.Text;
                     part.StepText = Loc.GetString(sub.Text);
                     part.StepComplete = sub.Complete;
                     part.HintText = string.IsNullOrEmpty(sub.Hint) ? string.Empty : Loc.GetString(sub.Hint);
@@ -1628,7 +1747,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 }
                 else
                 {
-                    part.StepText = Loc.GetString("tutorial-server-complete");
+                    controlHint = CompleteText;
+                    part.StepText = Loc.GetString(CompleteText);
                     part.StepComplete = TutorialStepComplete.Acknowledge;
                     part.HintText = string.Empty;
                     part.StuckHintText = string.Empty;
@@ -1676,6 +1796,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         Dirty(mob, part);
 
+        // Here rather than in AdvanceSubGoal, so a reconnect cannot leave a gate shut behind them.
+        if (session.GridUid != EntityUid.Invalid && role.Goals.Count > 0)
+            _tutorialRooms.RefreshSubGoalGates(session.GridUid, id => HasReachedSubGoal(role, session, id));
+
         // Held back until the coach stops talking — see TutorialGoalSensorSystem.TryReleaseControlHint.
         // Two things competing for the player's eye at once is how they end up reading neither.
         session.PendingControlHint = controlHint;
@@ -1717,6 +1841,27 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         {
             _mentorFollow.RequestCatchUp(session.MentorUid, restart: true);
         }
+    }
+
+    /// <summary>
+    /// True when the player is at, or past, the sub-goal with this id. At, because what is keyed to
+    /// a sub-goal is the staging for it. An unknown id is never reached, so a typo fails shut.
+    /// </summary>
+    private static bool HasReachedSubGoal(TutorialRolePrototype role, TutorialSessionData session, string subGoalId)
+    {
+        for (var g = 0; g < role.Goals.Count; g++)
+        {
+            var subs = role.Goals[g].SubGoals;
+            for (var s = 0; s < subs.Count; s++)
+            {
+                if (subs[s].Id != subGoalId)
+                    continue;
+
+                return session.GoalIndex > g || (session.GoalIndex == g && session.SubGoalIndex >= s);
+            }
+        }
+
+        return false;
     }
 
     private static bool TryGetCurrentSubGoalId(

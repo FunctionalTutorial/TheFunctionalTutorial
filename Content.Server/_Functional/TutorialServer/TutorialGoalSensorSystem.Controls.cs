@@ -104,37 +104,46 @@ public sealed partial class TutorialGoalSensorSystem
     }
 
     private bool IsCoachStillSpeaking(EntityUid uid)
+        => ResolveCoachSpeech(uid) != TutorialCoachSpeech.Done;
+
+    private TutorialCoachSpeech ResolveCoachSpeech(EntityUid uid)
     {
         if (!_tutorial.TryGetSession(uid, out var session))
-            return false;
+            return TutorialCoachSpeech.Done;
 
         var mentor = session.MentorUid;
         if (mentor == EntityUid.Invalid || TerminatingOrDeleted(mentor))
-            return false;
+            return TutorialCoachSpeech.Done;
 
         if (!TryComp<TutorialParticipantComponent>(uid, out var part) ||
             !_tutorial.TryGetCurrentSubGoal(uid, part, out var sub))
-            return false;
+            return TutorialCoachSpeech.Done;
 
-        return _trainer.IsMidSegment(mentor, sub.Id);
+        return _trainer.ResolveSegmentState(mentor, sub.Id);
     }
 
     /// <summary>
     /// Releases the sub-goal's control hint once the coach has said her piece.
     /// </summary>
     /// <remarks>
-    /// The timeout is the safety net: a coach the player never walks up to, or a sub-goal with no
-    /// authored lines, must not be able to leave the banner permanently blank.
+    /// The timeout is the safety net for a coach the player never walks up to, so it only applies
+    /// while she is waiting to start. Timing out a segment already in progress put the banner up in
+    /// the middle of what she was saying, which is what it was meant to stay out of the way of.
     /// </remarks>
     private void TryReleaseControlHint(EntityUid uid)
     {
         if (!_tutorial.HasPendingControlHint(uid))
             return;
 
-        if (IsCoachStillSpeaking(uid) &&
-            (!_tutorial.TryGetSubGoalElapsed(uid, out var elapsed) ||
-             elapsed.TotalSeconds < ControlHintFallbackSeconds))
-            return;
+        switch (ResolveCoachSpeech(uid))
+        {
+            case TutorialCoachSpeech.Speaking:
+                return;
+            case TutorialCoachSpeech.Waiting
+                when !_tutorial.TryGetSubGoalElapsed(uid, out var elapsed) ||
+                     elapsed.TotalSeconds < ControlHintFallbackSeconds:
+                return;
+        }
 
         _tutorial.ShowPendingControlHint(uid);
     }

@@ -116,6 +116,13 @@ public sealed partial class TutorialSessionData
     /// </summary>
     [DataField]
     public bool ControlHintShown;
+
+    /// <summary>
+    /// Last hint echoed into chat, so a beat that banners what the one before it already said does
+    /// not say it twice.
+    /// </summary>
+    [DataField]
+    public string? LastChattedHint;
 }
 
 public enum TutorialSessionState : byte

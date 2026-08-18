@@ -110,7 +110,7 @@ tutorial-basics-nanci-stand-done-3 = Continue to the next chamber.
 ## Chamber 4. climbing
 
 tutorial-basics-sg-climb-table = Climb onto the table.
-tutorial-basics-control-climb-table = Drag yourself onto the table, or click it with [color=#FFD24A][bold][keybind="AltActivateItemInWorld"][/bold][/color] held.
+tutorial-basics-control-climb-table = Drag yourself onto the table, or press [color=#FFD24A][bold][keybind="AltActivateItemInWorld"][/bold][/color].
 tutorial-basics-nanci-climb-table-1 = This chamber contains a table.
 tutorial-basics-nanci-climb-table-2 = The table is between you and the exit.
 tutorial-basics-nanci-climb-table-3 = Usually you walk around a table.

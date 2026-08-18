@@ -15,6 +15,10 @@
     layers:
     - state: internals
     - state: emergencytank
+  #Wizden: added tag
+  - type: Tag
+    tags:
+    - TutorialSurvivalBox
 
 - type: entity
   parent: BoxSurvival

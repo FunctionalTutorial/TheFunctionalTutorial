@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Shared.AlertLevel;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
+using Content.Shared.Humanoid.Prototypes;
 using Content.Shared.Preferences.Loadouts;
 using Content.Shared.Research.Prototypes;
 using Content.Shared.Roles;
@@ -210,6 +211,27 @@ public sealed partial class TutorialRolePrototype : IPrototype
     /// </summary>
     [DataField]
     public TutorialMentorMode MentorMode = TutorialMentorMode.Walk;
+
+    /// <summary>
+    /// Sort key inside <see cref="Category"/>, lowest first, ties falling back to display name. In
+    /// "Start Here" the reading order is the teaching order and must not be alphabetical luck.
+    /// </summary>
+    [DataField]
+    public int PickerOrder;
+
+    /// <summary>
+    /// Whether entering a chamber inserts a "stand on the glowing pad" check-in first. Worth it
+    /// where a bench of machinery needs the player parked somewhere known, an errand where not.
+    /// </summary>
+    [DataField]
+    public bool ChamberEntryPads = true;
+
+    /// <summary>
+    /// Species that cannot take this tutorial, shown greyed in the picker. For curricula a species
+    /// arrives having already satisfied, e.g. Vox and their tank harness in the survival chamber.
+    /// </summary>
+    [DataField]
+    public List<ProtoId<SpeciesPrototype>> BlockedSpecies = new();
 }
 
 /// <summary>
@@ -297,6 +319,7 @@ public sealed partial class TutorialSubGoalData
     /// should mention keys, and it should say nothing else — e.g.
     /// <c>Use [keybind="MoveUp"][keybind="MoveLeft"][keybind="MoveDown"][keybind="MoveRight"] to move.</c>
     /// Markup is resolved client-side, so the player sees their own bindings.
+    /// Omitting it falls the banner back to <see cref="Text"/>, so the corner is never blank.
     /// </summary>
     [DataField]
     public string? ControlHint;
@@ -360,6 +383,25 @@ public sealed partial class TutorialSubGoalData
     /// </summary>
     [DataField]
     public string? Marker;
+
+    /// <summary>
+    /// Equipment slot qualifier: on <see cref="TutorialStepComplete.StowItem"/> the item must be in
+    /// that slot rather than anywhere on the body, on
+    /// <see cref="TutorialStepComplete.StorageOpened"/> it is where the opened storage is worn.
+    /// </summary>
+    [DataField]
+    public string? Slot;
+
+    /// <summary>
+    /// Component an item must carry to satisfy a possession sensor, for drills that must not name a
+    /// prototype: a nitrogen and an oxygen breather carry different tanks, both <c>GasTank</c>.
+    /// </summary>
+    [DataField]
+    public string? Component;
+
+    /// <summary>Anchor state <see cref="TutorialStepComplete.TargetAnchored"/> waits for.</summary>
+    [DataField]
+    public bool Anchored;
 
     /// <summary>
     /// Reagent prototype for <see cref="TutorialStepComplete.SolutionContains"/>.
@@ -857,4 +899,64 @@ public enum TutorialStepComplete : byte
 
     /// <summary>Player returned a rotated camera to the default orientation.</summary>
     CameraResetDone,
+
+    /// <summary>Player made their other hand the active one.</summary>
+    PlayerSwappedHands,
+
+    /// <summary>
+    /// Player examined an entity carrying <see cref="TutorialSubGoalData.Tag"/>. The target also
+    /// needs <c>TutorialSensorTarget</c>, so this is not a subscription on every examine.
+    /// </summary>
+    ExamineTag,
+
+    /// <summary>
+    /// Player used a tagged world target with the activate key specifically. Unlike
+    /// <see cref="InteractTargetTag"/> a plain click does not count.
+    /// </summary>
+    ActivateInWorldTag,
+
+    /// <summary>Player threw a matching <see cref="TutorialSubGoalData.Entity"/>, hit or miss.</summary>
+    ThrewItem,
+
+    /// <summary>Player opened a storage UI, matched by tag, prototype or worn slot.</summary>
+    StorageOpened,
+
+    /// <summary>
+    /// A tagged disposal unit is engaged. Flush is its top-priority alt verb, so this is proof the
+    /// player used the alternate action.
+    /// </summary>
+    DisposalEngaged,
+
+    /// <summary>Player has a breath tool equipped, read off <c>Internals</c> so any species passes.</summary>
+    BreathToolEquipped,
+
+    /// <summary>Player has internals connected to a gas tank.</summary>
+    InternalsOn,
+
+    /// <summary>
+    /// The item in the player's <i>active</i> hand matches the spec, where <see cref="HoldItem"/>
+    /// accepts either hand. For drills teaching that the active hand is the one that acts.
+    /// </summary>
+    ActiveHandItem,
+
+    /// <summary>
+    /// A tagged entity's <c>Transform.Anchored</c> matches <see cref="TutorialSubGoalData.Anchored"/>.
+    /// The finished bolt, not the click, so an interrupted do-after cannot advance the drill.
+    /// </summary>
+    TargetAnchored,
+
+    /// <summary>Nothing tagged is left on the map: for drills that end by consuming their target.</summary>
+    TargetAbsent,
+
+    /// <summary>Every one of the player's hands is empty.</summary>
+    HandsEmpty,
+
+    /// <summary>
+    /// A tagged entity is parked on <see cref="TutorialSubGoalData.Marker"/> and nobody is pulling
+    /// it. The release matters: letting go is a separate control from taking hold.
+    /// </summary>
+    TargetParkedAtMarker,
+
+    /// <summary>Player's internals are disconnected; the counterpart to <see cref="InternalsOn"/>.</summary>
+    InternalsOff,
 }
