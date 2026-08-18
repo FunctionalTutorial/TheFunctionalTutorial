@@ -51,6 +51,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
                 trainer.LastSpokenSubGoal = subGoalId;
                 trainer.PendingLines.Clear();
                 trainer.NextLineAt = null;
+                trainer.LinesSpoken = 0;
 
                 // Don't pile IC speech on top of an open tutorial prompt.
                 if (!_tutorial.IsGuideUiOpen(playerUid))
@@ -91,6 +92,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
             var next = trainer.PendingLines.Dequeue();
             trainer.NextLineAt = now + ResolveNextLineDelay(trainer);
             trainer.HasSpoken = true;
+            trainer.LinesSpoken++;
             Dirty(trainerUid, trainer);
 
             SpeakLine(trainerUid, playerUid, subGoalId, next.Text);
@@ -98,6 +100,31 @@ public sealed class TutorialTrainerSystem : EntitySystem
             if (next.ShowControlHint)
                 _tutorial.ShowPendingControlHint(playerUid);
         }
+    }
+
+    /// <summary>
+    /// How many lines of <paramref name="subGoalId"/> this player's coach has spoken. False when no
+    /// coach is on that segment, which callers must read as "no cue is coming", not as zero.
+    /// </summary>
+    public bool TryGetLinesSpoken(EntityUid player, string subGoalId, out int spoken)
+    {
+        spoken = 0;
+
+        var coaches = EntityQueryEnumerator<TutorialTrainerComponent, TutorialMentorComponent>();
+        while (coaches.MoveNext(out _, out var trainer, out var mentor))
+        {
+            if (mentor.PlayerUid != player)
+                continue;
+
+            // A different segment means her count belongs to another beat.
+            if (!string.Equals(trainer.LastSpokenSubGoal, subGoalId, StringComparison.Ordinal))
+                return false;
+
+            spoken = trainer.LinesSpoken;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

@@ -15,6 +15,13 @@ public sealed partial class TutorialGateDoorComponent : Component
     [DataField]
     public int UnlockAtGoalIndex = 1;
 
+    /// <summary>
+    /// Sub-goal that unlocks this gate instead of a goal index, for a door that opens partway
+    /// through a chamber. Set, it overrides <see cref="UnlockAtGoalIndex"/> entirely.
+    /// </summary>
+    [DataField]
+    public string? UnlockAtSubGoalId;
+
     [DataField]
     public bool Unlocked;
 

@@ -22,6 +22,12 @@ public sealed class TutorialRolePickerEntry
     public string Category { get; set; } = string.Empty;
     public string? SubCategory { get; set; }
     public bool Stub { get; set; }
+
+    /// <summary>Sort key inside the category, lowest first. See TutorialRolePrototype.PickerOrder.</summary>
+    public int Order { get; set; }
+
+    /// <summary>Set when this player's species cannot take the role; shown greyed, refused if asked for.</summary>
+    public bool BlockedForSpecies { get; set; }
 }
 
 [Serializable, NetSerializable]

@@ -230,9 +230,15 @@ public sealed partial class TutorialMapSystem : EntitySystem
         gridUid = EntityUid.Invalid;
         spawnCoords = default;
 
+        // LogOrphanedGrids off: loading a curriculum grid onto its own map is exactly what that
+        // option warns about, and the error it logs fails any test that starts a tutorial.
         var opts = new MapLoadOptions
         {
-            DeserializationOptions = DeserializationOptions.Default with { InitializeMaps = true },
+            DeserializationOptions = DeserializationOptions.Default with
+            {
+                InitializeMaps = true,
+                LogOrphanedGrids = false,
+            },
         };
 
         if (!_mapLoader.TryLoadGeneric(path, out var result, opts) || result.Grids.Count == 0)

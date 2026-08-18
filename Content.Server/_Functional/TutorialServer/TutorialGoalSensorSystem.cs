@@ -114,6 +114,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
     [Dependency] private readonly ShuttleSystem _shuttles = default!;
     [Dependency] private readonly StationSystem _station = default!;
     [Dependency] private TutorialServerRuleSystem _tutorial = default!;
+    [Dependency] private IComponentFactory _compFactory = default!;
 
     private readonly HashSet<EntityUid> _changelingDevoured = new();
     private readonly HashSet<EntityUid> _changelingStung = new();
@@ -189,6 +190,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             after: [typeof(DevourSystem)]);
 
         InitializeControls();
+        InitializeItems();
     }
 
     public override void Update(float frameTime)
@@ -269,7 +271,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                         _tutorial.AdvanceSubGoal(uid);
                     break;
                 case TutorialStepComplete.WearItem:
-                    if (sub.Entity != null && IsWearingProto(uid, sub.Entity.Value))
+                    if (IsWearingMatch(uid, sub))
                         _tutorial.AdvanceSubGoal(uid);
                     break;
                 case TutorialStepComplete.TargetPowerDisabled:
@@ -416,6 +418,24 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 case TutorialStepComplete.BorgModuleSelected:
                     if (IsBorgModuleSelected(uid, sub))
                         _tutorial.AdvanceSubGoal(uid);
+                    break;
+                case TutorialStepComplete.PlayerSwappedHands:
+                case TutorialStepComplete.StorageOpened:
+                case TutorialStepComplete.DisposalEngaged:
+                case TutorialStepComplete.BreathToolEquipped:
+                case TutorialStepComplete.InternalsOn:
+                case TutorialStepComplete.ActiveHandItem:
+                case TutorialStepComplete.TargetAnchored:
+                case TutorialStepComplete.TargetAbsent:
+                case TutorialStepComplete.HandsEmpty:
+                case TutorialStepComplete.TargetParkedAtMarker:
+                case TutorialStepComplete.InternalsOff:
+                    UpdateItemSensors(uid, xform, sub);
+                    break;
+                case TutorialStepComplete.ExamineTag:
+                case TutorialStepComplete.ActivateInWorldTag:
+                case TutorialStepComplete.ThrewItem:
+                    // Discrete actions - handled by the event subscriptions in the Items partial.
                     break;
                 case TutorialStepComplete.Acknowledge:
                 case TutorialStepComplete.PlayerCrawling:
@@ -1209,10 +1229,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         if (!_tutorial.TryGetCurrentSubGoal(ent, ent.Comp, out var sub))
             return;
 
-        if (sub.Complete != TutorialStepComplete.WearItem || sub.Entity == null)
+        if (sub.Complete != TutorialStepComplete.WearItem)
             return;
 
-        if (!IsWearingProto(ent, sub.Entity.Value))
+        if (!IsWearingMatch(ent, sub))
             return;
 
         _tutorial.AdvanceSubGoal(ent);
@@ -1328,10 +1348,10 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
 
     private void OnActivateInWorld(Entity<TutorialParticipantComponent> ent, ref UserActivateInWorldEvent args)
     {
-        if (args.Handled)
+        if (!_tutorial.TryGetCurrentSubGoal(ent, ent.Comp, out var sub))
             return;
 
-        if (!_tutorial.TryGetCurrentSubGoal(ent, ent.Comp, out var sub))
+        if (args.Handled)
             return;
 
         if (sub.Complete != TutorialStepComplete.InteractTargetTag)
@@ -1484,33 +1504,33 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         switch (sub.Complete)
         {
             case TutorialStepComplete.HoldItem:
-                if (sub.Entity == null)
+                if (!HasItemSpec(sub))
                     return;
-                if (!IsHoldingProto(mob, sub.Entity.Value))
+                if (!IsHoldingMatch(mob, sub))
                     return;
                 break;
             case TutorialStepComplete.HoldTag:
                 if (string.IsNullOrEmpty(sub.Tag))
                     return;
-                if (!IsHoldingTag(mob, sub.Tag))
+                if (!IsHoldingTag(mob, sub.Tag, sub.MinCount))
                     return;
                 break;
             case TutorialStepComplete.ObtainItem:
-                if (sub.Entity == null)
+                if (!HasItemSpec(sub))
                     return;
                 // PillCanister + MinCount: require that many items inside the canister (filled pills).
-                int? storageCount = sub.Entity.Value.Id == "PillCanister" && sub.MinCount > 0
+                int? storageCount = sub.Entity?.Id == "PillCanister" && sub.MinCount > 0
                     ? sub.MinCount
                     : null;
-                if (!HasProto(mob, sub.Entity.Value, requireStorageCount: storageCount))
+                if (!HasMatch(mob, sub, requireStorageCount: storageCount))
                     return;
                 break;
             case TutorialStepComplete.StowItem:
-                if (sub.Entity == null)
+                if (!HasItemSpec(sub))
                     return;
-                if (IsHoldingProto(mob, sub.Entity.Value))
+                if (IsHoldingMatch(mob, sub))
                     return;
-                if (!HasStowedProto(mob, sub.Entity.Value))
+                if (!HasStowedMatch(mob, sub))
                     return;
                 break;
             default:
@@ -1520,39 +1540,80 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         _tutorial.AdvanceSubGoal(mob);
     }
 
-    private bool IsHoldingProto(EntityUid mob, EntProtoId proto)
+    /// <summary>
+    /// True when the sub-goal names an item at all. Every possession sensor bails when it is false,
+    /// so naming nothing stalls the drill instead of passing on whatever is in reach.
+    /// </summary>
+    private static bool HasItemSpec(TutorialSubGoalData sub)
+    {
+        return sub.Entity != null || !string.IsNullOrEmpty(sub.Component) || !string.IsNullOrEmpty(sub.Tag);
+    }
+
+    /// <summary>
+    /// True when an item is the one the sub-goal asked for; every named criterion must hold. Naming
+    /// only the component is how a drill stays species-agnostic.
+    /// </summary>
+    private bool MatchesItemSpec(EntityUid item, TutorialSubGoalData sub)
+    {
+        if (sub.Entity != null && !IsProto(item, sub.Entity.Value))
+            return false;
+
+        // Tag as well as prototype, so "a crowbar" accepts whichever variant the mapper placed.
+        if (!string.IsNullOrEmpty(sub.Tag) && !_tags.HasTag(item, (ProtoId<TagPrototype>) sub.Tag))
+            return false;
+
+        return string.IsNullOrEmpty(sub.Component) || HasComponentNamed(item, sub.Component);
+    }
+
+    private bool HasComponentNamed(EntityUid uid, string componentName)
+    {
+        return _compFactory.TryGetRegistration(componentName, out var registration) &&
+               EntityManager.HasComponent(uid, registration.Type);
+    }
+
+    private bool IsHoldingMatch(EntityUid mob, TutorialSubGoalData sub)
     {
         foreach (var held in _hands.EnumerateHeld(mob))
         {
-            if (IsProto(held, proto))
+            if (MatchesItemSpec(held, sub))
                 return true;
         }
 
         return false;
     }
 
-    private bool IsHoldingTag(EntityUid mob, string tag)
+    /// <summary>
+    /// True when the player holds at least <paramref name="minCount"/> items carrying the tag, so
+    /// "a tool in each hand" is one drill rather than two ordered ones.
+    /// </summary>
+    private bool IsHoldingTag(EntityUid mob, string tag, int minCount = 1)
     {
+        var needed = Math.Max(1, minCount);
+        var found = 0;
+
         foreach (var held in _hands.EnumerateHeld(mob))
         {
-            if (_tags.HasTag(held, (ProtoId<TagPrototype>) tag))
+            if (!_tags.HasTag(held, (ProtoId<TagPrototype>) tag))
+                continue;
+
+            if (++found >= needed)
                 return true;
         }
 
         return false;
     }
 
-    private bool HasProto(EntityUid mob, EntProtoId proto, int? requireStorageCount = null)
+    private bool HasMatch(EntityUid mob, TutorialSubGoalData sub, int? requireStorageCount = null)
     {
         foreach (var held in _hands.EnumerateHeld(mob))
         {
-            if (IsProto(held, proto) && MatchesStorageCount(held, requireStorageCount))
+            if (MatchesItemSpec(held, sub) && MatchesStorageCount(held, requireStorageCount))
                 return true;
         }
 
         foreach (var item in _inventory.GetHandOrInventoryEntities(mob))
         {
-            if (IsProto(item, proto) && MatchesStorageCount(item, requireStorageCount))
+            if (MatchesItemSpec(item, sub) && MatchesStorageCount(item, requireStorageCount))
                 return true;
         }
 
@@ -1571,24 +1632,41 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
     }
 
     /// <summary>
-    /// True when the proto is equipped in an inventory slot or inside equipped storage (not held).
+    /// True when a matching item is equipped, or is inside equipped storage; hands are the caller's
+    /// business. <see cref="TutorialSubGoalData.Slot"/> narrows it to one slot, which is all that
+    /// separates "into your bag", "onto your belt" and "into your suit".
     /// </summary>
-    private bool HasStowedProto(EntityUid mob, EntProtoId proto)
+    private bool HasStowedMatch(EntityUid mob, TutorialSubGoalData sub)
     {
+        if (!string.IsNullOrEmpty(sub.Slot))
+        {
+            return _inventory.TryGetSlotEntity(mob, sub.Slot, out var equipped) &&
+                   SlotHoldsMatch(equipped.Value, sub);
+        }
+
         var enumerator = _inventory.GetSlotEnumerator(mob);
         while (enumerator.NextItem(out var item))
         {
-            if (IsProto(item, proto))
+            if (SlotHoldsMatch(item, sub))
                 return true;
+        }
 
-            if (!TryComp<Content.Shared.Storage.StorageComponent>(item, out var storage))
-                continue;
+        return false;
+    }
 
-            foreach (var stored in storage.Container.ContainedEntities)
-            {
-                if (IsProto(stored, proto))
-                    return true;
-            }
+    /// <summary>True when the equipped item is the match, or is storage containing it.</summary>
+    private bool SlotHoldsMatch(EntityUid equipped, TutorialSubGoalData sub)
+    {
+        if (MatchesItemSpec(equipped, sub))
+            return true;
+
+        if (!TryComp<StorageComponent>(equipped, out var storage))
+            return false;
+
+        foreach (var stored in storage.Container.ContainedEntities)
+        {
+            if (MatchesItemSpec(stored, sub))
+                return true;
         }
 
         return false;
@@ -1751,12 +1829,25 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         return false;
     }
 
-    private bool IsWearingProto(EntityUid mob, EntProtoId proto)
+    /// <summary>
+    /// True when a matching item is worn. <see cref="TutorialSubGoalData.Slot"/> narrows it to one
+    /// slot, which is what separates a breath mask from an EVA helmet: both are a BreathMask.
+    /// </summary>
+    private bool IsWearingMatch(EntityUid mob, TutorialSubGoalData sub)
     {
+        if (!HasItemSpec(sub))
+            return false;
+
+        if (!string.IsNullOrEmpty(sub.Slot))
+        {
+            return _inventory.TryGetSlotEntity(mob, sub.Slot, out var worn) &&
+                   MatchesItemSpec(worn.Value, sub);
+        }
+
         var enumerator = _inventory.GetSlotEnumerator(mob);
         while (enumerator.NextItem(out var item))
         {
-            if (IsProto(item, proto))
+            if (MatchesItemSpec(item, sub))
                 return true;
         }
 
@@ -1987,6 +2078,12 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             else if (_containers.TryGetContainer(uid, "entity_storage", out var entityStorage))
             {
                 count = entityStorage.ContainedEntities.Count;
+            }
+            else if (TryComp<ContainerManagerComponent>(uid, out var manager))
+            {
+                // Anything else that holds things, e.g. a disposal unit's own named container.
+                foreach (var container in _containers.GetAllContainers(uid, manager))
+                    count += container.ContainedEntities.Count;
             }
             else
             {

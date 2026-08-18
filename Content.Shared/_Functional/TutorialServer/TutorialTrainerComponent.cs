@@ -39,6 +39,13 @@ public sealed partial class TutorialTrainerComponent : Component
     public TimeSpan? NextLineAt;
 
     /// <summary>
+    /// Lines of <see cref="LastSpokenSubGoal"/> said out loud, reset when the segment changes, so a
+    /// staged effect can land on a line of the script rather than on a stopwatch.
+    /// </summary>
+    [ViewVariables]
+    public int LinesSpoken;
+
+    /// <summary>
     /// How close the player must get before the coach starts a queued segment. Null speaks as soon
     /// as the sub-goal becomes current, which is what walking mentors want since they follow you.
     /// A holopad coach uses a small radius so the player walks up to them rather than catching

@@ -631,23 +631,3 @@
   - room: 2
     id: TableCounterMetal
     offset: 0, 1.5
-
-# Interim geometry for the Basic Controls curriculum, until the hand-authored
-# Maps/_Functional/TutorialServer/Roles/Basics.yml exists. Wide chambers so the walking and
-# crawling lanes take long enough to feel like drills. Props come from the role's practiceSpawns.
-- type: tutorialRoom
-  id: TutorialRoomBasics
-  chamberWidth: 13
-  chamberHeight: 7
-  maxChambers: 8
-  floorTile: FloorWhite
-  altFloorTile: FloorSteel
-  wall: WallSolid
-  light: AlwaysPoweredWallLight
-  lightSpacing: 4
-  windows: true
-  gateDoor: TutorialChamberGate
-  # Access Control goal: the chamber 6 -> 7 gate is crowbar practice. It spawns unpowered and is
-  # never auto-opened, so prying it is the only way through.
-  pryGateAtGoalIndex: 7
-  pryGateDoor: TutorialAirlockMaint
