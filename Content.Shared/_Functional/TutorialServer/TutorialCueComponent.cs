@@ -17,7 +17,8 @@ public sealed partial class TutorialCueComponent : Component
 
     /// <summary>
     /// Fire this long after the sub-goal starts. With <see cref="AfterLine"/> set it is only the
-    /// backstop for a beat the coach never speaks, and still bounds how late the effect can land.
+    /// backstop for a beat the coach never speaks: while she is working toward that line it is
+    /// pushed back, so it can never go off partway through what it was meant to punctuate.
     /// </summary>
     [DataField]
     public TimeSpan Delay = TimeSpan.Zero;

@@ -4,8 +4,8 @@ meta:
   engineVersion: 284.0.2
   forkId: ""
   forkVersion: ""
-  time: 08/15/2026 20:36:22
-  entityCount: 657
+  time: 08/18/2026 15:09:10
+  entityCount: 676
 maps: []
 grids:
 - 1
@@ -352,6 +352,8 @@ entities:
           decals:
             34: 4,0
             137: 38,-6
+            207: 27,-2
+            208: 27,4
         - node:
             id: FlowersBROne
             color: '#FFFFFFFF'
@@ -502,11 +504,6 @@ entities:
       - 326
 - proto: AlwaysPoweredWallLight
   entities:
-  - uid: 2
-    components:
-    - type: Transform
-      parent: 1
-      pos: -4.5,2.5
   - uid: 111
     components:
     - type: Transform
@@ -604,6 +601,11 @@ entities:
     - type: Transform
       parent: 1
       pos: 7.5,2.5
+  - uid: 669
+    components:
+    - type: Transform
+      parent: 1
+      pos: -3.5,2.5
 - proto: AtmosFixBlockerMarker
   entities:
   - uid: 499
@@ -2109,6 +2111,27 @@ entities:
     - type: Transform
       parent: 1
       pos: 49.5,-15.5
+- proto: PosterContrabandRobustSoftdrinks
+  entities:
+  - uid: 671
+    components:
+    - type: Transform
+      parent: 1
+      pos: 29.5,-0.5
+- proto: PosterContrabandTools
+  entities:
+  - uid: 673
+    components:
+    - type: Transform
+      parent: 1
+      pos: 41.5,-7.5
+- proto: PosterContrabandUnreadableAnnouncement
+  entities:
+  - uid: 672
+    components:
+    - type: Transform
+      parent: 1
+      pos: 34.5,-2.5
 - proto: PosterContrabandWehWatches
   entities:
   - uid: 200
@@ -2117,6 +2140,27 @@ entities:
       parent: 1
       rot: -1.5707963267948966 rad
       pos: 35.5,3.5
+- proto: PosterLegitCohibaRobustoAd
+  entities:
+  - uid: 2
+    components:
+    - type: Transform
+      parent: 1
+      pos: 10.5,-0.5
+- proto: PosterLegitGetYourLEGS
+  entities:
+  - uid: 670
+    components:
+    - type: Transform
+      parent: 1
+      pos: 21.5,-0.5
+- proto: PosterLegitJustAWeekAway
+  entities:
+  - uid: 675
+    components:
+    - type: Transform
+      parent: 1
+      pos: 70.5,-6.5
 - proto: PosterLegitTyrone
   entities:
   - uid: 39
@@ -2790,6 +2834,13 @@ entities:
     - type: Transform
       parent: 1
       pos: 84.5,-5.5
+- proto: SignEVA
+  entities:
+  - uid: 674
+    components:
+    - type: Transform
+      parent: 1
+      pos: 48.5,-6.5
 - proto: SignRedFive
   entities:
   - uid: 506
@@ -2832,6 +2883,13 @@ entities:
     - type: Transform
       parent: 1
       pos: 21.5,1.5
+- proto: SignSpace
+  entities:
+  - uid: 676
+    components:
+    - type: Transform
+      parent: 1
+      pos: 64.5,-7.5
 - proto: SpaceVillainArcade
   entities:
   - uid: 526
@@ -2887,6 +2945,68 @@ entities:
       parent: 1
       rot: 3.141592653589793 rad
       pos: 82.5,-4.5
+- proto: SurveillanceCameraConstructed
+  entities:
+  - uid: 658
+    components:
+    - type: Transform
+      parent: 1
+      pos: 0.5,-1.5
+  - uid: 659
+    components:
+    - type: Transform
+      parent: 1
+      rot: 1.5707963267948966 rad
+      pos: 9.5,2.5
+  - uid: 660
+    components:
+    - type: Transform
+      parent: 1
+      pos: 15.5,-1.5
+  - uid: 661
+    components:
+    - type: Transform
+      parent: 1
+      rot: 1.5707963267948966 rad
+      pos: 28.5,2.5
+  - uid: 662
+    components:
+    - type: Transform
+      parent: 1
+      pos: 34.5,-1.5
+  - uid: 663
+    components:
+    - type: Transform
+      parent: 1
+      rot: -1.5707963267948966 rad
+      pos: 35.5,-2.5
+  - uid: 664
+    components:
+    - type: Transform
+      parent: 1
+      pos: 44.5,-7.5
+  - uid: 665
+    components:
+    - type: Transform
+      parent: 1
+      rot: 3.141592653589793 rad
+      pos: 51.5,-3.5
+  - uid: 666
+    components:
+    - type: Transform
+      parent: 1
+      pos: 67.5,-7.5
+  - uid: 667
+    components:
+    - type: Transform
+      parent: 1
+      pos: 74.5,-6.5
+  - uid: 668
+    components:
+    - type: Transform
+      parent: 1
+      rot: -1.5707963267948966 rad
+      pos: 79.5,-3.5
 - proto: TableReinforced
   entities:
   - uid: 90

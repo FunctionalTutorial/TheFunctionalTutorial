@@ -822,6 +822,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         session.SubGoalIndex = 0;
         session.Completed = false;
         session.AwaitingChamberEntryPad = false;
+        session.LastChattedHint = null;
         // Sessions are reused across role reselects; forget where the last coach was projected.
         session.MentorHoloPad = EntityUid.Invalid;
         session.MentorHoloRoom = -1;
@@ -1492,6 +1493,19 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     /// </summary>
     private const string TutorialFinishedHint = "tutorial-server-tutorial-finished-hint";
 
+    /// <summary>
+    /// Stands in for a sub-goal once the curriculum runs out, until the session is closed off.
+    /// </summary>
+    private const string CompleteText = "tutorial-server-complete";
+
+    /// <summary>
+    /// A beat that ends itself once the coach has finished asks nothing of the player, so it gets
+    /// no banner: the objective line only says "listen", and it would still be up after she had
+    /// stopped. Acknowledge beats that wait to be clicked through do get one.
+    /// </summary>
+    private static bool IsSelfAdvancingNarration(TutorialSubGoalData sub)
+        => sub.Complete == TutorialStepComplete.Acknowledge && sub.AutoAdvanceSeconds != null;
+
     public void SendControlHint(EntityUid mob, string? locId)
     {
         if (!TryComp<ActorComponent>(mob, out var actor))
@@ -1538,6 +1552,30 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         session.ControlHintShown = true;
         SendControlHint(mob, session.PendingControlHint);
+        EchoControlHintToChat(mob, session);
+    }
+
+    /// <summary>
+    /// Repeats the banner into chat as it goes up, so an instruction the player looked away from
+    /// is still somewhere they can scroll back to.
+    /// </summary>
+    /// <remarks>
+    /// Skips the terminal hints: <see cref="CompleteTutorial"/> dispatches its own sign-off, and
+    /// echoing these would leave two endings in the log.
+    /// </remarks>
+    private void EchoControlHintToChat(EntityUid mob, TutorialSessionData session)
+    {
+        var hint = session.PendingControlHint;
+        if (string.IsNullOrEmpty(hint) ||
+            hint == TutorialFinishedHint ||
+            hint == CompleteText ||
+            hint == session.LastChattedHint)
+        {
+            return;
+        }
+
+        session.LastChattedHint = hint;
+        SendTipChat(mob, Loc.GetString(hint));
     }
 
     public bool TryGetSession(EntityUid mob, out TutorialSessionData session)
@@ -1685,6 +1723,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 {
                     var padRoom = ResolveGoalEnterRoom(role, session.GoalIndex) ?? session.GoalIndex;
                     var pad = CreateChamberEntryPadSubGoal(padRoom);
+                    controlHint = pad.Text;
                     part.StepText = Loc.GetString(pad.Text);
                     part.StepComplete = pad.Complete;
                     part.HintText = Loc.GetString(pad.Hint!);
@@ -1694,6 +1733,11 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 {
                     var sub = goal.SubGoals[session.SubGoalIndex];
                     controlHint = sub.ControlHint;
+
+                    // No control to teach still gets a banner: the objective line is already the
+                    // short imperative the player needs, and a blank corner reads as "nothing to do".
+                    if (string.IsNullOrEmpty(controlHint) && !IsSelfAdvancingNarration(sub))
+                        controlHint = sub.Text;
                     part.StepText = Loc.GetString(sub.Text);
                     part.StepComplete = sub.Complete;
                     part.HintText = string.IsNullOrEmpty(sub.Hint) ? string.Empty : Loc.GetString(sub.Hint);
@@ -1703,7 +1747,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 }
                 else
                 {
-                    part.StepText = Loc.GetString("tutorial-server-complete");
+                    controlHint = CompleteText;
+                    part.StepText = Loc.GetString(CompleteText);
                     part.StepComplete = TutorialStepComplete.Acknowledge;
                     part.HintText = string.Empty;
                     part.StuckHintText = string.Empty;

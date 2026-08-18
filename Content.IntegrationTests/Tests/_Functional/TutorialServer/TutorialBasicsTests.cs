@@ -345,6 +345,38 @@ public sealed class TutorialBasicsTests : GameTest
     }
 
     /// <summary>
+    /// Every beat the player has to act on leaves something in the banner: the key where one is
+    /// taught, the objective line otherwise. Beats that end themselves leave it blank.
+    /// </summary>
+    [Test]
+    public async Task TutorialBasics_BannerMatchesWhatEachBeatAsksFor()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartRound();
+        });
+
+        await pair.RunTicksSync(30);
+        await server.WaitPost(() => tutorial.TrySelectRole(pair.Player!, RoleId, confirmedStub: false));
+        await pair.RunTicksSync(120);
+
+        await server.WaitAssertion(() =>
+        {
+            TutorialCurriculumAssertions.BannerMatchesWhatTheBeatAsksFor(
+                tutorial,
+                server.EntMan,
+                pair.Player!.AttachedEntity!.Value,
+                server.ProtoMan.Index<TutorialRolePrototype>(RoleId));
+        });
+    }
+
+    /// <summary>
     /// Regression: the crowbar door used to spawn as an ordinary powered airlock, so it opened on
     /// its own and the pry sub-goal could never be satisfied.
     /// </summary>

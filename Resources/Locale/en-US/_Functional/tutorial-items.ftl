@@ -116,7 +116,7 @@ tutorial-items-nanci-take-can-3 = If nothing is happening, your active hand is s
 tutorial-items-nanci-take-can-4 = I said, pick up that can.
 
 tutorial-items-sg-throw-can = Throw the can at the disposal unit.
-tutorial-items-control-throw-can = Hold [color=#FFD24A][bold][keybind="ThrowItemInHand"][/bold][/color] where you want it to go.
+tutorial-items-control-throw-can = Press [color=#FFD24A][bold][keybind="ThrowItemInHand"][/bold][/color] while hovering you want it to go.
 tutorial-items-nanci-throw-can-1 = Now put it in the trash can.
 tutorial-items-nanci-throw-can-2 = There is a disposal unit across the chamber.
 tutorial-items-nanci-throw-can-3 = You may throw it. Nanotrasen encourages efficiency.
@@ -128,7 +128,7 @@ tutorial-items-nanci-bin-can-2 = Keep going until it lands inside.
 tutorial-items-nanci-bin-can-3 = You may also walk over and put it in by hand, but you will lose your dignity.
 
 tutorial-items-sg-flush-bin = Flush the disposal unit.
-tutorial-items-control-flush-bin = Hold [color=#FFD24A][bold][keybind="AltActivateItemInWorld"][/bold][/color] something for its alternate action.
+tutorial-items-control-flush-bin = Press [color=#FFD24A][bold][keybind="AltActivateItemInWorld"][/bold][/color] on something for its alternate action.
 tutorial-items-nanci-flush-bin-1 = Now flush it.
 tutorial-items-nanci-flush-bin-2 = Most objects have a second action that ordinary activation will never reach.
 tutorial-items-nanci-flush-bin-3 = Flushing is one. So is climbing, like you learned in our previous training.
@@ -165,7 +165,7 @@ tutorial-items-nanci-keep-plushie-2 = Companion assets are not deducted from you
 tutorial-items-nanci-keep-plushie-3 = You may keep it until the end of your shift.
 
 tutorial-items-sg-pull-crate = Pull the crate.
-tutorial-items-control-pull-crate = Hold [color=#FFD25A][bold][keybind="TryPullObject"][/bold][/color] something to pull it.
+tutorial-items-control-pull-crate = Press [color=#FFD25A][bold][keybind="TryPullObject"][/bold][/color] on something to pull it.
 tutorial-items-nanci-pull-crate-1 = Some things do not go in a bag.
 tutorial-items-nanci-pull-crate-2 = Crates. Lockers. Colleagues.
 tutorial-items-nanci-pull-crate-3 = You drag those.
@@ -193,7 +193,7 @@ tutorial-items-nanci-wear-belt-3 = It goes in the slot on your person that is sh
 tutorial-items-nanci-wear-belt-4 = The belt is not fashionable. Nothing you will ever be issued is fashionable.
 
 tutorial-items-sg-belt-crowbar = Put the crowbar on your belt.
-tutorial-items-control-belt-crowbar = Hold a tool and press [color=#FFD24A][bold][keybind="SmartEquipBelt"][/bold][/color] to stow it on your belt.
+tutorial-items-control-belt-crowbar = Press [color=#FFD24A][bold][keybind="SmartEquipBelt"][/bold][/color] to stow it on your belt.
 tutorial-items-nanci-belt-crowbar-1 = There is a crowbar on the table.
 tutorial-items-nanci-belt-crowbar-2 = Put it on the belt.
 tutorial-items-nanci-belt-crowbar-3 = You already know what a crowbar is for.

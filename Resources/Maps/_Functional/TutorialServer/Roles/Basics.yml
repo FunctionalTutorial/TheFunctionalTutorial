@@ -4,8 +4,8 @@ meta:
   engineVersion: 284.0.2
   forkId: ""
   forkVersion: ""
-  time: 08/13/2026 21:20:18
-  entityCount: 594
+  time: 08/18/2026 15:09:58
+  entityCount: 595
 maps: []
 grids:
 - 1
@@ -1760,6 +1760,13 @@ entities:
     - type: Transform
       parent: 1
       pos: 5.5,-1.5
+- proto: PosterLegitWalk
+  entities:
+  - uid: 595
+    components:
+    - type: Transform
+      parent: 1
+      pos: 19.5,-1.5
 - proto: Rack
   entities:
   - uid: 486

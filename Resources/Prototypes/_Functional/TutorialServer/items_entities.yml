@@ -171,7 +171,7 @@
   - type: TutorialCue
     subGoalId: breach-brief
     afterLine: 5
-    lineDelay: 0.5
+    lineDelay: 2
     delay: 16
     effect: Breach
 
@@ -211,14 +211,8 @@
 
 - type: entity
   abstract: true
-  parent: TutorialStepMarker
-  id: TutorialItemsMarker
-  suffix: Tutorial, Items
-
-- type: entity
-  abstract: true
   parent: MarkerBase
-  id: TutorialItemsHiddenMarker
+  id: TutorialItemsMarker
   suffix: Tutorial, Items
   components:
   - type: TutorialStepMarker
@@ -240,7 +234,7 @@
     markerId: items-pad-3
 
 - type: entity
-  parent: TutorialItemsHiddenMarker
+  parent: TutorialItemsMarker
   id: TutorialMarkerItemsPadVacuum
   name: tutorial marker (items-pad-vacuum)
   description: Walk here to complete a tutorial objective. This one is past the breach.

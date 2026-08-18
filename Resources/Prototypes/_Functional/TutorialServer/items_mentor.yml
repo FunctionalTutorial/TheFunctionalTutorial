@@ -9,7 +9,7 @@
     startDelay: 0
     sessionStartDelay: 4
     minLineDelay: 3
-    maxLineDelay: 10
+    maxLineDelay: 5
     secondsPerCharacter: 0.075
     lines:
     - subGoalId: welcome

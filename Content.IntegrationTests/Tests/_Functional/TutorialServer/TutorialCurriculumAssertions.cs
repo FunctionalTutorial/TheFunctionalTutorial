@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Content.Server._Functional.TutorialServer;
 using Content.Shared._Functional.TutorialServer;
 using Content.Shared.Tag;
 using NUnit.Framework;
@@ -114,6 +115,57 @@ public static class TutorialCurriculumAssertions
                     $"coach has lines for '{group.Key}', which is not a sub-goal of {role.ID}");
             }
         });
+    }
+
+    /// <summary>
+    /// Every beat the player has to act on leaves something in the banner: the key where one is
+    /// taught, the objective line otherwise. Beats that play themselves out leave it blank, since
+    /// the only thing they could say is "listen" and it would outlast her saying anything.
+    /// </summary>
+    /// <remarks>
+    /// Walks the curriculum by advancing the live session, since the banner is chosen where the
+    /// sub-goal is published rather than where it is authored.
+    /// </remarks>
+    public static void BannerMatchesWhatTheBeatAsksFor(
+        TutorialServerRuleSystem tutorial,
+        IEntityManager entMan,
+        EntityUid mob,
+        TutorialRolePrototype role)
+    {
+        Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part), Is.True,
+            "player is not in a tutorial session");
+
+        var expected = role.Goals.Sum(g => g.SubGoals.Count);
+        var walked = 0;
+
+        Assert.Multiple(() =>
+        {
+            while (walked <= expected && tutorial.TryGetCurrentSubGoal(mob, part!, out var sub))
+            {
+                Assert.That(tutorial.TryGetSession(mob, out var session), Is.True);
+                var banner = session.PendingControlHint;
+
+                if (sub.Complete == TutorialStepComplete.Acknowledge && sub.AutoAdvanceSeconds != null)
+                {
+                    Assert.That(banner, Is.Null.Or.Empty,
+                        $"'{sub.Id}' ends on its own, so its banner would still be up after she stopped");
+                }
+                else if (string.IsNullOrEmpty(banner))
+                {
+                    Assert.Fail($"'{sub.Id}' leaves the banner blank once the coach stops talking");
+                }
+                else
+                {
+                    Assert.That(Loc.TryGetString(banner, out _), Is.True,
+                        $"'{sub.Id}' banners '{banner}', which does not resolve");
+                }
+
+                walked++;
+                tutorial.AdvanceSubGoal(mob);
+            }
+        });
+
+        Assert.That(walked, Is.EqualTo(expected), "did not walk the whole curriculum");
     }
 
     /// <summary>Everything a sub-goal names has to exist, or its drill silently never completes.</summary>

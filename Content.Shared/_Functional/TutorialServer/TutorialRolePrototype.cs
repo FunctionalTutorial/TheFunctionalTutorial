@@ -319,6 +319,7 @@ public sealed partial class TutorialSubGoalData
     /// should mention keys, and it should say nothing else — e.g.
     /// <c>Use [keybind="MoveUp"][keybind="MoveLeft"][keybind="MoveDown"][keybind="MoveRight"] to move.</c>
     /// Markup is resolved client-side, so the player sees their own bindings.
+    /// Omitting it falls the banner back to <see cref="Text"/>, so the corner is never blank.
     /// </summary>
     [DataField]
     public string? ControlHint;

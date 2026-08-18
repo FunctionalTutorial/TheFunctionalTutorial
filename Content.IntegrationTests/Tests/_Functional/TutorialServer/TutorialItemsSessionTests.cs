@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Hands.Components;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Localization;
+using Robust.Shared.Utility;
 using Robust.Shared.Prototypes;
 
 namespace Content.IntegrationTests.Tests._Functional.TutorialServer;
@@ -52,6 +55,7 @@ public sealed class TutorialItemsSessionTests : GameTest
     [
         // "Cross the vacuum" already names the destination.
         "items-pad-vacuum",
+        "items-pad-3",
     ];
 
     /// <summary>Tags a drill matches on, kept separate because they let the map swap the prop.</summary>
@@ -248,6 +252,167 @@ public sealed class TutorialItemsSessionTests : GameTest
                 Assert.That(holoRooms.Distinct().OrderBy(r => r).ToList(),
                     Is.EqualTo(Enumerable.Range(0, role.Goals.Count).ToList()),
                     "every chamber needs a holopad, and no pad may name a chamber that does not exist");
+            });
+        });
+    }
+
+    /// <summary>
+    /// Every beat the player has to act on leaves something in the banner: the key where one is
+    /// taught, the objective line otherwise. Beats that end themselves leave it blank.
+    /// </summary>
+    [Test]
+    public async Task TutorialItems_BannerMatchesWhatEachBeatAsksFor()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var tutorial = server.System<TutorialServerRuleSystem>();
+
+        await StartSession();
+
+        await server.WaitAssertion(() =>
+        {
+            TutorialCurriculumAssertions.BannerMatchesWhatTheBeatAsksFor(
+                tutorial,
+                server.EntMan,
+                pair.Player!.AttachedEntity!.Value,
+                server.ProtoMan.Index<TutorialRolePrototype>(RoleId));
+        });
+    }
+
+    /// <summary>
+    /// The banner waits her out however long her script is. The safety net that stops a blank
+    /// corner only covers a coach who has not started.
+    /// </summary>
+    /// <remarks>
+    /// Regression: the net was measured from the start of the beat, so every segment longer than
+    /// it put the banner up in the middle of what she was saying.
+    /// </remarks>
+    [Test]
+    public async Task TutorialItems_BannerWaitsOutASegmentLongerThanTheSafetyNet()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var trainers = server.System<TutorialTrainerSystem>();
+
+        await StartSession();
+
+        var speaking = TutorialCoachSpeech.Done;
+        for (var i = 0; i < 60 && speaking != TutorialCoachSpeech.Speaking; i++)
+        {
+            await pair.RunTicksSync(5);
+            await server.WaitPost(() => speaking = ResolveCoachSpeech(tutorial, trainers));
+        }
+
+        Assert.That(speaking, Is.EqualTo(TutorialCoachSpeech.Speaking),
+            "the coach never started her opening segment, so there is nothing to wait out");
+
+        // Age the beat past the safety net rather than sitting through it, leaving her mid-script.
+        await server.WaitPost(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(tutorial.TryGetSession(mob, out var session), Is.True);
+            session.SubGoalStartedAt -= TimeSpan.FromMinutes(1);
+        });
+
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var mob = pair.Player!.AttachedEntity!.Value;
+
+            Assert.That(ResolveCoachSpeech(tutorial, trainers), Is.EqualTo(TutorialCoachSpeech.Speaking),
+                "she finished early, so the beat is no longer the one under test");
+            Assert.That(tutorial.HasPendingControlHint(mob), Is.True,
+                "the banner went up in the middle of her script");
+        });
+    }
+
+    /// <summary>Where the player's coach is in the script for their current beat.</summary>
+    private TutorialCoachSpeech ResolveCoachSpeech(
+        TutorialServerRuleSystem tutorial,
+        TutorialTrainerSystem trainers)
+    {
+        var mob = Pair.Player?.AttachedEntity;
+        if (mob is not { } player ||
+            !Server.EntMan.TryGetComponent<TutorialParticipantComponent>(player, out var part) ||
+            !tutorial.TryGetSession(player, out var session) ||
+            !tutorial.TryGetCurrentSubGoal(player, part, out var sub))
+        {
+            return TutorialCoachSpeech.Done;
+        }
+
+        return trainers.ResolveSegmentState(session.MentorUid, sub.Id);
+    }
+
+    /// <summary>
+    /// Whatever the banner says goes into chat as well, so an instruction the player looked away
+    /// from can still be scrolled back to. Only what the banner says: never twice running, never
+    /// the sign-off that <c>CompleteTutorial</c> writes to chat itself, and never a beat that ends
+    /// on its own and so never puts anything on screen to repeat.
+    /// </summary>
+    [Test]
+    public async Task TutorialItems_TheBannerIsRepeatedInChat()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var client = pair.Client;
+        var tutorial = server.System<TutorialServerRuleSystem>();
+
+        await StartSession();
+
+        var recorder = client.System<TutorialTipChatRecorder>();
+        await client.WaitPost(() => recorder.Received.Clear());
+
+        // Release each beat's banner rather than sitting through her lines for all of them.
+        for (var i = 0; i < 8; i++)
+        {
+            await server.WaitPost(() =>
+            {
+                var mob = pair.Player!.AttachedEntity!.Value;
+                tutorial.ShowPendingControlHint(mob);
+                tutorial.AdvanceSubGoal(mob);
+            });
+
+            await pair.RunTicksSync(5);
+        }
+
+        var chatted = new List<string>();
+        await client.WaitPost(() => chatted.AddRange(recorder.Received));
+
+        await server.WaitAssertion(() =>
+        {
+            // Only what a beat actually banners. A beat that ends itself shows nothing, so its
+            // objective line reaching chat means chat is carrying what the player never saw.
+            var role = server.ProtoMan.Index<TutorialRolePrototype>(RoleId);
+            var banners = role.Goals
+                .SelectMany(g => g.SubGoals)
+                .Where(sub => sub.Complete != TutorialStepComplete.Acknowledge || sub.AutoAdvanceSeconds == null)
+                .Select(sub => Loc.GetString(string.IsNullOrEmpty(sub.ControlHint) ? sub.Text : sub.ControlHint))
+                .ToHashSet();
+
+            Assert.That(chatted, Is.Not.Empty, "the banner was never repeated into chat");
+
+            Assert.Multiple(() =>
+            {
+                foreach (var line in chatted)
+                {
+                    Assert.That(banners, Does.Contain(line),
+                        $"chat carried '{line}', which no beat's banner says");
+
+                    // The chat box parses what it is given with AddMarkupOrThrow, so a line that
+                    // does not survive the round trip takes the whole box down with it.
+                    Assert.DoesNotThrow(
+                        () => FormattedMessage.FromMarkupOrThrow(
+                            FormattedMessage.FromMarkupPermissive(line).ToMarkup()),
+                        $"'{line}' does not survive the trip to chat as markup");
+                }
+
+                for (var i = 1; i < chatted.Count; i++)
+                {
+                    Assert.That(chatted[i], Is.Not.EqualTo(chatted[i - 1]),
+                        $"chat said '{chatted[i]}' twice running");
+                }
             });
         });
     }

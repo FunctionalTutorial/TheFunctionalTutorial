@@ -203,7 +203,6 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             if (!_tutorial.TryGetCurrentSubGoal(uid, part, out var sub))
                 continue;
 
-            TryReleaseControlHint(uid);
             TryFailAtRetryMarker(uid, xform, sub);
 
             switch (sub.Complete)
@@ -453,6 +452,11 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                     // Discrete actions — handled by the event subscriptions in the Controls partial.
                     break;
             }
+
+            // After the sensors, not before: a beat the player already satisfies is over on its
+            // first poll, and putting its banner up first meant chat carried an instruction that
+            // was never on screen long enough to read.
+            TryReleaseControlHint(uid);
         }
     }
 

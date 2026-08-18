@@ -24,16 +24,21 @@ public sealed class TutorialTipChatSystem : EntitySystem
         if (string.IsNullOrWhiteSpace(ev.Markup))
             return;
 
-        var resolved = FormattedMessage.FromMarkupPermissive(ev.Markup).ToString();
-        if (string.IsNullOrWhiteSpace(resolved))
+        // Reparsed rather than passed through, so a malformed tag reaches the chat box as text
+        // instead of throwing inside its markup parser.
+        var parsed = FormattedMessage.FromMarkupPermissive(ev.Markup);
+
+        // Plain text for filters and highlights; markup for the line that gets drawn, because a
+        // stripped [keybind] leaves a hole where the key should be.
+        var plain = parsed.ToString();
+        if (string.IsNullOrWhiteSpace(plain))
             return;
 
-        var wrapped = Loc.GetString("chat-manager-server-wrap-message",
-            ("message", FormattedMessage.EscapeText(resolved)));
+        var wrapped = Loc.GetString("chat-manager-server-wrap-message", ("message", parsed.ToMarkup()));
 
         var msg = new ChatMessage(
             ChatChannel.Server,
-            resolved,
+            plain,
             wrapped,
             NetEntity.Invalid,
             senderKey: null);

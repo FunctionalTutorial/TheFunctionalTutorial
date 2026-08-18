@@ -128,21 +128,32 @@ public sealed class TutorialTrainerSystem : EntitySystem
     }
 
     /// <summary>
-    /// True while a coach still owes the player words for <paramref name="subGoalId"/>: lines
-    /// queued, a gap running, or the segment not picked up from the goal change yet.
+    /// Where a coach is in <paramref name="subGoalId"/>'s script. Callers that hold something back
+    /// until she is done need <see cref="TutorialCoachSpeech.Waiting"/> separated from
+    /// <see cref="TutorialCoachSpeech.Speaking"/>: only the former can go on forever, so only the
+    /// former may be timed out.
     /// </summary>
-    public bool IsMidSegment(EntityUid mentor, string subGoalId)
+    public TutorialCoachSpeech ResolveSegmentState(EntityUid mentor, string subGoalId)
     {
         if (!TryComp<TutorialTrainerComponent>(mentor, out var trainer))
-            return false;
+            return TutorialCoachSpeech.Done;
 
         // The segment is enqueued by this system's own Update, which may not have run since the
         // sub-goal changed. Until it has, she is about to start rather than finished.
         if (!string.Equals(trainer.LastSpokenSubGoal, subGoalId, StringComparison.Ordinal))
-            return true;
+            return TutorialCoachSpeech.Waiting;
 
-        return trainer.PendingLines.Count > 0 ||
-               (trainer.NextLineAt is { } next && _timing.CurTime < next);
+        // Lines queued with no clock running means nobody has walked into earshot yet.
+        if (trainer.PendingLines.Count > 0 && trainer.NextLineAt == null)
+            return TutorialCoachSpeech.Waiting;
+
+        if (trainer.PendingLines.Count > 0 ||
+            (trainer.NextLineAt is { } next && _timing.CurTime < next))
+        {
+            return TutorialCoachSpeech.Speaking;
+        }
+
+        return TutorialCoachSpeech.Done;
     }
 
     /// <summary>

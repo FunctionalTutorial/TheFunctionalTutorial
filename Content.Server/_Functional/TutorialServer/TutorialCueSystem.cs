@@ -94,8 +94,8 @@ public sealed class TutorialCueSystem : EntitySystem
     }
 
     /// <summary>
-    /// Moves an armed cue onto the line it was written for. Only ever earlier: the gate into a
-    /// breached chamber opens on the next sub-goal, so the backstop has to stay an outer bound.
+    /// Moves an armed cue onto the line it was written for, and keeps the backstop out of the way
+    /// until she gets there.
     /// </summary>
     private void TryTakeTheBeatFromTheCoach(TimeSpan now, Entity<TutorialCueComponent> cue)
     {
@@ -105,8 +105,14 @@ public sealed class TutorialCueSystem : EntitySystem
         if (cue.Comp.ArmedBy is not { } player || TerminatingOrDeleted(player))
             return;
 
-        if (!_trainer.TryGetLinesSpoken(player, cue.Comp.SubGoalId, out var spoken) || spoken < afterLine)
+        if (!_trainer.TryGetLinesSpoken(player, cue.Comp.SubGoalId, out var spoken))
             return;
+
+        if (spoken < afterLine)
+        {
+            cue.Comp.FireAt = now + cue.Comp.Delay;
+            return;
+        }
 
         cue.Comp.CuedOnLine = true;
 
