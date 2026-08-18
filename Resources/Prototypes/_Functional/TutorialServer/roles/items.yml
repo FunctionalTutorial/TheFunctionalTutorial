@@ -1,13 +1,3 @@
-# Wing 5, Applied Manipulation. The second N.A.N.C.I. curriculum, after TutorialBasics.
-#
-# Three channels, never mixed: `controlHint` names keys and nothing else, `text` is the objectives
-# line, and everything in character is in her `lines` on TutorialHoloMentorItems. A sub-goal with
-# no line there has her read the checklist aloud.
-#
-# simplifiedEnvironment force-powers the props and leaves atmos running, which this curriculum
-# needs both of. If TutorialMapSystem.FreezeAtmosInSimplifiedEnvironment is ever turned back on,
-# this must go false and every powered prop in items_entities.yml must set needsPower itself.
-
 - type: tutorialRole
   id: TutorialItems
   job: Passenger
@@ -18,11 +8,7 @@
   name: tutorial-items-name
   map: /Maps/_Functional/TutorialServer/Roles/Items.yml
   guidebook: NewPlayer
-
-  # No pad beat between chambers: every drill is in the room, and her speak range already waits.
   chamberEntryPads: false
-
-  # Vox arrive wearing a tank harness and mask, pre-completing half of chamber 6.
   blockedSpecies:
   - Vox
 
