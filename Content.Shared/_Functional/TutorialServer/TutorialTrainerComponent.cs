@@ -21,6 +21,15 @@ public sealed partial class TutorialTrainerComponent : Component
     public List<TutorialTrainerLine> Lines = new();
 
     /// <summary>
+    /// Beats this coach deliberately has nothing to say on, because somebody else is speaking
+    /// them. Without it a coach with no authored line for a sub-goal falls back to reading the
+    /// objectives checklist aloud, which would have him talking over the voice the beat was
+    /// handed to.
+    /// </summary>
+    [DataField]
+    public List<string> SilentSubGoals = new();
+
+    /// <summary>
     /// Sub-goal id whose lines were last queued (change detection; no timed reminders).
     /// </summary>
     [DataField]
@@ -33,10 +42,60 @@ public sealed partial class TutorialTrainerComponent : Component
     public Queue<TutorialPendingLine> PendingLines = new();
 
     /// <summary>
+    /// Lines of <see cref="LastSpokenSubGoal"/> flagged <see cref="TutorialTrainerLine.AfterComplete"/>,
+    /// waiting for the player to finish the beat.
+    /// </summary>
+    [ViewVariables]
+    public Queue<TutorialPendingLine> PendingAfterLines = new();
+
+    /// <summary>
+    /// Sub-goal whose reaction is being spoken right now. While this is set the beat is satisfied
+    /// but deliberately not advanced, so the coach gets to finish before the next objective lands.
+    /// </summary>
+    [ViewVariables]
+    public string? ReactingFor;
+
+    /// <summary>
     /// When the next queued line may be spoken. Null while waiting on the player to come close.
     /// </summary>
     [ViewVariables]
     public TimeSpan? NextLineAt;
+
+    /// <summary>
+    /// Gap still owed to the line spoken before the segment changed, carried across the boundary.
+    /// </summary>
+    /// <remarks>
+    /// Finishing an objective must not fire the next segment's opening line on the same tick. The
+    /// pause between lines is the whole illusion: it reads as somebody typing, and it is the time
+    /// the player has to take in what was just said. A beat boundary is not a reason to skip it.
+    /// </remarks>
+    [ViewVariables]
+    public TimeSpan? CarriedGap;
+
+    /// <summary>
+    /// When the line currently on screen stops being the newest thing this coach said.
+    /// </summary>
+    /// <remarks>
+    /// Survives a change of sub-goal, unlike <see cref="NextLineAt"/>, which is why the walking
+    /// coach reads this one: he must not turn and go while a sentence of his is still up, and by
+    /// the time the next segment has been queued NextLineAt is about the next thing he will say
+    /// rather than the last thing he did.
+    /// </remarks>
+    [ViewVariables]
+    public TimeSpan SpeakingUntil;
+
+    /// <summary>
+    /// When the typing indicator may come back on after a line has been sent.
+    /// </summary>
+    [ViewVariables]
+    public TimeSpan? TypingResumeAt;
+
+    /// <summary>
+    /// Beat between a line appearing and the indicator starting up again, so it blinks off the way
+    /// it does for somebody who just hit enter and is thinking about the next sentence.
+    /// </summary>
+    [DataField]
+    public TimeSpan TypingPause = TimeSpan.FromSeconds(0.7);
 
     /// <summary>
     /// Lines of <see cref="LastSpokenSubGoal"/> said out loud, reset when the segment changes, so a
@@ -87,6 +146,14 @@ public sealed partial class TutorialTrainerComponent : Component
     /// </remarks>
     [ViewVariables]
     public bool PlayerArrived;
+
+    /// <summary>
+    /// Holds a queued segment at the gate. A coach who leads sets this while he is walking, so the
+    /// next section starts when he gets there rather than being shouted over his shoulder on the
+    /// way. Only the start of a segment is gated: once he has begun, a shove does not cut him off.
+    /// </summary>
+    [ViewVariables]
+    public bool SpeechHeld;
 
     /// <summary>
     /// Rate limit for one-off corrections (see <see cref="TutorialSubGoalData.RetryLine"/>).
@@ -163,10 +230,24 @@ public sealed partial class TutorialTrainerLine
     /// </summary>
     [DataField]
     public bool ShowControlHint;
+
+    /// <summary>
+    /// Hold this line back until the player has actually done the thing, then say it and only then
+    /// move on to the next beat.
+    /// </summary>
+    /// <remarks>
+    /// For lines that react rather than instruct: "hear that beep?", "see, it just says Passenger".
+    /// Said on the ordinary timer they land while the player is still reading the objective, and
+    /// the coach comes off as talking about something that has not happened yet. Anything left
+    /// unsaid from the instruction half of the segment is dropped when the reaction starts, since
+    /// the player has evidently stopped needing to be told.
+    /// </remarks>
+    [DataField]
+    public bool AfterComplete;
 }
 
 /// <summary>
 /// One queued line of coach dialogue: resolved text plus whether speaking it should reveal the
 /// control hint.
 /// </summary>
-public readonly record struct TutorialPendingLine(string Text, bool ShowControlHint);
+public readonly record struct TutorialPendingLine(string Text, bool ShowControlHint, bool AfterComplete = false);

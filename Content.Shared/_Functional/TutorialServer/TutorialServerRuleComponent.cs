@@ -105,6 +105,20 @@ public sealed partial class TutorialSessionData
     public int MentorHoloRoom = -1;
 
     /// <summary>
+    /// Point the <see cref="TutorialMentorMode.Lead"/> mentor is currently walking to or waiting
+    /// at, so he is only re-tasked when the curriculum actually has somewhere new to take him.
+    /// </summary>
+    [DataField]
+    public EntityUid MentorWalkPoint;
+
+    /// <summary>
+    /// Room that point belongs to. Changing room is what makes the player walk up to him again,
+    /// so it is also what clears the coach's arrival gate.
+    /// </summary>
+    [DataField]
+    public int MentorWalkRoom = -1;
+
+    /// <summary>
     /// Control hint for the current sub-goal, held back until the coach has finished her lines so
     /// the banner does not compete with her for the player's attention.
     /// </summary>

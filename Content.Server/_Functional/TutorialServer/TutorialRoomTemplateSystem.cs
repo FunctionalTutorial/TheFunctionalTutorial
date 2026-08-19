@@ -28,6 +28,13 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
 {
     private static readonly EntProtoId DefaultGateDoor = "Airlock";
 
+    /// <summary>
+    /// Chambers a stamped suite gets when nothing says otherwise. Room prototypes raise it with
+    /// <see cref="TutorialRoomPrototype.MaxChambers"/>; map-crop templates have no prototype to ask,
+    /// so they keep the original ceiling.
+    /// </summary>
+    private const int DefaultMaxCopies = 8;
+
     [Dependency] private readonly AtmosphereSystem _atmos = default!;
     [Dependency] private readonly GravitySystem _gravity = default!;
     [Dependency] private readonly IPrototypeManager _protos = default!;
@@ -133,14 +140,21 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
             return false;
 
         var gate = gateDoor ?? DefaultGateDoor;
+        var maxCopies = DefaultMaxCopies;
         if (_protos.TryIndex(roomId, out TutorialRoomPrototype? room))
+        {
             gate = gateDoor ?? room.GateDoor;
+            // The room's own ceiling, so a curriculum longer than the default can raise it without
+            // raising it for every suite in the game.
+            maxCopies = Math.Max(1, room.MaxChambers);
+        }
 
         // DoorSide on room protos is the exterior practice door, not the inter-chamber stamp axis.
         var stampDir = stampDirection ?? TutorialRoomDoorSide.East;
 
         var ok = TryStampCopies(srcGrid, copyCount, gate, fillAtmosphere, stampDir,
-            out mapUid, out gridUid, out spawnCoords, practicePathTargets, lightFacingOffsetDegrees);
+            out mapUid, out gridUid, out spawnCoords, practicePathTargets, lightFacingOffsetDegrees,
+            maxCopies);
         QueueDel(srcMap);
 
         // Every divider gets the same gate from the stamp; convert the one crowbar-practice gate.
@@ -183,7 +197,8 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
         out EntityUid gridUid,
         out EntityCoordinates spawnCoords,
         IReadOnlyList<(int Room, Vector2 Offset)>? practicePathTargets = null,
-        float lightFacingOffsetDegrees = 0f)
+        float lightFacingOffsetDegrees = 0f,
+        int maxCopies = DefaultMaxCopies)
     {
         mapUid = EntityUid.Invalid;
         gridUid = EntityUid.Invalid;
@@ -195,7 +210,16 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
             return false;
         }
 
-        copyCount = Math.Clamp(copyCount, 1, 8);
+        // Silently sharing the last chamber between the goals that did not fit is worse than it
+        // sounds: their props all land on top of each other in it. Say so.
+        if (copyCount > maxCopies)
+        {
+            Log.Warning(
+                $"Tutorial stamp: curriculum asked for {copyCount} chambers, ceiling is {maxCopies}; " +
+                "the last chambers will share a room. Raise maxChambers on the tutorialRoom.");
+        }
+
+        copyCount = Math.Clamp(copyCount, 1, maxCopies);
 
         if (!TryGetTileBounds(templateGrid, srcGridComp, out var min, out var max))
         {

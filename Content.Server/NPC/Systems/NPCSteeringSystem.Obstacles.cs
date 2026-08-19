@@ -81,22 +81,33 @@ public sealed partial class NPCSteeringSystem
             var isAccessRequired = (poly.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
             var isClimbable = (poly.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
 
-            // Just walk into it stupid
-            if (isDoor && !isAccessRequired)
+            // Just walk into it stupid. PathFlags.Doors movers do this at a locked door too: the
+            // pathfinder routed them through it on the understanding that they can open it, so the
+            // access check happens where it always did, inside the door.
+            if (isDoor && (!isAccessRequired || (component.Flags & PathFlags.Doors) != 0x0))
             {
-                // ... At least if it's not a bump open.
                 foreach (var ent in obstacleEnts)
                 {
                     if (!_doorQuery.TryGetComponent(ent, out var door))
                         continue;
 
-                    if (!door.BumpOpen && (component.Flags & PathFlags.Interact) != 0x0)
+                    if ((component.Flags & PathFlags.Interact) == 0x0)
+                        continue;
+
+                    // Open it, bump-open or not. This used to skip bump doors on the grounds that
+                    // walking into one is enough, which is only true of a mover that reaches it: a
+                    // mover arrives at interaction range rather than on contact, so it never
+                    // touches the door, never bumps it, and under the old rule never clicked it
+                    // either. Clicking one that would also have opened on contact costs nothing,
+                    // since both ends call TryOpen.
+                    //
+                    // Denying is the door playing its refusal, and clicking through that just
+                    // stacks the sound up. Let it finish and come round again, in case whatever was
+                    // refusing has stopped (bolts raised, power restored, somebody handed us a card).
+                    if (door.State is not (DoorState.Opening or DoorState.Denying))
                     {
-                        if (door.State != DoorState.Opening)
-                        {
-                            _interaction.InteractionActivate(uid, ent);
-                            return SteeringObstacleStatus.Continuing;
-                        }
+                        _interaction.InteractionActivate(uid, ent);
+                        return SteeringObstacleStatus.Continuing;
                     }
                 }
 

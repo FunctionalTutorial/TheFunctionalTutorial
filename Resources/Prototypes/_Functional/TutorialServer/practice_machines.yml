@@ -202,9 +202,14 @@
   suffix: Tutorial
   components:
   - type: TutorialPracticeMob
+  # DoorBumpOpener comes from species_base and a child's Tag list replaces the parent's, so every
+  # tutorial mob silently lost the ability to open a door by walking into it. Nothing complains:
+  # the door simply never opens, and a walking coach paces in front of it until a player opens it
+  # for him. Re-add it in any child that redeclares Tag, too.
   - type: Tag
     tags:
     - TutorialPracticeMob
+    - DoorBumpOpener
   - type: NpcFactionMember
     factions: []
   # Mindless NPCs must not show the SSD ZZZ icon or fall asleep mid-tutorial.
@@ -777,15 +782,24 @@
   parent: TutorialPracticeMob
   id: TutorialMentor
   name: Urist McMentor
-  description: A friendly practice mentor who follows you and teaches the current tip. Empty-hand click them to hear it again.
+  description: A friendly practice mentor who follows you and talks you through each step. Empty-hand click them to hurry them along.
   suffix: Tutorial, Mentor
   components:
   - type: Loadout
     prototypes: [VisitorLibrarian]
   - type: TutorialMentor
   - type: TutorialTrainer
+  # No TypingIndicator here: the component reserves a sprite layer the moment it appears, and in a
+  # prototype that is before the humanoid sprite has been built, which leaves the indicator sitting
+  # at the wrong offset. Added after the body is dressed instead, in GiveTutorialMentor, which is
+  # what the engine does for players (OnPlayerAttached).
   - type: InputMover
   - type: MobMover
+  # No NavDoors here on purpose. A following coach works chamber maps, where a sealed gate really
+  # does mean the player is unreachable and the follow system is right to give up and teleport.
+  # Telling the pathfinder to route through it would leave him walking at a door that cannot open
+  # instead. NavDoors belongs on coaches that lead, which work open station maps: see
+  # TutorialTideMentor.
   - type: HTN
     rootTask:
       task: TutorialFollowCompound
@@ -806,7 +820,7 @@
   parent: TutorialPracticeMob
   id: TutorialCargoQmMentor
   name: Urist McQuartermaster
-  description: Your cargo bay quartermaster. They stay put and tell you what to do next. Empty-hand click them to hear it again.
+  description: Your cargo bay quartermaster. They stay put and tell you what to do next. Empty-hand click them to hurry them along.
   suffix: Tutorial, Mentor, Cargo
   components:
   # VisitorQM is a full outfit (jumpsuit/cloak/hat). Job QuartermasterGear is accessories only.

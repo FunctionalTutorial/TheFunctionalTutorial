@@ -15,6 +15,14 @@ public sealed partial class TutorialHoloPointComponent : Component
     /// </summary>
     [DataField]
     public int Room;
+
+    /// <summary>
+    /// Hologram a <see cref="TutorialCueEffect.Project"/> cue put on this pad. The pad owns it, so
+    /// going dark takes it with it: a coach the holopad system does not know about (one a walking
+    /// curriculum staged for a single beat) has nothing else that would ever clean her up.
+    /// </summary>
+    [ViewVariables]
+    public EntityUid? Projection;
 }
 
 /// <summary>

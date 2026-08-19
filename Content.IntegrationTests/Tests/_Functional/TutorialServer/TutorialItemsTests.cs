@@ -119,33 +119,8 @@ public sealed class TutorialItemsTests : GameTest
 
         await server.WaitAssertion(() =>
         {
-            Assert.That(protos.TryIndex<TutorialRolePrototype>(RoleId, out var role), Is.True);
-            Assert.That(role!.MentorEntity, Is.Not.Null);
-            Assert.That(protos.TryIndex<EntityPrototype>(role.MentorEntity!.Value, out var mentor), Is.True);
-            Assert.That(mentor!.TryGetComponent<TutorialTrainerComponent>(out var trainer), Is.True);
-
-            var subGoalIds = role.Goals.SelectMany(g => g.SubGoals).Select(s => s.Id).ToHashSet();
-            var spoken = trainer!.Lines.ToLookup(l => l.SubGoalId);
-            var cued = new List<string>();
-
-            foreach (var proto in protos.EnumeratePrototypes<EntityPrototype>())
-            {
-                if (!proto.TryGetComponent<TutorialCueComponent>(out var cue))
-                    continue;
-
-                cued.Add(proto.ID);
-                Assert.That(subGoalIds, Does.Contain(cue.SubGoalId),
-                    $"{proto.ID} cues sub-goal '{cue.SubGoalId}', which is not in {RoleId}");
-
-                if (cue.AfterLine is not { } afterLine)
-                    continue;
-
-                Assert.That(afterLine, Is.GreaterThan(0), $"{proto.ID} counts her lines from one");
-                Assert.That(spoken[cue.SubGoalId].Count(), Is.GreaterThanOrEqualTo(afterLine),
-                    $"{proto.ID} fires after line {afterLine} of '{cue.SubGoalId}', which she never reaches");
-            }
-
-            Assert.That(cued, Is.Not.Empty, "no staged cues exist; the blackout and the breach are gone");
+            // Game-wide now that a second curriculum stages cues of its own; see the assertion.
+            TutorialCurriculumAssertions.EveryStagedCueNamesARealSubGoal(protos);
         });
     }
 

@@ -48,6 +48,11 @@ public sealed class TutorialMentorFollowSystem : EntitySystem
             if (!HasComp<HTNComponent>(mentorUid))
                 continue;
 
+            // Leading coaches are walked by TutorialLeadMentorSystem. Both systems write
+            // FollowTarget, so exactly one of them may own a given mentor.
+            if (mentor.Leads)
+                continue;
+
             if (!TryComp<TransformComponent>(mentor.PlayerUid, out var playerXform))
                 continue;
 
@@ -104,6 +109,12 @@ public sealed class TutorialMentorFollowSystem : EntitySystem
             return;
 
         if (mentor.PlayerUid == EntityUid.Invalid || TerminatingOrDeleted(mentor.PlayerUid))
+            return;
+
+        // A leading coach is meant to be ahead of the player: catching him up to them would undo
+        // the walk TutorialLeadMentorSystem just sent him on. Guarded here rather than only at the
+        // call site because a chamber change is exactly when both would otherwise fire.
+        if (mentor.Leads)
             return;
 
         // Already coaching in person — no catch-up needed.

@@ -223,5 +223,15 @@ public sealed class TutorialHoloMentorSystem : EntitySystem
         _appearance.SetData(pad, TutorialHoloPointVisuals.Active, active);
         _pointLight.SetEnabled(pad, active);
         _ambient.SetAmbience(pad, active);
+
+        // A pad that was projecting on its own takes its hologram down with it. Nothing else would:
+        // she is not the session's mentor, so none of the coach teardown reaches her.
+        if (active || !TryComp<TutorialHoloPointComponent>(pad, out var point))
+            return;
+
+        if (point.Projection is { } projection && !TerminatingOrDeleted(projection))
+            QueueDel(projection);
+
+        point.Projection = null;
     }
 }
