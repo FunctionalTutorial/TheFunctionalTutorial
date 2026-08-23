@@ -4,7 +4,7 @@ using Content.Server.Explosion.EntitySystems;
 using Content.Server.Pinpointer;
 using Content.Server.Popups;
 using Content.Server.Station.Systems;
-using Content.Shared._Functional.TutorialServer; //Wizden
+using Content.Shared._Functional.TutorialServer; //Tutorial
 using Content.Shared.Audio;
 using Content.Shared.AlertLevel;
 using Content.Shared.Containers.ItemSlots;
@@ -343,14 +343,14 @@ public sealed partial class NukeSystem : EntitySystem
 
         if (nuke.RemainingTime <= 0)
         {
-            //Wizden - Begin: tutorial dummy nukes arm but never detonate
+            //Tutorial - Begin: tutorial dummy nukes arm but never detonate
             if (HasComp<TutorialDummyNukeComponent>(uid))
             {
                 nuke.RemainingTime = MathF.Max(nuke.AlertSoundTime + 1f, 1f);
                 UpdateUserInterface(uid, nuke);
                 return;
             }
-            //Wizden - End
+            //Tutorial - End
 
             nuke.RemainingTime = 0;
             ActivateBomb(uid, nuke);

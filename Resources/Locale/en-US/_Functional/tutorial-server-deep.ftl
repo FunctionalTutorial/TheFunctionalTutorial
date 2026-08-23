@@ -821,27 +821,33 @@ tutorial-job-borg-sg-done = Cyborg tutorial complete. Use the Choose a tutorial 
 
 # Space Dragon
 tutorial-antag-dragon-name = Space Dragon
+tutorial-antag-dragon-briefing =
+    You are a Space Dragon! A pinpointer is on the ground nearby — activate it and fly to the station.
+    Open carp rifts, devour crew to heal, and breathe fire. Good hunting!
 tutorial-antag-dragon-goal-welcome = Welcome, space dragon
-tutorial-antag-dragon-goal-abilities = Abilities
-tutorial-antag-dragon-goal-hunt = Hunt
+tutorial-antag-dragon-goal-approach = Find the station
+tutorial-antag-dragon-goal-abilities = Dragon's Breath
 tutorial-antag-dragon-goal-feast = Devour for health
 tutorial-antag-dragon-goal-portal = Carp rift portal
 tutorial-antag-dragon-goal-finish = Tutorial complete
-tutorial-antag-dragon-sg-intro = You are practicing as a Space Dragon. Your real-round goals are to summon three fully charged carp rifts and survive. You have a five-minute timer between rifts - if it runs out with no charging rift, you die. This practice room disables that timer so you can learn safely.
-tutorial-antag-dragon-sg-breath-tip = Dragon's Breath fires a line of flame - use it to burn attackers, not to cook your own carp. Find the action on your hotbar. Click on me to continue.
+tutorial-antag-dragon-sg-intro = You are practicing as a Space Dragon in open space. Your real-round goals are to summon three fully charged carp rifts and survive. The five-minute rift timer is disabled here so you can learn safely. Click on me to continue.
+tutorial-antag-dragon-sg-pinpointer-tip = Look at the pinpointer on the ground near you. Activate it (click it) — the arrow points to the practice station. Fly that way and land inside. Click on me to continue.
+tutorial-antag-dragon-sg-pinpointer-hint = Click the pinpointer on the floor to turn it on. Follow the arrow. Dragons cannot pocket items — leave it floating and fly.
+tutorial-antag-dragon-sg-reach-station = Fly to the practice station and land on the marked tile inside.
+tutorial-antag-dragon-sg-reach-station-hint = Follow the pinpointer arrow until you reach the cargo-bay box. Enter through a dock or breach, then step on the marked floor.
+tutorial-antag-dragon-sg-breath-tip = Dragon's Breath fires a line of flame — use it to burn attackers, not to cook your own carp. Find the action on your hotbar. Click on me to continue.
 tutorial-antag-dragon-sg-breath-hint = Hotbar  ->  Dragon's Breath  ->  click a tile or direction to spew fire.
 tutorial-antag-dragon-sg-use-breath = Use Dragon's Breath (aim at empty floor or a wall away from the practice Urist).
-tutorial-antag-dragon-sg-melee-tip = Your claws are strong melee (pierce + slash). You can also force-pry doors and Devour walls when you need a breach. Click on me to continue.
 tutorial-antag-dragon-sg-kill = Kill a practice Urist with your claws (beat them until they die or go critical).
-tutorial-antag-dragon-sg-kill-hint = Click the Urist in combat mode. Alive targets cannot be Devoured - they must be critical or dead.
+tutorial-antag-dragon-sg-kill-hint = Click the Urist in combat mode. Alive targets cannot be Devoured — they must be critical or dead. They will not fight back.
 tutorial-antag-dragon-sg-devour-tip = Devour swallows crit/dead humanoids and feeds you Ichor for a minor heal. Living targets are rejected. You can also Devour doors and walls (slower). Click on me to continue.
 tutorial-antag-dragon-sg-devour-hint = Hotbar  ->  Devour  ->  click a dead or critical Urist, then wait for the short do-after.
 tutorial-antag-dragon-sg-devour = Devour a dead or critical practice Urist to gain Ichor healing.
 tutorial-antag-dragon-sg-rift-tip = Summon Carp Rift opens a portal on the station grid. Stay on solid floor away from space (about two tiles), and keep rifts spaced apart. Only one rift may charge at a time. Click on me to continue.
-tutorial-antag-dragon-sg-rift-hint = Hotbar  ->  Summon Carp Rift. Stand in the middle of the room, not against space tiles.
+tutorial-antag-dragon-sg-rift-hint = Hotbar  ->  Summon Carp Rift. Stand in the middle of the bay, not against space tiles.
 tutorial-antag-dragon-sg-rift-stuck = Rifts need a grid, no nearby space within two tiles, and cannot stack within 15 meters of another rift.
 tutorial-antag-dragon-sg-open-rift = Open a carp rift portal with Summon Carp Rift.
-tutorial-antag-dragon-sg-defend-tip = A charging rift takes five minutes and is fragile - defend it. At half charge the station is warned. Destroyed rifts weaken you for two minutes. After three finished rifts the timeout pressure ends. Click on me to continue.
+tutorial-antag-dragon-sg-defend-tip = A charging rift takes five minutes and is fragile — defend it. At half charge the station is warned. Destroyed rifts weaken you for two minutes. After three finished rifts the timeout pressure ends. Click on me to continue.
 tutorial-antag-dragon-sg-walk = Walk to the marked practice spot.
 tutorial-antag-dragon-sg-done = Space Dragon tutorial complete. Use the Choose a tutorial action (click the dollar sign on the left side of the game window) to pick another role.
 

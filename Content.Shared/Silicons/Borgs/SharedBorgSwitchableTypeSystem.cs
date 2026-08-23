@@ -69,10 +69,10 @@ public abstract partial class SharedBorgSwitchableTypeSystem : EntitySystem
 
     private void SelectTypeMessageHandler(Entity<BorgSwitchableTypeComponent> ent, ref BorgSelectTypeMessage args)
     {
-        TrySelectBorgType(ent.AsNullable(), args.Prototype); //Wizden: route through whitelist-aware API
+        TrySelectBorgType(ent.AsNullable(), args.Prototype); //Tutorial: route through whitelist-aware API
     }
 
-    //Wizden - Begin
+    //Tutorial - Begin
     /// <summary>
     /// Restricts which chassis types appear in the select-type UI and may be confirmed.
     /// Pass null or an empty list to allow every borg type.
@@ -111,7 +111,7 @@ public abstract partial class SharedBorgSwitchableTypeSystem : EntitySystem
         SelectBorgModule((ent.Owner, ent.Comp), borgType);
         return true;
     }
-    //Wizden - End
+    //Tutorial - End
 
     //
     // Implementation

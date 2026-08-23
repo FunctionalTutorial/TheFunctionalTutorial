@@ -2,6 +2,7 @@
   id: TutorialItems
   job: Passenger
   stub: false
+  liveTutorial: true
   simplifiedEnvironment: true
   category: Start Here
   pickerOrder: 1

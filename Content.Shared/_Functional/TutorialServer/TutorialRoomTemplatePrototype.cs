@@ -7,7 +7,7 @@ namespace Content.Shared._Functional.TutorialServer;
 /// Authorable tutorial room section: prefer a station-cropped map template,
 /// fall back to a procedural <see cref="TutorialRoomPrototype"/> when no crop exists.
 /// </summary>
-[Prototype] //Wizden: drop redundant type (RA0042)
+[Prototype] //Tutorial: drop redundant type (RA0042)
 public sealed partial class TutorialRoomTemplatePrototype : IPrototype
 {
     [IdDataField]

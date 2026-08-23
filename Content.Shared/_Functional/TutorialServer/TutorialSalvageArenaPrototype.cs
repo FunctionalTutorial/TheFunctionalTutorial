@@ -6,7 +6,7 @@ namespace Content.Shared._Functional.TutorialServer;
 /// <summary>
 /// Builds a salvage bay grid plus a nearby debris grid for magnet/EVA/haul tutorials.
 /// </summary>
-[Prototype] //Wizden: drop redundant type (RA0042)
+[Prototype] //Tutorial: drop redundant type (RA0042)
 public sealed partial class TutorialSalvageArenaPrototype : IPrototype
 {
     [IdDataField]

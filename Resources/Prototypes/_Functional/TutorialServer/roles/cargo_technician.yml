@@ -2,7 +2,9 @@
   id: TutorialCargoTechnician
   job: CargoTechnician
   stub: false
-  category: Cargo
+  liveTutorial: true
+  category: Station Jobs
+  pickerOrder: 0
   map: /Maps/_Functional/TutorialServer/Roles/CargoTechnician.yml
   shuttleArena: TutorialArenaCargoShuttle
   guidebook: Cargo

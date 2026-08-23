@@ -30,6 +30,7 @@ public sealed partial class TutorialMapSystem : EntitySystem
     [Dependency] private readonly TutorialRoomTemplateSystem _templates = default!;
     [Dependency] private readonly TutorialSalvageArenaSystem _salvageArenas = default!;
     [Dependency] private readonly TutorialShuttleArenaSystem _shuttleArenas = default!;
+    [Dependency] private readonly TutorialDragonArenaSystem _dragonArenas = default!;
 
     /// <summary>
     /// Creates a private tutorial map for a role — shuttle/salvage/nukeops, then stamped
@@ -50,6 +51,8 @@ public sealed partial class TutorialMapSystem : EntitySystem
             loaded = _shuttleArenas.TryBuildArena(role.ShuttleArena.Value, out mapUid, out gridUid, out spawnCoords);
         else if (role.SalvageArena != null)
             loaded = _salvageArenas.TryBuildArena(role.SalvageArena.Value, out mapUid, out gridUid, out spawnCoords);
+        else if (role.DragonArena != null)
+            loaded = _dragonArenas.TryBuildArena(role.DragonArena.Value, out mapUid, out gridUid, out spawnCoords);
         else if (role.NukeopsOutpost)
             loaded = _nukeopsBase.TryBuildOutpost(out mapUid, out gridUid, out spawnCoords);
         else if (role.RoomTemplate != null)
@@ -90,6 +93,7 @@ public sealed partial class TutorialMapSystem : EntitySystem
             // includes StationAnchor (switchedOn), which calls ShuttleSystem.Disable and leaves the
             // ship BodyType.Static forever — undock clears weld joints but thrusters still cannot
             // move it. Dock pads already get inherent gravity in TutorialShuttleArenaSystem.
+            // Dragon arenas spawn the body in map space; only support the prey station grid.
             if (role.ShuttleArena == null)
                 _rooms.EnsureGridSupport(gridUid);
 

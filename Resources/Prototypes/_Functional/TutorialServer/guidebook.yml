@@ -3,3 +3,4 @@
   name: tutorial-server-rules-title
   text: "/ServerInfo/_Functional/TutorialServer/Rules.xml"
   ruleEntry: true
+  priority: 10

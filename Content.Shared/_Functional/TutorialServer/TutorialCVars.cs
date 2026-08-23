@@ -25,4 +25,12 @@ public sealed class TutorialCVars
     /// </summary>
     public static readonly CVarDef<bool> E2EForceStart =
         CVarDef.Create("tutorial.e2e_force_start", false, CVar.SERVERONLY);
+
+    /// <summary>
+    /// When true, the role picker lists only tutorials marked <c>liveTutorial</c>.
+    /// Enabled on the deployed Tutorial host; left off in development so unfinished
+    /// tutorials stay visible (shown with a stub prefix).
+    /// </summary>
+    public static readonly CVarDef<bool> LiveTutorials =
+        CVarDef.Create("tutorial.live_tutorials", false, CVar.SERVERONLY);
 }

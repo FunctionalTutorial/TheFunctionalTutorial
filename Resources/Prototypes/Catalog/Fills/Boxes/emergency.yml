@@ -15,7 +15,7 @@
     layers:
     - state: internals
     - state: emergencytank
-  #Wizden: added tag
+  #Tutorial: added tag
   - type: Tag
     tags:
     - TutorialSurvivalBox

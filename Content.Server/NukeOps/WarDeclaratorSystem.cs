@@ -2,7 +2,7 @@ using Content.Server.Administration.Logs;
 using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
 using Content.Server.Popups;
-using Content.Shared._Functional.TutorialServer; //Wizden
+using Content.Shared._Functional.TutorialServer; //Tutorial
 using Content.Shared.Access.Systems;
 using Content.Shared.CCVar;
 using Content.Shared.Chat;
@@ -22,7 +22,7 @@ namespace Content.Server.NukeOps;
 public sealed partial class WarDeclaratorSystem : EntitySystem
 {
     [Dependency] private IAdminLogManager _adminLogger = default!;
-    [Dependency] private IChatManager _chatManager = default!; //Wizden
+    [Dependency] private IChatManager _chatManager = default!; //Tutorial
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
@@ -62,13 +62,13 @@ public sealed partial class WarDeclaratorSystem : EntitySystem
 
     private void OnActivated(Entity<WarDeclaratorComponent> ent, ref WarDeclaratorActivateMessage args)
     {
-        //Wizden - Begin: tutorial warops — player-local only, no Nukeops rule required
+        //Tutorial - Begin: tutorial warops — player-local only, no Nukeops rule required
         if (HasComp<TutorialParticipantComponent>(args.Actor))
         {
             OnTutorialActivated(ent, ref args);
             return;
         }
-        //Wizden - End
+        //Tutorial - End
 
         var ev = new WarDeclaredEvent(ent.Comp.CurrentStatus, ent);
         RaiseLocalEvent(ref ev);
@@ -93,7 +93,7 @@ public sealed partial class WarDeclaratorSystem : EntitySystem
         UpdateUI(ent, ev.Status);
     }
 
-    //Wizden - Begin
+    //Tutorial - Begin
     private void OnTutorialActivated(Entity<WarDeclaratorComponent> ent, ref WarDeclaratorActivateMessage args)
     {
         var maxLength = _cfg.GetCVar(CCVars.ChatMaxAnnouncementLength);
@@ -119,7 +119,7 @@ public sealed partial class WarDeclaratorSystem : EntitySystem
 
         UpdateUI(ent, ent.Comp.CurrentStatus);
     }
-    //Wizden - End
+    //Tutorial - End
 
     private void UpdateUI(Entity<WarDeclaratorComponent> ent, WarConditionStatus? status = null)
     {

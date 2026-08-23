@@ -228,7 +228,7 @@ namespace Content.Client.Gameplay
             {
                 var mousePosWorld = vp.PixelToMap(kArgs.PointerLocation.Position);
 
-                //Wizden - Begin: skip map conversion when eye/map is gone (round restart / picker-only join)
+                //Tutorial - Begin: skip map conversion when eye/map is gone (round restart / picker-only join)
                 if (mousePosWorld.MapId == MapId.Nullspace)
                 {
                     coordinates = EntityCoordinates.Invalid;
@@ -250,7 +250,7 @@ namespace Content.Client.Gameplay
                         mapSystem.MapToGrid(uid, mousePosWorld) :
                         transformSystem.ToCoordinates(mousePosWorld);
                 }
-                //Wizden - End
+                //Tutorial - End
             }
             else
             {

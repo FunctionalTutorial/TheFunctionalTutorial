@@ -4,8 +4,10 @@
   job: Passenger
   antag: Nukeops
   stub: false
+  liveTutorial: true
   simplifiedEnvironment: true
-  category: Wizden antagonists
+  category: Antagonist
+  pickerOrder: 1
   nukeopsOutpost: true
   map: /Maps/_Functional/TutorialServer/Antag_Nukeops.yml
   guidebook: NuclearOperatives

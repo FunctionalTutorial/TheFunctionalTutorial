@@ -1,17 +1,17 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Build Content.Server (+ Content.Client when present), package with Resources, upload to FileShare.
+  Build Content.Server (+ Content.Client when present), package with Resources, drop onto Google Drive.
 
 .DESCRIPTION
-  Local-only deploy helper for DESKTOP-7SCFTK4 (192.168.1.6).
-  Does not touch the remote MCP (port 8000) or FileShare server (port 8765).
+  Local-only deploy helper. Does not touch the remote MCP (port 8000) or FileShare (port 8765).
 
-  Package lands at:
-    http://192.168.1.6:8765/incoming/tutorial-update.zip
-  Plus a marker:
+  Package lands in the mirrored Drive folder:
+    incoming/tutorial-update.zip
+    incoming/tutorial-update.sha256
     incoming/tutorial-update.ready
 
+  Drop root comes from -DropRoot or %USERPROFILE%\.wizden-host-drive.path.
   The host supervisor (Watch-TutorialServer.ps1) applies the package:
   stop SS14 -> extract -> start SS14 (infra stays up).
 
@@ -28,14 +28,13 @@ param(
     [ValidateSet("Debug", "DebugOpt", "Release")]
     [string] $Configuration = "DebugOpt",
     [switch] $SkipBuild,
-    [string] $BaseUrl = "http://192.168.1.6:8765",
-    [string] $Token,
-    [string] $TokenFile = "$env:USERPROFILE\.wizden-host-fileshare.token",
+    [string] $DropRoot = "",
     [switch] $ResourcesOnly,
     [switch] $BinOnly
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "Resolve-TutorialHostDropRoot.ps1")
 
 if (-not $RepoRoot) {
     # tutorial-host/ -> _Functional/ -> Build/ -> repo root
@@ -46,12 +45,8 @@ function Write-Step([string]$msg) {
     Write-Host "==> $msg" -ForegroundColor Cyan
 }
 
-if (-not $Token) {
-    if (-not (Test-Path -LiteralPath $TokenFile)) {
-        throw "Pass -Token or create $TokenFile with the host FileShare bearer token."
-    }
-    $Token = (Get-Content -LiteralPath $TokenFile -Raw).Trim()
-}
+$drop = Resolve-TutorialHostDropRoot -DropRoot $DropRoot
+$incomingDir = Join-Path $drop "incoming"
 
 $serverProj = Join-Path $RepoRoot "Content.Server\Content.Server.csproj"
 $clientProj = Join-Path $RepoRoot "Content.Client\Content.Client.csproj"
@@ -158,46 +153,26 @@ try {
 
     $zipItem = Get-Item -LiteralPath $zipPath
     $mb = [math]::Round($zipItem.Length / 1MB, 1)
-    Write-Step "Uploading package ($mb MB)"
+    Write-Step "Copying package to Drive drop ($mb MB) -> $incomingDir"
 
-    function Send-FileSharePut([string]$RemoteName, [string]$LocalPath) {
-        $uri = "$BaseUrl/$($RemoteName.TrimStart('/'))"
-        $item = Get-Item -LiteralPath $LocalPath
-        $request = [System.Net.HttpWebRequest]::Create($uri)
-        $request.Method = "PUT"
-        $request.Headers["Authorization"] = "Bearer $Token"
-        $request.ContentType = "application/octet-stream"
-        $request.AllowWriteStreamBuffering = $false
-        $request.Timeout = 1000 * 60 * 120
-        $request.ReadWriteTimeout = 1000 * 60 * 120
-        $request.ContentLength = $item.Length
-        $fs = [System.IO.File]::OpenRead($item.FullName)
-        try {
-            $reqStream = $request.GetRequestStream()
-            try { $fs.CopyTo($reqStream, 1024 * 1024) }
-            finally { $reqStream.Close() }
-            $response = $request.GetResponse()
-            try {
-                $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
-                $body = $reader.ReadToEnd()
-                Write-Host $body
-                if ([int]$response.StatusCode -ge 300) {
-                    throw "Upload failed HTTP $([int]$response.StatusCode): $body"
-                }
-            }
-            finally { $response.Close() }
-        }
-        finally { $fs.Close() }
+    New-Item -ItemType Directory -Path $incomingDir -Force | Out-Null
+    $destZip = Join-Path $incomingDir "tutorial-update.zip"
+    $destSha = Join-Path $incomingDir "tutorial-update.sha256"
+    $destReady = Join-Path $incomingDir "tutorial-update.ready"
+
+    # Remove the ready marker first so the host cannot apply a half-copied zip.
+    if (Test-Path -LiteralPath $destReady) {
+        Remove-Item -LiteralPath $destReady -Force
     }
 
-    Send-FileSharePut "incoming/tutorial-update.zip" $zipPath
+    Copy-Item -LiteralPath $zipPath -Destination $destZip -Force
+    $hash = (Get-FileHash -LiteralPath $destZip -Algorithm SHA256).Hash.ToLowerInvariant()
+    Set-Content -LiteralPath $destSha -Value $hash -Encoding ascii
+    Set-Content -LiteralPath $destReady -Value ((Get-Date).ToUniversalTime().ToString("o")) -Encoding ascii
 
-    $readyPath = Join-Path $workRoot "tutorial-update.ready"
-    Set-Content -LiteralPath $readyPath -Value ((Get-Date).ToUniversalTime().ToString("o")) -Encoding ascii
-    Send-FileSharePut "incoming/tutorial-update.ready" $readyPath
-
-    Write-Step "Upload complete. Host supervisor will apply when it sees tutorial-update.ready"
-    Write-Host "Package: incoming/tutorial-update.zip"
+    Write-Step "Drop complete. Host supervisor will apply when Drive finishes syncing tutorial-update.ready"
+    Write-Host "Package: $destZip"
+    Write-Host "SHA256: $hash"
 }
 finally {
     if (Test-Path -LiteralPath $workRoot) {

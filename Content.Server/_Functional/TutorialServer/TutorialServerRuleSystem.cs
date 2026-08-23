@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
+using Content.Server.Antag;
 using Content.Server._Functional.TutorialServer.UI;
 using Content.Server.Chat.Managers;
 using Content.Server.EUI;
@@ -57,6 +58,8 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.Map;
+using Robust.Shared.Localization;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -99,6 +102,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly TutorialCommandBootstrapSystem _commandBootstrap = default!;
     [Dependency] private readonly TutorialChemBootstrapSystem _chemBootstrap = default!;
     [Dependency] private readonly TutorialAntagBootstrapSystem _antagBootstrap = default!;
+    [Dependency] private readonly AntagSelectionSystem _antagSelection = default!;
     [Dependency] private readonly SharedActionsSystem _actions = default!;
     [Dependency] private readonly SharedContainerSystem _containers = default!;
     [Dependency] private readonly SharedHandsSystem _hands = default!;
@@ -126,6 +130,11 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     private static readonly ProtoId<TutorialRolePrototype> TutorialCargoTechnicianRole = "TutorialCargoTechnician";
     private static readonly TimeSpan ProgressPopupCooldown = TimeSpan.FromSeconds(0.75);
     private const string ControlsSubGoalId = "controls";
+    private const string PickerCategoryStartHere = "Start Here";
+    private const string PickerCategoryStationJobs = "Station Jobs";
+    private const string PickerCategoryAntagonist = "Antagonist";
+    private const string PickerCategoryWizdenAntags = "Wizden antagonists";
+    private const string PickerCategoryServerSpecific = "Server specific";
 
     /// <summary>
     /// IC speak range for mentor tips. Beyond this, hybrid travel roles fall back to tip chat.
@@ -159,6 +168,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     private bool _prevOoc;
     private bool _prevLooc;
     private bool _prevDeadChat;
+    private bool _prevOocEnableDuringRound;
     private bool _prevDisallowLateJoin;
     private bool _prevRoleTimers;
     private bool _prevRoleWhitelist;
@@ -303,6 +313,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _prevOoc = _cfg.GetCVar(CCVars.OocEnabled);
         _prevLooc = _cfg.GetCVar(CCVars.LoocEnabled);
         _prevDeadChat = _cfg.GetCVar(CCVars.DeadChatEnabled);
+        _prevOocEnableDuringRound = _cfg.GetCVar(CCVars.OocEnableDuringRound);
         _prevDisallowLateJoin = _cfg.GetCVar(CCVars.GameDisallowLateJoins);
         _prevRoleTimers = _cfg.GetCVar(CCVars.GameRoleTimers);
         _prevRoleWhitelist = _cfg.GetCVar(CCVars.GameRoleWhitelist);
@@ -311,6 +322,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _cfg.SetCVar(CCVars.OocEnabled, false);
         _cfg.SetCVar(CCVars.LoocEnabled, false);
         _cfg.SetCVar(CCVars.DeadChatEnabled, false);
+        // ChatSystem re-enables ooc.enabled on PostRound/PreRoundLobby unless this is true.
+        _cfg.SetCVar(CCVars.OocEnableDuringRound, true);
         _cfg.SetCVar(CCVars.GameDisallowLateJoins, false);
         _cfg.SetCVar(CCVars.GameRoleTimers, false);
         _cfg.SetCVar(CCVars.GameRoleWhitelist, false);
@@ -327,6 +340,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _cfg.SetCVar(CCVars.OocEnabled, _prevOoc);
         _cfg.SetCVar(CCVars.LoocEnabled, _prevLooc);
         _cfg.SetCVar(CCVars.DeadChatEnabled, _prevDeadChat);
+        _cfg.SetCVar(CCVars.OocEnableDuringRound, _prevOocEnableDuringRound);
         _cfg.SetCVar(CCVars.GameDisallowLateJoins, _prevDisallowLateJoin);
         _cfg.SetCVar(CCVars.GameRoleTimers, _prevRoleTimers);
         _cfg.SetCVar(CCVars.GameRoleWhitelist, _prevRoleWhitelist);
@@ -454,6 +468,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             return;
 
         if (!ProtoMan.TryIndex<TutorialRolePrototype>(roleId, out var roleProto))
+            return;
+
+        if (_cfg.GetCVar(TutorialCVars.LiveTutorials) && !roleProto.LiveTutorial)
             return;
 
         if (IsRoleBlockedForPlayer(player, roleProto))
@@ -620,18 +637,23 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// Builds the role-picker list: Passenger first, then departments, server-specific,
-    /// antagonists last. ERT packages are omitted.
+    /// Builds the role-picker list: Start Here, Station Jobs, then remaining departments,
+    /// server-specific, antagonists last. ERT packages are omitted. When
+    /// <see cref="TutorialCVars.LiveTutorials"/> is set, only <c>liveTutorial</c> roles remain.
     /// </summary>
     /// <param name="player">Whose species decides what comes back blocked; null lists everything.</param>
     public List<TutorialRolePickerEntry> BuildPickerEntries(ICommonSession? player = null)
     {
         var species = GetSelectedSpecies(player);
+        var liveOnly = _cfg.GetCVar(TutorialCVars.LiveTutorials);
 
         var list = new List<TutorialRolePickerEntry>();
         foreach (var proto in ProtoMan.EnumeratePrototypes<TutorialRolePrototype>())
         {
             if (IsErtTutorialRole(proto))
+                continue;
+
+            if (liveOnly && !proto.LiveTutorial)
                 continue;
 
             list.Add(new TutorialRolePickerEntry
@@ -640,7 +662,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 DisplayName = GetRoleDisplayName(proto),
                 Category = proto.Category,
                 SubCategory = proto.SubCategory,
-                Stub = proto.Stub,
+                Stub = proto.Stub || !proto.LiveTutorial,
                 Order = proto.PickerOrder,
                 BlockedForSpecies = species != null && proto.BlockedSpecies.Contains(species.Value),
             });
@@ -707,26 +729,28 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// 0 = Start Here (controls), 1 = Passenger/Assistant basics, 2 = departments,
-    /// 3 = server-specific, 4 = wizden antagonists.
+    /// 0 = Start Here, 1 = Station Jobs, 2 = Passenger leftover, 3 = other departments,
+    /// 4 = server-specific, 5 = antagonists.
     /// </summary>
     private static int GetPickerCategoryOrder(TutorialRolePickerEntry entry)
     {
-        // Someone who has never played should land on the controls tutorial first.
-        if (string.Equals(entry.Category, "Start Here", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(entry.Category, PickerCategoryStartHere, StringComparison.OrdinalIgnoreCase))
             return 0;
 
-        if (entry.RoleId == "TutorialPassenger")
+        if (string.Equals(entry.Category, PickerCategoryStationJobs, StringComparison.OrdinalIgnoreCase))
             return 1;
 
-        if (string.Equals(entry.Category, "Wizden antagonists", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(entry.Category, "Antagonist", StringComparison.OrdinalIgnoreCase))
+        if (entry.RoleId == "TutorialPassenger")
+            return 2;
+
+        if (string.Equals(entry.Category, PickerCategoryServerSpecific, StringComparison.OrdinalIgnoreCase))
             return 4;
 
-        if (string.Equals(entry.Category, "Server specific", StringComparison.OrdinalIgnoreCase))
-            return 3;
+        if (string.Equals(entry.Category, PickerCategoryAntagonist, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(entry.Category, PickerCategoryWizdenAntags, StringComparison.OrdinalIgnoreCase))
+            return 5;
 
-        return 2;
+        return 3;
     }
 
     private static bool IsErtTutorialRole(TutorialRolePrototype proto)
@@ -794,6 +818,15 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         // Mind roles first so RoleRequirement placeholder objectives (e.g. dragon rifts) can attach.
         _antagBootstrap.ApplyTutorialAntag(mob, mindId, roleProto.Antag);
 
+        if (roleProto.DragonArena != null)
+        {
+            _antagSelection.SendBriefing(
+                player,
+                Loc.GetString("tutorial-antag-dragon-briefing"),
+                Color.FromHex("#c41e3a"),
+                briefingSound: null);
+        }
+
         if (TryComp<MindComponent>(mindId, out var mindComp))
         {
             foreach (var objectiveId in roleProto.PlaceholderObjectives)
@@ -849,7 +882,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     /// Travel/off-grid arenas use a speaking handheld guide; single-grid roles get a soft-following mentor.
     /// </summary>
     public static bool UsesTravelingCoach(TutorialRolePrototype role) =>
-        role.ShuttleArena != null || role.SalvageArena != null;
+        role.ShuttleArena != null || role.SalvageArena != null || role.DragonArena != null;
 
     private void GiveTutorialCoach(
         EntityUid mob,

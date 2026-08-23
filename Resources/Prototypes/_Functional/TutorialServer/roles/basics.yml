@@ -2,6 +2,7 @@
   id: TutorialBasics
   job: Passenger
   stub: false
+  liveTutorial: true
   simplifiedEnvironment: true
   category: Start Here
   name: tutorial-basics-name

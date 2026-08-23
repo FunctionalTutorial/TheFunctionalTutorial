@@ -1,18 +1,23 @@
 using Content.Server.Chat.Managers;
+using Content.Server.Chat.Systems;
+using Content.Server.GameTicking;
 using Content.Server.Radio;
 using Content.Shared._Functional.TutorialServer;
+using Content.Shared.CCVar;
 using Content.Shared.Chat;
 using Content.Shared.GameTicking.Components;
+using Robust.Shared.Configuration;
 
 namespace Content.Server._Functional.TutorialServer;
 
 /// <summary>
-/// Chat isolation while TutorialServer is active: no radio, and ghosts cannot use dead chat
-/// (CVars also disable OOC/LOOC/dead; this hard-cancels dead-chat attempts as a backstop).
+/// Chat isolation while TutorialServer is active: no radio, and players cannot use OOC channels
+/// (CVars also disable OOC/LOOC/dead; this hard-cancels in-game OOC attempts as a backstop).
 /// </summary>
 public sealed class TutorialChatIsolationSystem : EntitySystem
 {
     [Dependency] private readonly IChatManager _chat = default!;
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
 
     public override void Initialize()
     {
@@ -21,6 +26,8 @@ public sealed class TutorialChatIsolationSystem : EntitySystem
         SubscribeLocalEvent<RadioReceiveAttemptEvent>(OnRadioReceiveAttempt);
         SubscribeLocalEvent<RadioSendAttemptEvent>(OnRadioSendAttempt);
         SubscribeLocalEvent<InGameOocMessageAttemptEvent>(OnInGameOocAttempt);
+        // After ChatSystem, which otherwise turns ooc.enabled back on at PostRound / lobby.
+        SubscribeLocalEvent<GameRunLevelChangedEvent>(OnRunLevelChanged, after: [typeof(ChatSystem)]);
     }
 
     private bool TutorialActive()
@@ -46,10 +53,21 @@ public sealed class TutorialChatIsolationSystem : EntitySystem
         if (args.Cancelled || !TutorialActive())
             return;
 
-        if (args.Type != InGameOOCChatType.Dead)
+        args.Cancelled = true;
+        var loc = args.Type == InGameOOCChatType.Dead
+            ? "tutorial-server-dead-chat-disabled"
+            : "tutorial-server-looc-disabled";
+        _chat.DispatchServerMessage(args.Session, Loc.GetString(loc), suppressLog: true);
+    }
+
+    private void OnRunLevelChanged(GameRunLevelChangedEvent ev)
+    {
+        if (!TutorialActive())
             return;
 
-        args.Cancelled = true;
-        _chat.DispatchServerMessage(args.Session, Loc.GetString("tutorial-server-dead-chat-disabled"), suppressLog: true);
+        _cfg.SetCVar(CCVars.OocEnabled, false);
+        _cfg.SetCVar(CCVars.LoocEnabled, false);
+        _cfg.SetCVar(CCVars.DeadChatEnabled, false);
+        _cfg.SetCVar(CCVars.OocEnableDuringRound, true);
     }
 }

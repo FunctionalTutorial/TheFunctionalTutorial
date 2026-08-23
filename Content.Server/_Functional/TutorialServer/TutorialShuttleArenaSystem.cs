@@ -289,21 +289,28 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
     }
 
     /// <summary>
-    /// Rough cargo-bay department: docks, orders console, crates, conveyors, ore pad.
+    /// Builds the cargo-bay box station (same hull/furniture as the cargo tutorial home dock).
+    /// Used by cargo shuttle arenas and the Space Dragon prey arena.
     /// </summary>
-    private EntityUid BuildCargoBayStation(MapId mapId, TutorialShuttleArenaPrototype arena)
+    public EntityUid BuildCargoBayBoxStation(
+        MapId mapId,
+        EntProtoId dockProto,
+        string stationId,
+        bool attachTradeStation = true)
     {
         const int w = 15;
         const int h = 11;
-        var gridUid = BuildStationHull(mapId, w, h, "FloorSteel", "FloorSteelCheckerDark", westDockYs: new[] { 4, 6 }, arena.DockProto);
+        var gridUid = BuildStationHull(mapId, w, h, "FloorSteel", "FloorSteelCheckerDark", westDockYs: new[] { 4, 6 }, dockProto);
 
         var station = EnsureComp<TutorialDockStationComponent>(gridUid);
-        station.StationId = arena.HomeStationId;
+        station.StationId = stationId;
         Dirty(gridUid, station);
 
-        // Own a cargo trade station so the order console can purchase / approve.
-        var tradeStation = Spawn(TutorialCargoTradeStationProto, MapCoordinates.Nullspace);
-        _station.AddGridToStation(tradeStation, gridUid, name: "Tutorial Cargo Bay");
+        if (attachTradeStation)
+        {
+            var tradeStation = Spawn(TutorialCargoTradeStationProto, MapCoordinates.Nullspace);
+            _station.AddGridToStation(tradeStation, gridUid, name: "Tutorial Cargo Bay");
+        }
 
         SpawnAnchored("DefaultStationBeaconCargoBay", gridUid, new Vector2i(7, 9));
         SpawnAnchored("TutorialComputerCargoOrders", gridUid, new Vector2i(4, 8));
@@ -325,6 +332,19 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
 
         return gridUid;
     }
+
+    /// <summary>
+    /// Rough cargo-bay department: docks, orders console, crates, conveyors, ore pad.
+    /// </summary>
+    private EntityUid BuildCargoBayStation(MapId mapId, TutorialShuttleArenaPrototype arena)
+    {
+        return BuildCargoBayBoxStation(mapId, arena.DockProto, arena.HomeStationId, attachTradeStation: true);
+    }
+
+    /// <summary>
+    /// Gravity + atmos init for a procedural dock station (shared with dragon prey arena).
+    /// </summary>
+    public void PrepareDockStationGrid(EntityUid gridUid) => PrepareGrid(gridUid);
 
     /// <summary>
     /// Compact Automated Trade Station stand-in with pallet pads and a facing dock.

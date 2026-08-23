@@ -174,7 +174,7 @@ public sealed partial class RevolutionaryRuleSystem : GameRuleSystem<Revolutiona
             }
         }
 
-        //Wizden: skip mind roles for AlwaysRevolutionaryConvertible practice NPCs (no mind).
+        //Tutorial: skip mind roles for AlwaysRevolutionaryConvertible practice NPCs (no mind).
         if (mindId != default && !_role.MindHasRole<RevolutionaryRoleComponent>(mindId))
         {
             _role.MindAddRole(mindId, "MindRoleRevolutionary");

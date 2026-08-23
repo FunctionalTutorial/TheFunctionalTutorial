@@ -42,8 +42,10 @@
   fallbackRoom: TutorialRoomAtmos
   sourceNote: "Packed atmospherics AABB crop"
   gateDoor: AirlockAtmospherics
-  # East mid is open deck; south strip is eng/atmos locks.
-  stampDirection: East
+  # Zone sits on the N–S airlock corridor (x≈8). East mid is plasma glass + tank
+  # walls; east-edge ResolveGateLateral snaps to the SE external airlock — unpathable
+  # / non-obvious after vaulting. Stamp south through the center doors instead.
+  stampDirection: South
 
 - type: tutorialRoomTemplate
   id: TutorialSectionSecurity

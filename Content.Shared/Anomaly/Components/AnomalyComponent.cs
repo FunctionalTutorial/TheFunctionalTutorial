@@ -187,7 +187,7 @@ public sealed partial class AnomalyComponent : Component
     [DataField, AutoNetworkedField]
     public AnomalousParticleType TransformationParticleType;
 
-    //Wizden - Begin: tutorial-stable particle / behavior locks
+    //Tutorial - Begin: tutorial-stable particle / behavior locks
     /// <summary>
     /// When true, MapInit keeps the YAML particle type assignments instead of shuffling them.
     /// </summary>
@@ -199,7 +199,7 @@ public sealed partial class AnomalyComponent : Component
     /// </summary>
     [DataField]
     public bool LockBehavior;
-    //Wizden - End
+    //Tutorial - End
 
     #region Points and Vessels
     /// <summary>

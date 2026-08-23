@@ -1,6 +1,7 @@
 tutorial-server-preset-title = The Functional Tutorial Server
 tutorial-server-preset-description = Solo job and antagonist tutorials on private maps. Press Join in the lobby, then pick a job (Passenger is listed first for the basics). No player chat. Use the Choose a tutorial action (dollar sign) to switch roles.
 tutorial-server-dead-chat-disabled = Dead chat is disabled on the tutorial server. Use the Choose a tutorial action (click the dollar sign on the left side of the game window, or right-click yourself) to open the role picker.
+tutorial-server-looc-disabled = LOOC is disabled on the tutorial server.
 tutorial-server-picker-title = Choose a tutorial
 tutorial-server-picker-subtitle = Pick any job or antagonist. Grey entries are incomplete stubs.
 tutorial-server-picker-quit = Quit
@@ -16,7 +17,7 @@ tutorial-server-mentor-tip = Your mentor speaks your current tip once. Empty-han
 tutorial-server-mentor-highlight = Tutorial mentor
 tutorial-server-progress-toast = Next: {$text}
 tutorial-server-prompt-hint = Hint
-tutorial-server-picker-stub-entry = {$name} (stub / incomplete)
+tutorial-server-picker-stub-entry = stub {$name}
 tutorial-server-picker-species-entry = {$name} (not for your species)
 tutorial-server-picker-species-tooltip = Your current character's species is not fit for this tutorial.
 tutorial-server-stub-confirm-text = This tutorial is incomplete (stub). Continue anyway?

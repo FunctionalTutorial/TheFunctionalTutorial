@@ -4,7 +4,7 @@
   Stop supervisor/relay/old SS14, then run TutorialServer bound to the LAN IP.
 
 .DESCRIPTION
-  Intended for the physical Tutorial host (192.168.1.6) when you are at the keyboard
+  Intended for the physical Tutorial host (192.168.1.4) when you are at the keyboard
   and can Accept the Windows firewall prompt for dotnet.
 
   Does NOT touch windows-mcp or FileShare.
@@ -17,7 +17,7 @@ param(
     [string] $LiveRoot = 'D:\WizdenHost\live',
     [string] $ToolsRoot = 'D:\WizdenHost\tools',
     [string] $DotnetExe = 'D:\dotnet\dotnet.exe',
-    [string] $BindHost = '192.168.1.6',
+    [string] $BindHost = '192.168.1.4',
     [int] $Port = 1212,
     [int] $ReadyTimeoutSec = 180
 )
@@ -117,7 +117,7 @@ if ($still.Count -gt 0) {
 Write-Step "Starting TutorialServer on ${BindHost}:${Port} (hub.advertise=false)"
 Write-Host "WorkingDirectory=$LiveRoot"
 Write-Host 'Click Allow if Windows Firewall prompts for dotnet.'
-Write-Host 'Connect: ss14://192.168.1.6:1212  (LAN)  or  ss14://24.32.95.172:1212  (internet)'
+Write-Host 'Connect: ss14://192.168.1.4:1212  (LAN)  or  ss14://24.32.95.172:1212  (internet)'
 Write-Host 'Ctrl+C stops the server when you are done.'
 Write-Host ''
 
@@ -136,6 +136,16 @@ $argList = @(
     '--cvar', 'game.map=TutorialLobby',
     '--cvar', 'game.lobbyduration=120',
     '--cvar', 'game.hostname=The Functional Tutorial Server',
+    '--cvar', 'game.soft_max_players=40',
+    '--cvar', 'server.rules_file=TutorialServerRules',
+    '--cvar', 'rules.enabled=true',
+    '--cvar', 'rules.time=5',
+    '--cvar', 'rules.validity_days=0',
+    '--cvar', 'ooc.enabled=false',
+    '--cvar', 'ooc.enable_during_round=true',
+    '--cvar', 'looc.enabled=false',
+    '--cvar', 'dead_chat.enabled=false',
+    '--cvar', 'tutorial.live_tutorials=true',
     '--cvar', 'console.loginlocal=true',
     '--cvar', 'log.level=Info'
 )

@@ -3,8 +3,10 @@
   mentorName: Urist McMalpractice
   job: MedicalDoctor
   stub: false
+  liveTutorial: true
   simplifiedEnvironment: true
-  category: Medical
+  category: Station Jobs
+  pickerOrder: 1
   map: /Maps/_Functional/TutorialServer/Roles/MedicalDoctor.yml
   roomTemplate: TutorialSectionMedbay
   guidebook: Medical
