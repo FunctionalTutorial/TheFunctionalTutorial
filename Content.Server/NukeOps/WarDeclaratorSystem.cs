@@ -1,6 +1,8 @@
 using Content.Server.Administration.Logs;
+using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
 using Content.Server.Popups;
+using Content.Shared._Functional.TutorialServer; //Tutorial
 using Content.Shared.Access.Systems;
 using Content.Shared.CCVar;
 using Content.Shared.Chat;
@@ -9,6 +11,7 @@ using Content.Shared.NukeOps;
 using Content.Shared.UserInterface;
 using Robust.Server.GameObjects;
 using Robust.Shared.Configuration;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
 namespace Content.Server.NukeOps;
@@ -19,6 +22,7 @@ namespace Content.Server.NukeOps;
 public sealed partial class WarDeclaratorSystem : EntitySystem
 {
     [Dependency] private IAdminLogManager _adminLogger = default!;
+    [Dependency] private IChatManager _chatManager = default!; //Tutorial
     [Dependency] private IConfigurationManager _cfg = default!;
     [Dependency] private IGameTiming _gameTiming = default!;
     [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
@@ -58,6 +62,14 @@ public sealed partial class WarDeclaratorSystem : EntitySystem
 
     private void OnActivated(Entity<WarDeclaratorComponent> ent, ref WarDeclaratorActivateMessage args)
     {
+        //Tutorial - Begin: tutorial warops — player-local only, no Nukeops rule required
+        if (HasComp<TutorialParticipantComponent>(args.Actor))
+        {
+            OnTutorialActivated(ent, ref args);
+            return;
+        }
+        //Tutorial - End
+
         var ev = new WarDeclaredEvent(ent.Comp.CurrentStatus, ent);
         RaiseLocalEvent(ref ev);
 
@@ -80,6 +92,34 @@ public sealed partial class WarDeclaratorSystem : EntitySystem
 
         UpdateUI(ent, ev.Status);
     }
+
+    //Tutorial - Begin
+    private void OnTutorialActivated(Entity<WarDeclaratorComponent> ent, ref WarDeclaratorActivateMessage args)
+    {
+        var maxLength = _cfg.GetCVar(CCVars.ChatMaxAnnouncementLength);
+        var message = SharedChatSystem.SanitizeAnnouncement(args.Message, maxLength);
+        if (ent.Comp.AllowEditingMessage && message != string.Empty)
+            ent.Comp.Message = message;
+
+        // One successful declare completes the tutorial warops flow (player-local announce only).
+        if (ent.Comp.CurrentStatus != WarConditionStatus.WarReady)
+            ent.Comp.CurrentStatus = WarConditionStatus.WarReady;
+
+        if (TryComp<ActorComponent>(args.Actor, out var actor))
+        {
+            var title = Loc.GetString(ent.Comp.SenderTitle);
+            _chatManager.DispatchServerMessage(actor.PlayerSession,
+                Loc.GetString("tutorial-antag-nukeops-commander-war-local",
+                    ("title", title),
+                    ("message", ent.Comp.Message)));
+            EnsureComp<TutorialWarDeclaredComponent>(args.Actor);
+            _adminLogger.Add(LogType.Chat, LogImpact.Low,
+                $"{ToPrettyString(args.Actor):player} tutorial-declared war: {ent.Comp.Message}");
+        }
+
+        UpdateUI(ent, ent.Comp.CurrentStatus);
+    }
+    //Tutorial - End
 
     private void UpdateUI(Entity<WarDeclaratorComponent> ent, WarConditionStatus? status = null)
     {

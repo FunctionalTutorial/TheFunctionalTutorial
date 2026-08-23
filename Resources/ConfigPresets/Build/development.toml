@@ -1,12 +1,15 @@
 ﻿[game]
-# Straight in-game baby
-lobbyenabled = false
-# Dev map for faster loading & convenience
-map = "Dev"
+# Tutorial: TutorialServer is the local default (was lobbyenabled=false + Dev/Sandbox).
+# Dev map only exposes Captain latejoin slots — that masked wrong-preset launches.
+lobbyenabled = true
+map = "TutorialLobby"
+defaultpreset = "TutorialServer"
 role_timers = false
 admin_job_tracking = true
 role_loadout_timers = false
+# Keep Passenger + Captain for any leftover Dev-map workflows.
 new_character_jobs = "Passenger, Captain"
+soft_max_players = 40
 
 [events]
 enabled = false
@@ -38,6 +41,15 @@ preload_grids = false
 [afk]
 time = 0
 
+#Tutorial: TutorialServer connect-time rules popup (localhost is still exempt)
+[rules]
+enabled = true
+time = 5
+validity_days = 0
+
+[server]
+rules_file = "TutorialServerRules"
+
 [admin]
 afk_time = 0
 see_own_notes = true
@@ -60,3 +72,18 @@ pg_password = "postgres"
 [net]
 max_rapid_connections = 413
 max_ip_connections = 413
+
+#Tutorial: TutorialServer — no player OOC (enable_during_round blocks end-of-round auto-enable)
+[ooc]
+enabled = false
+enable_during_round = true
+
+[looc]
+enabled = false
+
+[dead_chat]
+enabled = false
+
+#Tutorial: development keeps unfinished tutorials visible (stub-prefixed)
+[tutorial]
+live_tutorials = false

@@ -1,0 +1,35 @@
+- type: vampireClass
+  id: Hemomancer
+  tooltip: vampire-class-hemomancer-tooltip
+  icon:
+    sprite: _Starlight/Vampire/Haemomancer.rsi
+    state: claws
+  classComponent: Hemomancer
+  actions: []
+
+- type: vampireClass
+  id: Umbrae
+  tooltip: vampire-class-umbrae-tooltip
+  icon:
+    sprite: _Starlight/Vampire/Umbrae.rsi
+    state: cloak_of_darkness
+  classComponent: Umbrae
+  actions: []
+
+- type: vampireClass
+  id: Gargantua
+  tooltip: vampire-class-gargantua-tooltip
+  icon:
+    sprite: _Starlight/Vampire/Gargantua.rsi
+    state: blood_swell
+  classComponent: Gargantua
+  actions: []
+
+- type: vampireClass
+  id: Dantalion
+  tooltip: vampire-class-dantalion-tooltip
+  icon:
+    sprite: _Starlight/Vampire/Dantalion.rsi
+    state: enthrall
+  classComponent: Dantalion
+  actions: []

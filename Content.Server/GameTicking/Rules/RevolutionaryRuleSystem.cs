@@ -174,7 +174,8 @@ public sealed partial class RevolutionaryRuleSystem : GameRuleSystem<Revolutiona
             }
         }
 
-        if (mindId == default || !_role.MindHasRole<RevolutionaryRoleComponent>(mindId))
+        //Tutorial: skip mind roles for AlwaysRevolutionaryConvertible practice NPCs (no mind).
+        if (mindId != default && !_role.MindHasRole<RevolutionaryRoleComponent>(mindId))
         {
             _role.MindAddRole(mindId, "MindRoleRevolutionary");
         }

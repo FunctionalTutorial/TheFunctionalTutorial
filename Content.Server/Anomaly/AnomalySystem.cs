@@ -64,13 +64,40 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
         ChangeAnomalyStability(anomaly, Random.NextFloat(anomaly.Comp.InitialStabilityRange.Item1 , anomaly.Comp.InitialStabilityRange.Item2), anomaly.Comp);
         ChangeAnomalySeverity(anomaly, Random.NextFloat(anomaly.Comp.InitialSeverityRange.Item1, anomaly.Comp.InitialSeverityRange.Item2), anomaly.Comp);
 
-        ShuffleParticlesEffect(anomaly);
-        anomaly.Comp.Continuity = _random.NextFloat(anomaly.Comp.MinContituty, anomaly.Comp.MaxContituty);
-        SetBehavior(anomaly, GetRandomBehavior());
+        //Tutorial - Begin: honor Learn/tutorial particle + behavior locks
+        if (anomaly.Comp.LockParticles)
+        {
+            Dirty(anomaly);
+        }
+        else
+        {
+            ShuffleParticlesEffect(anomaly);
+        }
+
+        if (anomaly.Comp.LockBehavior)
+        {
+            anomaly.Comp.Continuity = 0f;
+            if (anomaly.Comp.CurrentBehavior is { } lockedBehavior)
+            {
+                // Clear so SetBehavior applies behavior components even when YAML already set the id.
+                anomaly.Comp.CurrentBehavior = null;
+                SetBehavior(anomaly, lockedBehavior);
+            }
+        }
+        else
+        {
+            anomaly.Comp.Continuity = _random.NextFloat(anomaly.Comp.MinContituty, anomaly.Comp.MaxContituty);
+            SetBehavior(anomaly, GetRandomBehavior());
+        }
+        //Tutorial - End
     }
 
     public void ShuffleParticlesEffect(Entity<AnomalyComponent> anomaly)
     {
+        //Tutorial: tutorial / locked anomalies keep fixed particle roles
+        if (anomaly.Comp.LockParticles)
+            return;
+
         var particles = new List<AnomalousParticleType>
             { AnomalousParticleType.Delta, AnomalousParticleType.Epsilon, AnomalousParticleType.Zeta, AnomalousParticleType.Sigma };
 

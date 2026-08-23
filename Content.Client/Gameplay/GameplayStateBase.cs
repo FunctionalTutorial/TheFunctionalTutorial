@@ -228,20 +228,29 @@ namespace Content.Client.Gameplay
             {
                 var mousePosWorld = vp.PixelToMap(kArgs.PointerLocation.Position);
 
-                if (vp is ScalingViewport svp)
+                //Tutorial - Begin: skip map conversion when eye/map is gone (round restart / picker-only join)
+                if (mousePosWorld.MapId == MapId.Nullspace)
                 {
-                    entityToClick = GetClickedEntity(mousePosWorld, svp.Eye);
+                    coordinates = EntityCoordinates.Invalid;
                 }
                 else
                 {
-                    entityToClick = GetClickedEntity(mousePosWorld);
-                }
-                var transformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
-                var mapSystem = _entitySystemManager.GetEntitySystem<MapSystem>();
+                    if (vp is ScalingViewport svp)
+                    {
+                        entityToClick = GetClickedEntity(mousePosWorld, svp.Eye);
+                    }
+                    else
+                    {
+                        entityToClick = GetClickedEntity(mousePosWorld);
+                    }
+                    var transformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+                    var mapSystem = _entitySystemManager.GetEntitySystem<MapSystem>();
 
-                coordinates = mapSystem.TryFindGridAt(mousePosWorld, out var uid, out _) ?
-                    mapSystem.MapToGrid(uid, mousePosWorld) :
-                    transformSystem.ToCoordinates(mousePosWorld);
+                    coordinates = mapSystem.TryFindGridAt(mousePosWorld, out var uid, out _) ?
+                        mapSystem.MapToGrid(uid, mousePosWorld) :
+                        transformSystem.ToCoordinates(mousePosWorld);
+                }
+                //Tutorial - End
             }
             else
             {

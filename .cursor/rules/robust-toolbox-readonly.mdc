@@ -10,7 +10,7 @@ alwaysApply: true
 ## Hard rule
 
 - **Never** create, modify, delete, move, or reformat files under `RobustToolbox/`.
-- **Never** commit, submodule-bump, vendor, or otherwise update the engine as part of Wizden work.
+- **Never** commit, submodule-bump, vendor, or otherwise update the engine as part of Wizden work unless the user explicitly asks for an upstream submodule bump after an official engine PR merges.
 - Treat the engine as **read-only**: you may read it for API understanding, but all changes belong in Wizden content (`Content.*`, `Resources/`, Wizden folders, etc.).
 
-If a feature seems to require engine changes, stop and tell the user — do not patch RobustToolbox.
+If a feature seems to require engine changes: work around it in content, avoid the bug (e.g. connect via `127.0.0.1` instead of `localhost` for Happy Eyeballs races), or stop and tell the user — do not patch RobustToolbox.

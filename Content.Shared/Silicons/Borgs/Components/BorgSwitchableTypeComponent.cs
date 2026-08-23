@@ -40,6 +40,15 @@ public sealed partial class BorgSwitchableTypeComponent : Component
     [DataField, AutoNetworkedField]
     public ProtoId<BorgTypePrototype>? SelectedBorgType;
 
+    //Tutorial - Begin: optional whitelist for chassis type picker (tutorial / constrained spawns)
+    /// <summary>
+    /// If non-null and non-empty, only these borg types may be selected.
+    /// Null or empty means every <see cref="BorgTypePrototype"/> is available.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public List<ProtoId<BorgTypePrototype>>? AvailableBorgTypes;
+    //Tutorial - End
+
     /// <summary>
     /// Radio channels that the borg will always have. These are added on top of the selected type's radio channels.
     /// </summary>

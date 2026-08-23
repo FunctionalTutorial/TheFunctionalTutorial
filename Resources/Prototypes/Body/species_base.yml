@@ -130,6 +130,10 @@
         type: HumanoidMarkingModifierBoundUserInterface
       enum.StrippingUiKey.Key:
         type: StrippableBoundUserInterface
+      #Tutorial - Begin: Starlight vampire class picker (tutorial / antag)
+      enum.VampireClassUiKey.Key:
+        type: VampireClassBui
+      #Tutorial - End
   - type: Puller
   - type: Speech
     speechSounds: Alto

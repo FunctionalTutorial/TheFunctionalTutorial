@@ -69,14 +69,49 @@ public abstract partial class SharedBorgSwitchableTypeSystem : EntitySystem
 
     private void SelectTypeMessageHandler(Entity<BorgSwitchableTypeComponent> ent, ref BorgSelectTypeMessage args)
     {
-        if (ent.Comp.SelectedBorgType != null)
-            return;
-
-        if (!ProtoMan.HasIndex(args.Prototype))
-            return;
-
-        SelectBorgModule(ent, args.Prototype);
+        TrySelectBorgType(ent.AsNullable(), args.Prototype); //Tutorial: route through whitelist-aware API
     }
+
+    //Tutorial - Begin
+    /// <summary>
+    /// Restricts which chassis types appear in the select-type UI and may be confirmed.
+    /// Pass null or an empty list to allow every borg type.
+    /// </summary>
+    public void SetAvailableBorgTypes(
+        Entity<BorgSwitchableTypeComponent?> ent,
+        List<ProtoId<BorgTypePrototype>>? types)
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return;
+
+        ent.Comp.AvailableBorgTypes = types;
+        Dirty(ent);
+    }
+
+    /// <summary>
+    /// Attempts to select a chassis type. Honors <see cref="BorgSwitchableTypeComponent.AvailableBorgTypes"/>.
+    /// </summary>
+    public bool TrySelectBorgType(
+        Entity<BorgSwitchableTypeComponent?> ent,
+        ProtoId<BorgTypePrototype> borgType)
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return false;
+
+        if (ent.Comp.SelectedBorgType != null)
+            return false;
+
+        if (!ProtoMan.HasIndex(borgType))
+            return false;
+
+        if (ent.Comp.AvailableBorgTypes is { Count: > 0 } allowed &&
+            !allowed.Contains(borgType))
+            return false;
+
+        SelectBorgModule((ent.Owner, ent.Comp), borgType);
+        return true;
+    }
+    //Tutorial - End
 
     //
     // Implementation

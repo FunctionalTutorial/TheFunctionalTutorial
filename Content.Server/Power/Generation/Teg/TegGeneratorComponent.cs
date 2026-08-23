@@ -5,7 +5,7 @@
 /// </summary>
 /// <seealso cref="TegSystem"/>
 [RegisterComponent]
-[Access(typeof(TegSystem))]
+[Access(typeof(TegSystem), typeof(Content.Server._Functional.TutorialServer.TutorialTegBootstrapSystem), typeof(Content.Server._Functional.TutorialServer.TutorialGoalSensorSystem))] //Tutorial: tutorial TEG sensor/bootstrap
 public sealed partial class TegGeneratorComponent : Component
 {
     /// <summary>

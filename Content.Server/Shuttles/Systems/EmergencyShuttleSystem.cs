@@ -452,6 +452,16 @@ public sealed partial class EmergencyShuttleSystem : SharedEmergencyShuttleSyste
                 dockResults.Add(dockResult);
         }
 
+        //Tutorial - Begin: no StationEmergencyShuttle (e.g. TutorialServer lobby) → empty list;
+        // Enumerable.Max throws "Sequence contains no elements" and kills the process.
+        if (dockResults.Count == 0)
+        {
+            Log.Warning("DockEmergencyShuttle called with no station emergency shuttles; ending round without dock.");
+            _roundEnd.EndRound();
+            return;
+        }
+        //Tutorial - End
+
         // Make the shuttle wait longer if it couldn't dock in the normal spot.
         // We have to handle the possibility of there being multiple stations, so since the shuttle timer is global,
         // use the WORST value we have.

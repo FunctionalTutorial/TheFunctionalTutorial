@@ -1,0 +1,8 @@
+# Tutorial nuclear bomb — arms normally, never detonates (TutorialDummyNuke + NukeSystem clamp).
+
+- type: entity
+  parent: NuclearBomb
+  id: TutorialNuclearBomb
+  suffix: Tutorial
+  components:
+  - type: TutorialDummyNuke

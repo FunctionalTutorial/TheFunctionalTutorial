@@ -26,7 +26,7 @@ hostname = "MyServer"
 # Description of the server. This is what will be displayed in the server list.
 desc = "Just another server, don't mind me!"
 # The maximum number of players that can connect to the server. (Exluding admins)
-soft_max_players = 30
+soft_max_players = 40 #Tutorial: TutorialServer cap
 # Controls the lobby timer in seconds.
 lobbyduration = 150
 # Should roles be restricted based on time?
@@ -56,6 +56,16 @@ admins_count_in_playercount = false
 [server]
 # Change this to have the changelog and rules "last seen" date stored separately from other servers.
 id = "unknown_server_id"
+#Tutorial: TutorialServer rules guidebook entry
+rules_file = "TutorialServerRules"
+
+#Tutorial: connect-time rules acceptance popup (admins can still use showrules)
+[rules]
+enabled = true
+# Short document — default 45s wait is for Wizard's Den's full ruleset.
+time = 5
+#Tutorial: 0 = show the updated rules on every connect
+validity_days = 0
 
 [events]
 # Controls if the game should run station events. (Meteors, Sleeper Syndicates ETC)
@@ -65,7 +75,8 @@ enabled = true
 # Should the emergency shuttle be allowed to launch early by command staff?
 emergency_early_launch_allowed = false
 # Time in minutes after round start to auto-call the emergency shuttle. Set to zero to disable.
-auto_call_time = 90
+# TutorialServer lobby has no emergency shuttle — auto-call would crash DockEmergencyShuttle.
+auto_call_time = 0
 
 [console]
 # If this is true, people connecting from this computer will automatically be elevated to full admin privileges.
@@ -85,6 +96,21 @@ enabled = false
 # Message of the day. This is displayed to players when they connect to the server.
 # Type your message between the quotes.
 motd = ""
+
+#Tutorial: TutorialServer — players never get OOC (ChatSystem would otherwise re-enable it at round end)
+[ooc]
+enabled = false
+enable_during_round = true
+
+[looc]
+enabled = false #Tutorial
+
+[dead_chat]
+enabled = false #Tutorial
+
+#Tutorial: deployed Tutorial host — hide unfinished tutorials from the picker
+[tutorial]
+live_tutorials = true
 
 [hub]
 # Set to true to show this server on the public server list

@@ -1,6 +1,8 @@
-﻿using Content.Shared.Silicons.Borgs.Components;
+﻿using Content.Shared.Silicons.Borgs;
+using Content.Shared.Silicons.Borgs.Components;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
+using Robust.Shared.Prototypes;
 
 namespace Content.Client.Silicons.Borgs;
 
@@ -25,6 +27,13 @@ public sealed class BorgSelectTypeUserInterface : BoundUserInterface
         base.Open();
 
         _menu = this.CreateWindow<BorgSelectTypeMenu>();
+        //Tutorial - Begin: filter chassis list when AvailableBorgTypes is set
+        IReadOnlyList<ProtoId<BorgTypePrototype>>? available = null;
+        if (EntMan.TryGetComponent(Owner, out BorgSwitchableTypeComponent? switchable))
+            available = switchable.AvailableBorgTypes;
+        _menu.Populate(available);
+        //Tutorial - End
         _menu.ConfirmedBorgType += prototype => SendPredictedMessage(new BorgSelectTypeMessage(prototype));
     }
 }
+

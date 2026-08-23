@@ -1,0 +1,40 @@
+- type: entity
+  parent: BaseAction
+  id: ActionVampireToggleFangs
+  name: Toggle Fangs
+  description: Extend or retract your fangs to drink blood from victims.
+  components:
+  - type: Action
+    useDelay: 2
+    itemIconStyle: NoItem
+    priority: 1
+    icon:
+      sprite: _Starlight/Vampire/actions_vampire.rsi
+      state: fangs_retracted
+    iconOn:
+      sprite: _Starlight/Vampire/actions_vampire.rsi
+      state: fangs_extended
+  - type: InstantAction
+    event: !type:VampireToggleFangsActionEvent
+  - type: VampireAction
+    bloodToUnlock: 0
+    bloodCost: 0
+
+- type: entity
+  parent: BaseAction
+  id: ActionClassSelectId
+  name: Choose Vampire Class
+  description: Choose your vampire subclass.
+  components:
+  - type: Action
+    useDelay: 2
+    itemIconStyle: NoItem
+    priority: 5
+    icon:
+      sprite: _Starlight/Vampire/actions_vampire.rsi
+      state: select_class
+  - type: InstantAction
+    event: !type:VampireClassSelectActionEvent
+  - type: VampireAction
+    bloodToUnlock: 0
+    bloodCost: 0
