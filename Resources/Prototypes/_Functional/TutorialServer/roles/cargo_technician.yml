@@ -50,6 +50,7 @@
     - id: controls
       text: tutorial-job-cargo-technician-sg-controls
       complete: Acknowledge
+      suppressControlHint: true
   - id: pilot
     title: tutorial-job-cargo-technician-goal-pilot
     subGoals:
@@ -87,6 +88,7 @@
     - id: sell-crate
       text: tutorial-job-cargo-technician-sg-sell-crate
       complete: CargoSold
+      tag: TutorialCargoBayCrate
       minCount: 1
   - id: retrieve
     title: tutorial-job-cargo-technician-goal-retrieve

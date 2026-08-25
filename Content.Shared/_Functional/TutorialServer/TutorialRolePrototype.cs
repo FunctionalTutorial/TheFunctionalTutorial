@@ -340,6 +340,12 @@ public sealed partial class TutorialSubGoalData
     public string? ControlHint;
 
     /// <summary>
+    /// When true, no on-screen control-hint banner is shown for this sub-goal (tablet-only beats).
+    /// </summary>
+    [DataField]
+    public bool SuppressControlHint;
+
+    /// <summary>
     /// Posture the player must hold for <see cref="TutorialStepComplete.ReachMarker"/> to count.
     /// Lets one marker beat teach "walk there" or "crawl there" without a new completion kind.
     /// </summary>
@@ -689,7 +695,8 @@ public enum TutorialStepComplete : byte
 
     /// <summary>
     /// At least <see cref="TutorialSubGoalData.MinCount"/> entities were sold via cargo pallet sale
-    /// on the player's map.
+    /// on the player's map. When <see cref="TutorialSubGoalData.Tag"/> is set, only sold entities
+    /// with that tag count.
     /// </summary>
     CargoSold,
 
@@ -974,4 +981,7 @@ public enum TutorialStepComplete : byte
 
     /// <summary>Player's internals are disconnected; the counterpart to <see cref="InternalsOn"/>.</summary>
     InternalsOff,
+
+    /// <summary>Player hugged their tutorial mentor (empty-hand interaction popup success).</summary>
+    InteractMentor,
 }

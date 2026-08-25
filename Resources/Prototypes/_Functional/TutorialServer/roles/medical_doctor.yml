@@ -1,6 +1,7 @@
 - type: tutorialRole
   id: TutorialMedicalDoctor
   mentorName: Urist McMalpractice
+  mentorEntity: TutorialMedicalMentor
   job: MedicalDoctor
   stub: false
   liveTutorial: true
@@ -13,7 +14,7 @@
   practiceSpawns:
   - id: LockerMedicalFilled
     room: 0
-    offset: -2, 1
+    offset: -2, 3
   - id: HandheldHealthAnalyzer
     room: 0
     offset: 0.5, 0
@@ -40,21 +41,19 @@
     offset: 0.8, -1
   - id: EmergencyMedipen
     room: 0
-    offset: -0.5, -1
+    offset: 0.5, 0
   - id: MedkitCombat
     room: 0
     offset: -0.8, -0.5
-  - id: TutorialStepMarker
-    room: 0
-    offset: 0, -1.5
-    marker: med-pass
   goals:
   - id: welcome
     title: tutorial-job-medical-doctor-goal-welcome
     subGoals:
-    - id: intro
-      text: tutorial-job-medical-doctor-sg-intro
-      complete: Acknowledge
+    - id: hug-mentor
+      text: tutorial-job-medical-doctor-sg-hug-mentor
+      hint: tutorial-job-medical-doctor-hint-hug-mentor
+      stuckHint: tutorial-job-medical-doctor-stuck-hug-mentor
+      complete: InteractMentor
   - id: diagnose
     title: tutorial-job-medical-doctor-goal-diagnose
     subGoals:
@@ -99,8 +98,9 @@
       entity: EmergencyMedipen
     - id: use-epi
       text: tutorial-job-medical-doctor-sg-use-epi
-      complete: UseInHand
+      complete: InteractTargetHolding
       entity: EmergencyMedipen
+      tag: TutorialPracticePatient
     - id: crit-tip
       text: tutorial-job-medical-doctor-sg-crit-tip
       complete: Acknowledge
@@ -119,10 +119,6 @@
       hint: tutorial-job-medical-doctor-sg-revive-hint
       stuckHint: tutorial-job-medical-doctor-sg-revive-stuck
       complete: PracticeMobRevived
-    - id: walk
-      text: tutorial-job-medical-doctor-sg-walk
-      complete: ReachMarker
-      marker: med-pass
   - id: finish
     title: tutorial-job-medical-doctor-goal-finish
     subGoals:

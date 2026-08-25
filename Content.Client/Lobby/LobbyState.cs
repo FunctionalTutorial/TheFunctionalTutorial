@@ -1,6 +1,5 @@
 using Content.Client.Audio;
 using Content.Client.GameTicking.Managers;
-using Content.Client.LateJoin;
 using Content.Client.Lobby.UI;
 using Content.Client.Message;
 using Content.Client.Playtime;
@@ -114,7 +113,8 @@ namespace Content.Client.Lobby
                 return;
             }
 
-            new LateJoinGui().OpenCentered();
+            //Tutorial: open tutorial role picker instead of station late-join job list
+            _consoleHost.ExecuteCommand("jointutorial");
         }
 
         private void OnReadyToggled(BaseButton.ButtonToggledEventArgs args)

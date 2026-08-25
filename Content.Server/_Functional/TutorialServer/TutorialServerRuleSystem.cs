@@ -128,8 +128,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     private static readonly EntProtoId TutorialCurriculumGoalProto = "TutorialCurriculumGoal";
     private static readonly ProtoId<TutorialRolePrototype> TutorialPassengerRole = "TutorialPassenger";
     private static readonly ProtoId<TutorialRolePrototype> TutorialCargoTechnicianRole = "TutorialCargoTechnician";
+    private static readonly ProtoId<TutorialRolePrototype> TutorialMedicalDoctorRole = "TutorialMedicalDoctor";
+    private static readonly EntProtoId TutorialMedicalBeltProto = "ClothingBeltMedicalFilled";
     private static readonly TimeSpan ProgressPopupCooldown = TimeSpan.FromSeconds(0.75);
-    private const string ControlsSubGoalId = "controls";
     private const string PickerCategoryStartHere = "Start Here";
     private const string PickerCategoryStationJobs = "Station Jobs";
     private const string PickerCategoryAntagonist = "Antagonist";
@@ -579,6 +580,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
     public bool IsPickerOpen(ICommonSession player) => _openPickers.ContainsKey(player.UserId);
 
+    /// <summary>Whether the TutorialServer game rule is currently active.</summary>
+    public bool IsTutorialServerActive() => TryGetActiveRule(out _, out _, out _);
+
     private void OnGhostGetVerbs(Entity<GhostComponent> ent, ref GetVerbsEvent<AlternativeVerb> args)
     {
         if (!TryGetActiveRule(out _, out _, out _))
@@ -844,6 +848,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         // UseInHand (and any future item sensors) accept belt or floor sources.
         EnsureInventorySensorTargets(mob);
 
+        if (roleProto.ID == TutorialMedicalDoctorRole)
+            TryEquipTutorialMedicalBelt(mob);
+
         var session = rule.Sessions.GetValueOrDefault(player.UserId) ?? new TutorialSessionData();
         session.State = TutorialSessionState.InTutorial;
         session.SelectedRoleId = roleProto.ID;
@@ -1011,6 +1018,16 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _hands.PickupOrDrop(mob, guide, checkActionBlocker: false, handsComp: hands);
         if (rightHand != null && _hands.HandIsEmpty((mob, hands), rightHand))
             _hands.TrySetActiveHand((mob, hands), rightHand);
+    }
+
+    private void TryEquipTutorialMedicalBelt(EntityUid mob)
+    {
+        if (_inventory.TryGetSlotEntity(mob, "belt", out _))
+            return;
+
+        var belt = Spawn(TutorialMedicalBeltProto, Transform(mob).Coordinates);
+        _inventory.TryEquip(mob, belt, "belt", force: true);
+        EnsureInventorySensorTargets(mob);
     }
 
     /// <summary>
@@ -1769,8 +1786,12 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
                     // No control to teach still gets a banner: the objective line is already the
                     // short imperative the player needs, and a blank corner reads as "nothing to do".
-                    if (string.IsNullOrEmpty(controlHint) && !IsSelfAdvancingNarration(sub))
+                    if (string.IsNullOrEmpty(controlHint) &&
+                        !IsSelfAdvancingNarration(sub) &&
+                        !sub.SuppressControlHint)
                         controlHint = sub.Text;
+                    else if (sub.SuppressControlHint)
+                        controlHint = null;
                     part.StepText = Loc.GetString(sub.Text);
                     part.StepComplete = sub.Complete;
                     part.HintText = string.IsNullOrEmpty(sub.Hint) ? string.Empty : Loc.GetString(sub.Hint);
@@ -1840,21 +1861,6 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         SendControlHint(mob, null);
 
         SyncCurriculumObjectives(mob, role, part);
-
-        // Cargo Tech: force-open the tablet when controls becomes current (boarded the shuttle).
-        if (TryGetCurrentSubGoalId(role, session, out var subGoalId) &&
-            subGoalId == ControlsSubGoalId &&
-            session.GuideUid != EntityUid.Invalid &&
-            !TerminatingOrDeleted(session.GuideUid) &&
-            TryComp<TutorialGuideComponent>(session.GuideUid, out var guideComp))
-        {
-            // Push state before OpenUi so the client never paints an empty checklist window.
-            var guideSys = EntityManager.System<TutorialGuideSystem>();
-            var guideEnt = new Entity<TutorialGuideComponent>(session.GuideUid, guideComp);
-            _ui.SetUiState(session.GuideUid, TutorialPromptUiKey.Key, guideSys.GetUiState(guideEnt, mob));
-            _ui.OpenUi(session.GuideUid, TutorialPromptUiKey.Key, mob);
-            session.GuideAutoOpened = true;
-        }
 
         session.SubGoalStartedAt = _timing.CurTime;
 
