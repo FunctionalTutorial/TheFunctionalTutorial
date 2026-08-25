@@ -303,6 +303,15 @@
   description: A volunteer practice patient who hurts on purpose.
   suffix: Tutorial, Patient
   components:
+  - type: TutorialPracticeMob
+    spawnDamage:
+      types:
+        Blunt: 30
+        Slash: 10
+        Heat: 20
+    postHealCritDamage:
+      types:
+        Blunt: 101
   - type: DatasetVocalizer
     dataset: TutorialPracticeMobPatientAds
 
@@ -895,6 +904,15 @@
         0.5
       MaximumIdleTime: !type:Single
         1.5
+
+# CMO outfit for the medical doctor tutorial mentor (Urist McMalpractice).
+- type: entity
+  parent: TutorialMentor
+  id: TutorialMedicalMentor
+  suffix: Tutorial, Mentor, Medical
+  components:
+  - type: Loadout
+    prototypes: [VisitorCMO]
 
 # Stationary cargo-bay QM for Cargo Tech (no HTN follow). Speaks tips; click to repeat / Acknowledge.
 - type: entity

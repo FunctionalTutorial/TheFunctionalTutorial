@@ -317,16 +317,24 @@ public sealed partial class TutorialShuttleArenaSystem : EntitySystem
         SpawnAnchored("ComputerCargoBounty", gridUid, new Vector2i(6, 8));
         SpawnAnchored("ChairOfficeLight", gridUid, new Vector2i(4, 7));
         SpawnAnchored("OreProcessor", gridUid, new Vector2i(11, 7));
-        // Pullable sell crate for early haul practice (must not start on ATS sell pads).
+        // Pullable sell crates for early haul practice (must not start on ATS sell pads).
         SpawnBaySellCrate("CrateGenericSteel", gridUid, new Vector2i(9, 3));
-        SpawnAnchored("CratePlastic", gridUid, new Vector2i(10, 3));
-        SpawnAnchored("CrateGenericSteel", gridUid, new Vector2i(11, 3));
+        SpawnBaySellCrate("CratePlastic", gridUid, new Vector2i(10, 3));
+        SpawnBaySellCrate("CrateGenericSteel", gridUid, new Vector2i(11, 3));
         SpawnAnchored("ConveyorBelt", gridUid, new Vector2i(8, 5));
         SpawnAnchored("ConveyorBelt", gridUid, new Vector2i(9, 5));
         SpawnAnchored("ConveyorBelt", gridUid, new Vector2i(10, 5));
         SpawnAnchored("TableCounterMetal", gridUid, new Vector2i(3, 3));
         SpawnAnchored("Rack", gridUid, new Vector2i(12, 8));
+        SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(1, 3));
+        SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(1, 6));
+        SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(4, 1));
+        SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(7, 1));
+        SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(10, 1));
+        SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(13, 3));
+        SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(13, 6));
         SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(3, 9));
+        SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(7, 9));
         SpawnAnchored("AlwaysPoweredWallLight", gridUid, new Vector2i(11, 9));
         SpawnAnchored("HolopadCargoBay", gridUid, new Vector2i(7, 2));
 

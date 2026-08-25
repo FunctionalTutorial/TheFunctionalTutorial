@@ -182,6 +182,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         SubscribeLocalEvent<TutorialPracticeMobComponent, StunnedEvent>(OnPracticeMobStunned);
         SubscribeLocalEvent<TutorialPracticeMobComponent, KnockedDownEvent>(OnPracticeMobKnockedDown);
         SubscribeLocalEvent<TutorialPracticeMobComponent, MobStateChangedEvent>(OnPracticeMobStateChanged);
+        SubscribeLocalEvent<TutorialMentorComponent, InteractionSuccessEvent>(OnMentorHugged);
         SubscribeLocalEvent<TutorialParticipantComponent, ChangelingDevouredEvent>(OnChangelingDevoured);
         SubscribeLocalEvent<TutorialParticipantComponent, ChangelingStingDnaEvent>(OnChangelingStung);
         SubscribeLocalEvent<ActionComponent, ActionPerformedEvent>(OnActionPerformed);
@@ -600,8 +601,23 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             if (sub.Complete == TutorialStepComplete.CargoSold)
             {
                 var needed = sub.MinCount > 0 ? sub.MinCount : 1;
-                if (args.Sold.Count < needed)
+                if (!string.IsNullOrEmpty(sub.Tag))
+                {
+                    var tagId = (ProtoId<TagPrototype>) sub.Tag;
+                    var soldMatching = 0;
+                    foreach (var sold in args.Sold)
+                    {
+                        if (Exists(sold) && _tags.HasTag(sold, tagId))
+                            soldMatching++;
+                    }
+
+                    if (soldMatching < needed)
+                        continue;
+                }
+                else if (args.Sold.Count < needed)
+                {
                     continue;
+                }
 
                 _tutorial.AdvanceSubGoal(uid);
                 continue;
@@ -790,7 +806,50 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
             if (!IsPracticeMobDamageBelow(mapUid, sub.MaxDamage))
                 continue;
 
+            ApplyPostHealCritOnMap(mapUid);
             _tutorial.AdvanceSubGoal(uid);
+        }
+    }
+
+    private void OnMentorHugged(Entity<TutorialMentorComponent> ent, ref InteractionSuccessEvent args)
+    {
+        if (ent.Comp.PlayerUid != args.User)
+            return;
+
+        if (!TryComp<TutorialParticipantComponent>(args.User, out var part))
+            return;
+
+        if (!_tutorial.TryGetCurrentSubGoal(args.User, part, out var sub))
+            return;
+
+        if (sub.Complete != TutorialStepComplete.InteractMentor)
+            return;
+
+        _tutorial.AdvanceSubGoal(args.User);
+    }
+
+    /// <summary>
+    /// Drops healed practice patients into critical so medipen drills have a living inject target.
+    /// </summary>
+    private void ApplyPostHealCritOnMap(EntityUid? mapUid)
+    {
+        if (mapUid == null)
+            return;
+
+        var query = EntityQueryEnumerator<TutorialPracticeMobComponent, MobStateComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var practice, out var mobState, out var xform))
+        {
+            if (xform.MapUid != mapUid)
+                continue;
+
+            if (practice.PostHealCritApplied || !practice.PostHealCritDamage.AnyPositive())
+                continue;
+
+            if (mobState.CurrentState == MobState.Dead)
+                continue;
+
+            practice.PostHealCritApplied = true;
+            _damageable.TryChangeDamage(uid, practice.PostHealCritDamage, ignoreResistances: true, interruptsDoAfters: false);
         }
     }
 

@@ -62,6 +62,7 @@ using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
 using Robust.Server.GameObjects;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -504,18 +505,22 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(botany.PracticeSpawns.Any(p => p.Id == "TutorialVendingMachineSeeds"));
 
             var doctor = proto.Index<TutorialRolePrototype>("TutorialMedicalDoctor");
+            Assert.That(Sub(doctor, "hug-mentor").Complete, Is.EqualTo(TutorialStepComplete.InteractMentor));
             Assert.That(Sub(doctor, "heal-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDamageBelow));
             Assert.That(Sub(doctor, "scan-patient").Complete, Is.EqualTo(TutorialStepComplete.InteractTargetHolding));
             Assert.That(Sub(doctor, "scan-patient").Entity, Is.EqualTo(new EntProtoId("HandheldHealthAnalyzer")));
             Assert.That(Sub(doctor, "scan-patient").Tag, Is.EqualTo("TutorialPracticePatient"));
-            Assert.That(Sub(doctor, "use-epi").Complete, Is.EqualTo(TutorialStepComplete.UseInHand));
+            Assert.That(Sub(doctor, "use-epi").Complete, Is.EqualTo(TutorialStepComplete.InteractTargetHolding));
             Assert.That(Sub(doctor, "use-epi").Entity, Is.EqualTo(new EntProtoId("EmergencyMedipen")));
+            Assert.That(Sub(doctor, "use-epi").Tag, Is.EqualTo("TutorialPracticePatient"));
             Assert.That(Sub(doctor, "revive-corpse").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobRevived));
+            Assert.That(doctor.MentorEntity, Is.EqualTo(new EntProtoId("TutorialMedicalMentor")));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "TutorialPracticeMobPatient"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "TutorialPracticeMobCorpse"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "DefibrillatorOneHandedUnpowered"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "ClothingEyesHudMedical"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "EmergencyMedipen"));
+            Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "TutorialStepMarker"), Is.False);
 
             var sec = proto.Index<TutorialRolePrototype>("TutorialSecurityOfficer");
             Assert.That(sec.RoomTemplate, Is.EqualTo(new ProtoId<TutorialRoomTemplatePrototype>("TutorialSectionSecurity")));
@@ -1394,7 +1399,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
                 .Any(s => s.Id == "controls" && s.Complete == TutorialStepComplete.Acknowledge));
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
-                .Any(s => s.Id == "sell-crate" && s.Complete == TutorialStepComplete.CargoSold));
+                .Any(s => s.Id == "sell-crate" && s.Complete == TutorialStepComplete.CargoSold
+                          && s.Tag == "TutorialCargoBayCrate"));
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
                 .Any(s => s.Id == "retrieve" && s.Complete == TutorialStepComplete.PullTag
                           && s.Tag == "TutorialCargoPurchase"));
@@ -1849,7 +1855,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(atsHasBank, Is.True, "ATS grid should be a station member with a bank");
 
             var tags = server.System<TagSystem>();
-            var bayHaulCrate = false;
+            var bayHaulCrateCount = 0;
             var boardMarker = false;
             var sellPadTiles = new HashSet<Vector2i>();
             var markerQuery = server.EntMan.AllEntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
@@ -1872,7 +1878,7 @@ public sealed class TutorialServerTests : GameTest
                     tags.HasTag(crateUid, "TutorialCargoBayCrate") &&
                     !crateXform.Anchored)
                 {
-                    bayHaulCrate = true;
+                    bayHaulCrateCount++;
                 }
             }
 
@@ -1905,7 +1911,8 @@ public sealed class TutorialServerTests : GameTest
                     crateOnAtsSellPad = true;
             }
 
-            Assert.That(bayHaulCrate, Is.True, "Bay needs an unanchored TutorialCargoBayCrate haul target");
+            Assert.That(bayHaulCrateCount, Is.GreaterThanOrEqualTo(3),
+                "Bay needs three unanchored TutorialCargoBayCrate haul targets");
             Assert.That(boardMarker, Is.True, "Shuttle needs cargo-shuttle board marker");
             Assert.That(crateOnAtsSellPad, Is.False, "ATS sell pads must not preload sellable crates");
 
@@ -3118,13 +3125,16 @@ public sealed class TutorialServerTests : GameTest
             tutorialSys.AdvanceSubGoal(mob); // confirm
             tutorialSys.AdvanceSubGoal(mob); // drag-crate
             tutorialSys.AdvanceSubGoal(mob); // board-shuttle
-            tutorialSys.AdvanceSubGoal(mob); // controls (force-opens guide)
+            ui.CloseUi(session.GuideUid, TutorialPromptUiKey.Key, mob);
+            tutorialSys.AdvanceSubGoal(mob); // controls
             Assert.That(entMan.TryGetComponent(mob, out part));
             Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
             Assert.That(tutorialSys.TryGetCurrentSubGoal(mob, part, out var controlsSub));
             Assert.That(controlsSub.Id, Is.EqualTo("controls"));
-            Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.True,
-                "Controls step must force-open the guide tablet");
+            Assert.That(controlsSub.SuppressControlHint, Is.True);
+            Assert.That(session.GuideAutoOpened, Is.False);
+            Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.False,
+                "Controls step should not force-open the guide tablet");
 
             tutorialSys.AdvanceSubGoal(mob); // open-console
             Assert.That(entMan.TryGetComponent(mob, out part));
@@ -3380,6 +3390,37 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
                 Is.EqualTo(TutorialStepComplete.HoldItem),
                 "World-dropping a Crowbar should advance DropItem to hold-light");
+        });
+    }
+
+    [Test]
+    public async Task TutorialJoinCommand_OpensRolePicker()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var console = server.ResolveDependency<IConsoleHost>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() => console.ExecuteCommand(pair.Player!, "jointutorial"));
+        await pair.RunTicksSync(10);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(tutorial.IsPickerOpen(pair.Player!), Is.True,
+                "jointutorial should open the Choose a tutorial picker");
+            var player = pair.Player!;
+            Assert.That(player.AttachedEntity, Is.Not.Null);
+            Assert.That(server.EntMan.HasComponent<GhostComponent>(player.AttachedEntity!.Value), Is.True,
+                "jointutorial must attach an observer so the client has a valid map");
         });
     }
 
@@ -6009,7 +6050,7 @@ public sealed class TutorialServerTests : GameTest
                     break;
                 if (sub.Id == "scan-patient")
                     break;
-                if (sub.Complete == TutorialStepComplete.Acknowledge)
+                if (sub.Complete is TutorialStepComplete.Acknowledge or TutorialStepComplete.InteractMentor)
                     tutorial.AdvanceSubGoal(mob);
                 else if (sub.Complete == TutorialStepComplete.HoldItem &&
                          sub.Entity == new EntProtoId("ClothingEyesHudMedical"))
@@ -6091,6 +6132,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var afterHeal));
             Assert.That(afterHeal.Id, Is.Not.EqualTo("heal-dummy"),
                 "PracticeMobDamageBelow must ignore Dead corpses and advance when the living patient is healed");
+            Assert.That(entMan.GetComponent<MobStateComponent>(patient).CurrentState, Is.EqualTo(MobState.Critical),
+                "Healed patient should drop into critical for medipen practice");
 
             // Force-advance past epi/crit tips into the revive goal, then pick up the defib.
             for (var i = 0; i < 30; i++)
@@ -6139,9 +6182,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(entMan.GetComponent<MobStateComponent>(corpse).CurrentState, Is.EqualTo(MobState.Critical),
                 "210 damage corpse with 50 asphyx should revive after one zap (-40 asphyx + electrocution)");
             Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var afterRevive));
-            // ReachMarker may auto-complete if the player already stands on med-pass.
-            Assert.That(afterRevive.Id, Is.EqualTo("walk").Or.EqualTo("done"),
-                $"PracticeMobRevived should leave revive-corpse (at {afterRevive.Id})");
+            Assert.That(afterRevive.Id, Is.EqualTo("done"),
+                $"PracticeMobRevived should advance revive-corpse to done (at {afterRevive.Id})");
             Assert.That(afterRevive.Complete, Is.Not.EqualTo(TutorialStepComplete.PracticeMobRevived));
         });
     }
