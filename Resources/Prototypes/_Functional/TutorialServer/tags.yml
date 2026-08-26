@@ -187,3 +187,50 @@
 # On BoxSurvival itself, so it covers every species and departmental variant at once.
 - type: Tag
   id: TutorialSurvivalBox
+
+# --- Passenger / greytide curriculum -------------------------------------------
+
+- type: Tag
+  id: TutorialTideCargoDoor
+
+- type: Tag
+  id: TutorialTideMaintDoor
+
+- type: Tag
+  id: TutorialTideToolbox
+
+- type: Tag
+  id: TutorialTideBelt
+
+- type: Tag
+  id: TutorialTideGrille
+
+- type: Tag
+  id: TutorialTideStorageDoor
+
+- type: Tag
+  id: TutorialTideSteel
+
+- type: Tag
+  id: TutorialTideVaultDoor
+
+- type: Tag
+  id: TutorialTidePipe
+
+- type: Tag
+  id: TutorialTideDisposal
+
+- type: Tag
+  id: TutorialTideVendor
+
+- type: Tag
+  id: TutorialTideTider
+
+- type: Tag
+  id: TutorialTideHoP
+
+- type: Tag
+  id: TutorialTideSecOfficer
+
+- type: Tag
+  id: TutorialTideShutterButton

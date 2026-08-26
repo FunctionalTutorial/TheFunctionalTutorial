@@ -6,7 +6,7 @@
   stub: false
   liveTutorial: true
   category: Station Jobs
-  pickerOrder: 3
+  pickerOrder: 4
   map: /Maps/_Functional/TutorialServer/Roles/TechnicalAssistant.yml
   roomTemplate: TutorialSectionEngineering
   guidebook: Engineering

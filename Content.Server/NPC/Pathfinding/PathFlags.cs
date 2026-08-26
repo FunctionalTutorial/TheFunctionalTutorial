@@ -29,4 +29,16 @@ public enum PathFlags : byte
     /// Can we open stuff that requires interaction (e.g. click-open doors).
     /// </summary>
     Interact = 1 << 4,
+
+    /// <summary>
+    /// Doors are never an obstacle, locked or not: the route is costed as if they were open floor
+    /// and the access check is not consulted. Distinct from <see cref="Interact"/>, which only
+    /// covers doors that would let anybody through anyway.
+    /// </summary>
+    /// <remarks>
+    /// Only says the pathfinder may route through them. Something still has to open the door when
+    /// the mover arrives, so an NPC with this wants the access to match, or it will walk to a door
+    /// that says no and stand there.
+    /// </remarks>
+    Doors = 1 << 5,
 }

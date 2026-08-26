@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Content.Shared.AlertLevel;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
@@ -260,6 +260,14 @@ public enum TutorialMentorMode : byte
 
     /// <summary>Re-projected at each room's holopad; never physically moves.</summary>
     Holopad,
+
+    /// <summary>
+    /// Walks to the <see cref="TutorialWalkPointComponent"/> of the room the curriculum is in and
+    /// waits there for the player (see <c>TutorialLeadMentorSystem</c>). The inverse of
+    /// <see cref="Walk"/>: the player follows the coach rather than the coach trailing the player,
+    /// which is what a mentor showing somebody around a station actually does.
+    /// </summary>
+    Lead,
 }
 
 /// <summary>
@@ -368,6 +376,19 @@ public sealed partial class TutorialSubGoalData
     public LocId? RetryLine;
 
     /// <summary>
+    /// Keeps a leading coach standing where he is for the length of this beat, instead of setting
+    /// off for the next section's walk point the moment the goal changes.
+    /// </summary>
+    /// <remarks>
+    /// A coach who leads walks on goal boundaries, which is usually right and occasionally ruins
+    /// the beat: he opens the maintenance door the player was asked to open, or turns his back
+    /// while they are still climbing out of a disposal unit. Set this on the beats he should watch
+    /// rather than walk through.
+    /// </remarks>
+    [DataField]
+    public bool MentorHolds;
+
+    /// <summary>
     /// Marker that counts as failing this sub-goal if the player reaches it while the sub-goal is
     /// still current. Catches the player who walks the length of a drill without ever engaging
     /// with it, which no completion condition can detect on its own.
@@ -404,6 +425,15 @@ public sealed partial class TutorialSubGoalData
     /// </summary>
     [DataField]
     public string? Marker;
+
+    /// <summary>
+    /// How close to <see cref="Marker"/> counts, in tiles. Only read by
+    /// <see cref="TutorialStepComplete.EntityAtMarker"/>, whose default of a tile and a half suits
+    /// "put it on the counter" but is wider than a tile — set it tight for a drill where the
+    /// neighbouring tile already holds something that would match.
+    /// </summary>
+    [DataField]
+    public float? MarkerRange;
 
     /// <summary>
     /// Equipment slot qualifier: on <see cref="TutorialStepComplete.StowItem"/> the item must be in
@@ -877,6 +907,22 @@ public enum TutorialStepComplete : byte
     PowerWiresCut,
 
     /// <summary>
+    /// No wire on a tagged entity is cut (<see cref="TutorialSubGoalData.Tag"/>). Stronger than
+    /// <see cref="TargetPowered"/> on purpose: a door can be live with its bolt wire still cut, and
+    /// a cut wire cannot be pulsed, so the player is left holding a multitool at a wire that will
+    /// never answer with nothing on screen to say why.
+    /// </summary>
+    TargetWiresIntact,
+
+    /// <summary>
+    /// A tagged entity on the map is powered again (<see cref="TutorialSubGoalData.Tag"/>). The
+    /// counterpart to <see cref="PowerWiresCut"/>, for the half of a hack that puts a wire back.
+    /// Only means anything on a beat that follows one which took the power off, since anything
+    /// still plugged in satisfies it on the frame it becomes current.
+    /// </summary>
+    TargetPowered,
+
+    /// <summary>
     /// A cargo order was added on the player's map (purchase / request path).
     /// </summary>
     CargoOrderAdded,
@@ -981,6 +1027,37 @@ public enum TutorialStepComplete : byte
 
     /// <summary>Player's internals are disconnected; the counterpart to <see cref="InternalsOn"/>.</summary>
     InternalsOff,
+
+    /// <summary>
+    /// A tagged door refused the player for want of access. Completes on the failure, because
+    /// being told no by a door is the thing being taught.
+    /// </summary>
+    DoorAccessDenied,
+
+    /// <summary>Player took a shock. Taught by consequence, so the drill is to get hurt once.</summary>
+    PlayerShocked,
+
+    /// <summary>
+    /// A tagged door's bolts are up. The state rather than the pulse that raised them, so a player
+    /// who gets there some other way still passes. Named for the state and not the verb on
+    /// purpose: crew say "drop the bolts" for locking a door, and this is the opposite of that.
+    /// </summary>
+    DoorBoltsRaised,
+
+    /// <summary>Player opened the construction menu.</summary>
+    ConstructionMenuOpened,
+
+    /// <summary>Player is inside a tagged disposal unit, before the flush that sends them off.</summary>
+    PlayerInDisposal,
+
+    /// <summary>A tagged vending machine has had its contraband stock unlocked.</summary>
+    VendorContrabandUnlocked,
+
+    /// <summary>
+    /// Something matching the spec is resting at <see cref="TutorialSubGoalData.Marker"/> and is
+    /// not in anyone's hands. For "put it down there", which no possession sensor can express.
+    /// </summary>
+    EntityAtMarker,
 
     /// <summary>Player hugged their tutorial mentor (empty-hand interaction popup success).</summary>
     InteractMentor,

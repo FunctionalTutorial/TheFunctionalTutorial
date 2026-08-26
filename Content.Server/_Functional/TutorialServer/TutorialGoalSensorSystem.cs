@@ -192,6 +192,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
 
         InitializeControls();
         InitializeItems();
+        InitializeTide();
     }
 
     public override void Update(float frameTime)
@@ -282,6 +283,21 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                     if (IsTargetDoorOpen(xform.MapUid, sub.Tag))
                         _tutorial.AdvanceSubGoal(uid);
                     break;
+                case TutorialStepComplete.TargetWiresIntact:
+                    if (AreTargetWiresIntact(xform.MapUid, sub.Tag))
+                        _tutorial.AdvanceSubGoal(uid);
+
+                    break;
+
+                case TutorialStepComplete.TargetPowered:
+                    if (!IsTargetPowerDisabled(xform.MapUid, sub.Tag))
+                    {
+                        _tutorial.AdvanceSubGoal(uid);
+                        break;
+                    }
+
+                    break;
+
                 case TutorialStepComplete.PowerWiresCut:
                     if (IsPowerWiresCut(xform.MapUid, sub.Tag))
                         _tutorial.AdvanceSubGoal(uid);
@@ -451,6 +467,15 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 case TutorialStepComplete.PlayerClimbed:
                 case TutorialStepComplete.PlayerPointed:
                     // Discrete actions — handled by the event subscriptions in the Controls partial.
+                    break;
+                case TutorialStepComplete.DoorAccessDenied:
+                case TutorialStepComplete.PlayerShocked:
+                case TutorialStepComplete.DoorBoltsRaised:
+                case TutorialStepComplete.ConstructionMenuOpened:
+                case TutorialStepComplete.PlayerInDisposal:
+                case TutorialStepComplete.VendorContrabandUnlocked:
+                case TutorialStepComplete.EntityAtMarker:
+                    UpdateTideSensors(uid, xform, sub);
                     break;
             }
 
@@ -1959,6 +1984,38 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// True when a tagged entity has no cut wires left at all.
+    /// </summary>
+    /// <remarks>
+    /// Power is not enough to call a panel repaired: the lights come back on with the bolt wire
+    /// still cut, and a cut wire refuses to pulse. Checked across every wire rather than the power
+    /// ones so "put it back how you found it" means what it says.
+    /// </remarks>
+    private bool AreTargetWiresIntact(EntityUid? mapUid, string? tag)
+    {
+        if (mapUid == null || string.IsNullOrEmpty(tag))
+            return false;
+
+        var tagId = (ProtoId<TagPrototype>) tag;
+        var found = false;
+        var query = EntityQueryEnumerator<WiresComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out var wires, out var xform))
+        {
+            if (xform.MapUid != mapUid || !_tags.HasTag(uid, tagId))
+                continue;
+
+            found = true;
+            foreach (var wire in wires.WiresList)
+            {
+                if (wire.IsCut)
+                    return false;
+            }
+        }
+
+        return found;
     }
 
     private bool IsPowerWiresCut(EntityUid? mapUid, string? tag)

@@ -214,7 +214,16 @@ public sealed partial class NPCSteeringSystem
                 lock (_obstacles)
                 {
                     // We're still coming to a stop so wait for the do_after.
-                    if (body.LinearVelocity.LengthSquared() > 0.01f)
+                    //
+                    // Doors are exempt. Opening one is a click, not a do_after, and that stop never
+                    // comes: a mover counts as arrived at interaction range rather than on contact,
+                    // so unless it is physically pressed against the obstacle it keeps drifting and
+                    // gets steered again next tick. Waiting for stillness there means trying the
+                    // handle once on the way in and never again, which is the NPC you see pacing in
+                    // front of an airlock.
+                    var isDoorNode = (node.Data.Flags & PathfindingBreadcrumbFlag.Door) != 0x0;
+
+                    if (!isDoorNode && body.LinearVelocity.LengthSquared() > 0.01f)
                     {
                         return true;
                     }

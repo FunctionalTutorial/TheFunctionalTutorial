@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -1091,6 +1091,7 @@ public sealed class TutorialServerTests : GameTest
             var stationJobs = entries.Where(e => e.Category == "Station Jobs").Select(e => e.RoleId).ToList();
             Assert.That(stationJobs, Is.EqualTo(new[]
             {
+                "TutorialTide",
                 "TutorialCargoTechnician",
                 "TutorialMedicalDoctor",
                 "TutorialChemist",
@@ -1143,6 +1144,7 @@ public sealed class TutorialServerTests : GameTest
                 {
                     "TutorialBasics",
                     "TutorialItems",
+                    "TutorialTide",
                     "TutorialCargoTechnician",
                     "TutorialMedicalDoctor",
                     "TutorialChemist",

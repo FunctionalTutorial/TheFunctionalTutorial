@@ -462,6 +462,11 @@ namespace Content.Server.NPC.Pathfinding
                 flags |= PathFlags.Interact;
             }
 
+            if (blackboard.TryGetValue<bool>(NPCBlackboard.NavDoors, out var doors, EntityManager) && doors)
+            {
+                flags |= PathFlags.Doors;
+            }
+
             return flags;
         }
 

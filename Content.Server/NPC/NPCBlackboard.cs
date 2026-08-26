@@ -305,6 +305,12 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
     public const string NavInteract = "NavInteract";
 
     /// <summary>
+    /// Doors never block a route, whether or not they are access-locked
+    /// (<see cref="PathFlags.Doors"/>).
+    /// </summary>
+    public const string NavDoors = "NavDoors";
+
+    /// <summary>
     /// Can the NPC pry open doors for steering.
     /// </summary>
     public const string NavPry = "NavPry";

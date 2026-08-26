@@ -299,7 +299,9 @@ public sealed partial class TutorialGoalSensorSystem
         if (sub.Complete != TutorialStepComplete.ExamineTag)
             return;
 
-        if (string.IsNullOrEmpty(sub.Tag) || !_tags.HasTag(ent.Owner, (ProtoId<TagPrototype>) sub.Tag))
+        // Named by tag or by prototype: a drill about the card the player already spawned with has
+        // no tag to hang off, because that card is the station's and not the curriculum's.
+        if (!HasItemSpec(sub) || !MatchesItemSpec(ent.Owner, sub))
             return;
 
         _tutorial.AdvanceSubGoal(args.Examiner);

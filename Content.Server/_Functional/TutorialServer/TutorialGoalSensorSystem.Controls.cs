@@ -111,15 +111,15 @@ public sealed partial class TutorialGoalSensorSystem
         if (!_tutorial.TryGetSession(uid, out var session))
             return TutorialCoachSpeech.Done;
 
+        // No mentor is not the same as nobody talking: a beat can be handed to a second voice, and
+        // ResolveBeatSpeech is what sees it.
         var mentor = session.MentorUid;
-        if (mentor == EntityUid.Invalid || TerminatingOrDeleted(mentor))
-            return TutorialCoachSpeech.Done;
 
         if (!TryComp<TutorialParticipantComponent>(uid, out var part) ||
             !_tutorial.TryGetCurrentSubGoal(uid, part, out var sub))
             return TutorialCoachSpeech.Done;
 
-        return _trainer.ResolveSegmentState(mentor, sub.Id);
+        return _trainer.ResolveBeatSpeech(uid, mentor, sub.Id);
     }
 
     /// <summary>

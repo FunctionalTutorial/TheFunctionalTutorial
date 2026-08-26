@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -24,8 +24,10 @@ using Content.Shared._Functional.TutorialServer;
 using Content.Shared.Actions;
 using Content.Shared.Bed.Sleep;
 using Content.Shared.Popups;
+using Content.Shared.Strip.Components;
 using Content.Shared.Body;
 using Content.Shared.CCVar;
+using Content.Shared.Chat.TypingIndicator;
 using Content.Shared.Damage;
 using Content.Shared.Damage.Systems;
 using Content.Shared.DetailExaminable;
@@ -44,6 +46,8 @@ using Content.Shared.Item;
 using Content.Shared.Mind;
 using Content.Shared.Mind.Components;
 using Content.Shared.Mobs;
+using Content.Shared.Doors.Components;
+using Content.Shared.Doors.Systems;
 using Content.Shared.Objectives.Systems;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Preferences;
@@ -115,7 +119,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly NPCSystem _npc = default!;
     [Dependency] private readonly HTNSystem _htn = default!;
     [Dependency] private readonly TutorialMentorFollowSystem _mentorFollow = default!;
+    [Dependency] private readonly SharedDoorSystem _doors = default!;
     [Dependency] private readonly TutorialHoloMentorSystem _holoMentor = default!;
+    [Dependency] private readonly TutorialTrainerSystem _trainer = default!;
+    [Dependency] private readonly TutorialLeadMentorSystem _leadMentor = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private static readonly EntProtoId TutorialGuideProto = "TutorialGuide";
@@ -810,6 +817,12 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 ? SpawnAntagTutorialMob(spawnCoords, profile, player, roleProto)
                 : _stationSpawning.SpawnPlayerMob(spawnCoords, roleProto.Job ?? "Passenger", profile, null);
 
+        // Everything the player arrives wearing and carrying, and everything nested inside it, so a
+        // curriculum can build a drill around the PDA and ID they already have rather than handing
+        // them a tutorial-only copy. Sensors that watch their target need the component to be there
+        // before the first beat, and job gear is equipped by the spawn call above.
+        EnsureSensorTargetsRecursive(mob);
+
         var mindId = _mind.CreateMind(player.UserId, profile.Name);
         _mind.SetUserId(mindId, player.UserId);
         _mind.TransferTo(mindId, mob);
@@ -866,6 +879,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         // Sessions are reused across role reselects; forget where the last coach was projected.
         session.MentorHoloPad = EntityUid.Invalid;
         session.MentorHoloRoom = -1;
+        session.MentorWalkPoint = EntityUid.Invalid;
+        session.MentorWalkRoom = -1;
         rule.Sessions[player.UserId] = session;
 
         // Chamber 0 starts open. Later chambers unlock only when a goal sets EnterRoom
@@ -877,6 +892,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         GiveTutorialCoach(mob, session, spawnCoords, player, roleProto);
         // The HUD refresh above ran before the coach existed, so place a holopad coach now.
         _holoMentor.RefreshProjection(mob, roleProto, session);
+        _leadMentor.RefreshLead(mob, roleProto, session);
         EnsureTutorialChooseAction(mob);
         rule.Sessions[player.UserId] = session;
 
@@ -961,6 +977,19 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         var mentor = Spawn(mentorProto, spawnCoords.Offset(roleProto.MentorSpawnOffset));
         var mentorComp = EnsureComp<TutorialMentorComponent>(mentor);
         mentorComp.PlayerUid = mob;
+        mentorComp.Leads = roleProto.MentorMode == TutorialMentorMode.Lead;
+        // A coach carrying gloves, a belt and a card the curriculum leans on is a coach worth
+        // robbing, and a player who strips him is a player whose tutorial quietly stops working.
+        RemComp<StrippableComponent>(mentor);
+
+        // The three dots over his head between lines: a pause with no indicator reads as a coach
+        // who has finished talking. Added here rather than on the prototype because the visualiser
+        // reserves its sprite layer when the component arrives, and doing that before the humanoid
+        // sprite is assembled puts the indicator in the wrong place. Same order the engine uses
+        // when a player takes a body.
+        EnsureComp<AppearanceComponent>(mentor);
+        EnsureComp<TypingIndicatorComponent>(mentor);
+
         session.MentorUid = mentor;
 
         var mentorName = string.IsNullOrWhiteSpace(roleProto.MentorName)
@@ -968,7 +997,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             : roleProto.MentorName;
         _meta.SetEntityName(mentor, mentorName);
 
-        if (roleProto.MentorFollows && TryComp<HTNComponent>(mentor, out var htn))
+        // A leading coach is aimed at the room's walk point by TutorialLeadMentorSystem on its next
+        // tick; pointing him at the player first would have him take a step toward them and stop.
+        if (roleProto.MentorFollows && !mentorComp.Leads && TryComp<HTNComponent>(mentor, out var htn))
         {
             _npc.SetBlackboard(mentor, NPCBlackboard.FollowTarget,
                 new EntityCoordinates(mob, Vector2.Zero), htn);
@@ -1148,6 +1179,12 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             // Include nested storage / entity-storage fills (closet tools, etc.).
             EnsureSensorTargetsRecursive(ent);
 
+            // A door that spawns bolted has the state but not the lights: SharedDoorSystem only
+            // refreshes those when something moves the bolts, and nothing has. Without this a drill
+            // that opens on "see, it's bolted" has nothing for the player to see.
+            if (TryComp<DoorBoltComponent>(ent, out var bolts) && bolts.BoltsDown)
+                _doors.UpdateBoltLightStatus((ent, bolts));
+
             if (spawn.Id == TutorialHackAirlockProto)
                 _tutorialRooms.PrepareHackPracticeDoor(gridUid, ent, coords.Position);
 
@@ -1165,6 +1202,14 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             {
                 holoPoint.Room = spawn.Room;
                 Dirty(ent, holoPoint);
+            }
+
+            // Same reasoning for the walking coach's waypoints: every stamped copy carries the
+            // prototype's default room, so the chamber has to be recorded where it is known.
+            if (TryComp<TutorialWalkPointComponent>(ent, out var walkPoint))
+            {
+                walkPoint.Room = spawn.Room;
+                Dirty(ent, walkPoint);
             }
 
             if (spawn.AlwaysPowered)
@@ -1870,6 +1915,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         // Holopad coaches skip the walk entirely: they re-project at the new chamber's pad.
         _holoMentor.RefreshProjection(mob, role, session);
+        _leadMentor.RefreshLead(mob, role, session);
 
         // Chamber transitions can leave the mentor behind a sealed gate — give them time to walk
         // before TutorialMentorFollowSystem path-checks and (only if stuck) snaps.
@@ -1962,6 +2008,17 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             }
 
             var goal = role.Goals[session.GoalIndex];
+
+            // The coach may owe this beat a reaction: a line written to land after the player has
+            // done the thing rather than while they are still being told to. Hold the beat where it
+            // is and let him say it; he calls back here when he runs out of words.
+            if (session.SubGoalIndex >= 0 &&
+                session.SubGoalIndex < goal.SubGoals.Count &&
+                _trainer.TryStartReaction(mob, goal.SubGoals[session.SubGoalIndex].Id))
+            {
+                return;
+            }
+
             session.SubGoalIndex++;
 
             if (session.SubGoalIndex >= goal.SubGoals.Count)

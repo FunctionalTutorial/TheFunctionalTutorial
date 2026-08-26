@@ -60,8 +60,14 @@ public sealed partial class PathfindingSystem
             var isClimb = (end.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
 
             // TODO: Handling power + door prying
+            // Any door at all, because this mover is not stopped by them. Ahead of the access
+            // check on purpose: a locked door is the case this exists for.
+            if (isDoor && (request.Flags & PathFlags.Doors) != 0x0)
+            {
+                modifier += 0.5f;
+            }
             // Door we should be able to open
-            if (isDoor && !isAccess && (request.Flags & PathFlags.Interact) != 0x0)
+            else if (isDoor && !isAccess && (request.Flags & PathFlags.Interact) != 0x0)
             {
                 modifier += 0.5f;
             }

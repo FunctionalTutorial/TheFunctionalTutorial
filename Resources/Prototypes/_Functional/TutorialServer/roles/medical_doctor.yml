@@ -7,7 +7,7 @@
   liveTutorial: true
   simplifiedEnvironment: true
   category: Station Jobs
-  pickerOrder: 1
+  pickerOrder: 2
   map: /Maps/_Functional/TutorialServer/Roles/MedicalDoctor.yml
   roomTemplate: TutorialSectionMedbay
   guidebook: Medical

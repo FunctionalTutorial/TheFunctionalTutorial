@@ -4,7 +4,7 @@
   stub: false
   liveTutorial: true
   category: Station Jobs
-  pickerOrder: 0
+  pickerOrder: 1
   map: /Maps/_Functional/TutorialServer/Roles/CargoTechnician.yml
   shuttleArena: TutorialArenaCargoShuttle
   guidebook: Cargo

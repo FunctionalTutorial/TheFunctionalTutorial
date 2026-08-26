@@ -8,7 +8,7 @@
   liveTutorial: true
   simplifiedEnvironment: true
   category: Station Jobs
-  pickerOrder: 2
+  pickerOrder: 3
   map: /Maps/_Functional/TutorialServer/Roles/Chemist.yml
   roomTemplate: TutorialSectionChem
   guidebook: Medical
