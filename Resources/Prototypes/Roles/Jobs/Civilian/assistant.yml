@@ -6,7 +6,7 @@
   startingGear: PassengerGear
   icon: "JobIconPassenger"
   supervisors: job-supervisors-everyone
-  displayWeight: 1000 #Wizden: keep Passenger first within its department in job UIs
+  displayWeight: 1000 #Tutorial: keep Passenger first within its department in job UIs
   access:
   - Maintenance
 

@@ -8,7 +8,7 @@ namespace Content.Shared._Functional.TutorialServer;
 /// Chambers are laid out east-west; bolted doors between them unlock as goals advance.
 /// Styles mirror Box/Bagel department floors, walls, and lighting.
 /// </summary>
-[Prototype] //Wizden: drop redundant type (RA0042)
+[Prototype] //Tutorial: drop redundant type (RA0042)
 public sealed partial class TutorialRoomPrototype : IPrototype
 {
     [IdDataField]

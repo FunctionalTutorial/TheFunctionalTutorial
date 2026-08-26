@@ -652,11 +652,13 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
 
     private void PunchOpening(EntityUid gridUid, MapGridComponent grid, Vector2i tile)
     {
+        // Immediate Del — SealSuperfluousDoorsAndEnsurePaths pathfinds in the same call;
+        // QueueDel would leave walls/doors on the opening tile and fail the walk check.
         foreach (var ent in _map.GetAnchoredEntities((gridUid, grid), tile).ToArray())
         {
             if (HasComp<TutorialGateDoorComponent>(ent))
                 continue;
-            QueueDel(ent);
+            Del(ent);
         }
     }
 
@@ -676,7 +678,7 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
             EnsureDividerFloor(gridUid, grid, indices, new Vector2i(-1, 0));
 
             foreach (var ent in _map.GetAnchoredEntities((gridUid, grid), indices).ToArray())
-                QueueDel(ent);
+                Del(ent);
 
             if (y == doorY)
             {
@@ -707,7 +709,7 @@ public sealed partial class TutorialRoomTemplateSystem : EntitySystem
             EnsureDividerFloor(gridUid, grid, indices, new Vector2i(0, 1));
 
             foreach (var ent in _map.GetAnchoredEntities((gridUid, grid), indices).ToArray())
-                QueueDel(ent);
+                Del(ent);
 
             if (x == doorX)
             {

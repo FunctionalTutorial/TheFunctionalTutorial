@@ -131,8 +131,8 @@
   origin: 23, -39
   size: 16, 14
   gateDoor: AirlockAtmospherics
-  # Stamp east — south strip is eng/atmos locks.
-  sourceNote: "Packed atmospherics core (east exit)"
+  # Stamp south — center N–S airlock corridor from TutorialZoneOrigin.
+  sourceNote: "Packed atmospherics core (south exit via center corridor)"
 
 - type: tutorialSectionCrop
   id: CropJanitor

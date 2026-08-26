@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Content.Shared.AlertLevel;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
@@ -15,7 +15,7 @@ namespace Content.Shared._Functional.TutorialServer;
 /// <summary>
 /// Defines a selectable tutorial package for the Functional Tutorial Server.
 /// </summary>
-[Prototype] //Wizden: drop redundant type (RA0042)
+[Prototype] //Tutorial: drop redundant type (RA0042)
 public sealed partial class TutorialRolePrototype : IPrototype
 {
     [IdDataField]
@@ -38,6 +38,14 @@ public sealed partial class TutorialRolePrototype : IPrototype
     /// </summary>
     [DataField]
     public bool Stub = true;
+
+    /// <summary>
+    /// When true, this tutorial stays on the picker while
+    /// <see cref="TutorialCVars.LiveTutorials"/> is enabled. Roles without this flag
+    /// are hidden on the live host and shown with a stub prefix in development.
+    /// </summary>
+    [DataField]
+    public bool LiveTutorial;
 
     /// <summary>
     /// When true, after the private map loads: force APC receivers to not need power.
@@ -79,6 +87,13 @@ public sealed partial class TutorialRolePrototype : IPrototype
     /// </summary>
     [DataField]
     public ProtoId<TutorialSalvageArenaPrototype>? SalvageArena;
+
+    /// <summary>
+    /// When set, builds a Space Dragon prey arena (cargo-bay box + space spawn).
+    /// Takes priority over <see cref="Room"/> after shuttle/salvage arenas.
+    /// </summary>
+    [DataField]
+    public ProtoId<TutorialDragonArenaPrototype>? DragonArena;
 
     /// <summary>
     /// When true, builds the floating Syndicate outpost spawn lounge + chem lab fragment
@@ -331,6 +346,12 @@ public sealed partial class TutorialSubGoalData
     /// </summary>
     [DataField]
     public string? ControlHint;
+
+    /// <summary>
+    /// When true, no on-screen control-hint banner is shown for this sub-goal (tablet-only beats).
+    /// </summary>
+    [DataField]
+    public bool SuppressControlHint;
 
     /// <summary>
     /// Posture the player must hold for <see cref="TutorialStepComplete.ReachMarker"/> to count.
@@ -704,7 +725,8 @@ public enum TutorialStepComplete : byte
 
     /// <summary>
     /// At least <see cref="TutorialSubGoalData.MinCount"/> entities were sold via cargo pallet sale
-    /// on the player's map.
+    /// on the player's map. When <see cref="TutorialSubGoalData.Tag"/> is set, only sold entities
+    /// with that tag count.
     /// </summary>
     CargoSold,
 
@@ -1036,4 +1058,7 @@ public enum TutorialStepComplete : byte
     /// not in anyone's hands. For "put it down there", which no possession sensor can express.
     /// </summary>
     EntityAtMarker,
+
+    /// <summary>Player hugged their tutorial mentor (empty-hand interaction popup success).</summary>
+    InteractMentor,
 }

@@ -2,8 +2,9 @@
   id: TutorialTide
   job: Passenger
   stub: false
+  liveTutorial: true
   simplifiedEnvironment: true
-  category: Civilian
+  category: Station Jobs
   pickerOrder: 0
   name: tutorial-tide-name
   map: /Maps/_Functional/TutorialServer/Roles/Tide.yml

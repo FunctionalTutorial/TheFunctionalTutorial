@@ -452,7 +452,7 @@ public sealed partial class EmergencyShuttleSystem : SharedEmergencyShuttleSyste
                 dockResults.Add(dockResult);
         }
 
-        //Wizden - Begin: no StationEmergencyShuttle (e.g. TutorialServer lobby) → empty list;
+        //Tutorial - Begin: no StationEmergencyShuttle (e.g. TutorialServer lobby) → empty list;
         // Enumerable.Max throws "Sequence contains no elements" and kills the process.
         if (dockResults.Count == 0)
         {
@@ -460,7 +460,7 @@ public sealed partial class EmergencyShuttleSystem : SharedEmergencyShuttleSyste
             _roundEnd.EndRound();
             return;
         }
-        //Wizden - End
+        //Tutorial - End
 
         // Make the shuttle wait longer if it couldn't dock in the normal spot.
         // We have to handle the possibility of there being multiple stations, so since the shuttle timer is global,

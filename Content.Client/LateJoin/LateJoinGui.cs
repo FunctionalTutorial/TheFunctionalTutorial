@@ -173,7 +173,7 @@ namespace Content.Client.LateJoin
                 _jobCategories[id] = new Dictionary<string, BoxContainer>();
                 var stationAvailable = _gameTicker.JobsAvailable[id];
 
-                //Wizden - Begin: pin Passenger at the top of late-join (tutorial basics / new players)
+                //Tutorial - Begin: pin Passenger at the top of late-join (tutorial basics / new players)
                 const string passengerJobId = "Passenger";
                 var pinnedPassenger = false;
                 if (stationAvailable.ContainsKey(passengerJobId) &&
@@ -202,7 +202,7 @@ namespace Content.Client.LateJoin
                     pinnedPassenger = true;
                     firstCategory = false;
                 }
-                //Wizden - End
+                //Tutorial - End
 
                 foreach (var department in departments)
                 {
@@ -214,7 +214,7 @@ namespace Content.Client.LateJoin
                         if (!stationAvailable.ContainsKey(jobId))
                             continue;
 
-                        //Wizden: already listed under Start here
+                        //Tutorial: already listed under Start here
                         if (pinnedPassenger && jobId == passengerJobId)
                             continue;
 

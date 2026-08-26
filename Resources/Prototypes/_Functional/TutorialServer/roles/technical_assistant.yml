@@ -4,7 +4,9 @@
   mentorName: Urist McWrench
   job: TechnicalAssistant
   stub: false
-  category: Engineering
+  liveTutorial: true
+  category: Station Jobs
+  pickerOrder: 4
   map: /Maps/_Functional/TutorialServer/Roles/TechnicalAssistant.yml
   roomTemplate: TutorialSectionEngineering
   guidebook: Engineering

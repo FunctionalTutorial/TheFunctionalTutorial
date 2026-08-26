@@ -1,5 +1,5 @@
 ﻿[game]
-# Wizden: TutorialServer is the local default (was lobbyenabled=false + Dev/Sandbox).
+# Tutorial: TutorialServer is the local default (was lobbyenabled=false + Dev/Sandbox).
 # Dev map only exposes Captain latejoin slots — that masked wrong-preset launches.
 lobbyenabled = true
 map = "TutorialLobby"
@@ -9,6 +9,7 @@ admin_job_tracking = true
 role_loadout_timers = false
 # Keep Passenger + Captain for any leftover Dev-map workflows.
 new_character_jobs = "Passenger, Captain"
+soft_max_players = 40
 
 [events]
 enabled = false
@@ -40,9 +41,14 @@ preload_grids = false
 [afk]
 time = 0
 
-#Wizden: connect-time rules popup off (rules.enabled defaults false; explicit for clarity)
+#Tutorial: TutorialServer connect-time rules popup (localhost is still exempt)
 [rules]
-enabled = false
+enabled = true
+time = 5
+validity_days = 0
+
+[server]
+rules_file = "TutorialServerRules"
 
 [admin]
 afk_time = 0
@@ -66,3 +72,18 @@ pg_password = "postgres"
 [net]
 max_rapid_connections = 413
 max_ip_connections = 413
+
+#Tutorial: TutorialServer — no player OOC (enable_during_round blocks end-of-round auto-enable)
+[ooc]
+enabled = false
+enable_during_round = true
+
+[looc]
+enabled = false
+
+[dead_chat]
+enabled = false
+
+#Tutorial: development keeps unfinished tutorials visible (stub-prefixed)
+[tutorial]
+live_tutorials = false

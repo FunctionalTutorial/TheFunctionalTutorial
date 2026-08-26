@@ -27,12 +27,12 @@ public sealed class BorgSelectTypeUserInterface : BoundUserInterface
         base.Open();
 
         _menu = this.CreateWindow<BorgSelectTypeMenu>();
-        //Wizden - Begin: filter chassis list when AvailableBorgTypes is set
+        //Tutorial - Begin: filter chassis list when AvailableBorgTypes is set
         IReadOnlyList<ProtoId<BorgTypePrototype>>? available = null;
         if (EntMan.TryGetComponent(Owner, out BorgSwitchableTypeComponent? switchable))
             available = switchable.AvailableBorgTypes;
         _menu.Populate(available);
-        //Wizden - End
+        //Tutorial - End
         _menu.ConfirmedBorgType += prototype => SendPredictedMessage(new BorgSelectTypeMessage(prototype));
     }
 }

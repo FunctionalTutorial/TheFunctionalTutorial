@@ -7,7 +7,7 @@ namespace Content.Shared._Functional.TutorialServer;
 /// <summary>
 /// Spawns a flyable cargo shuttle plus cargo-bay and ATS mini-stations for pilot/dock tutorials.
 /// </summary>
-[Prototype] //Wizden: drop redundant type (RA0042)
+[Prototype] //Tutorial: drop redundant type (RA0042)
 public sealed partial class TutorialShuttleArenaPrototype : IPrototype
 {
     [IdDataField]

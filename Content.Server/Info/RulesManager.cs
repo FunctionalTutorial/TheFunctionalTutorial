@@ -18,8 +18,6 @@ public sealed partial class RulesManager
     [Dependency] private IAdminLogManager _adminLog = default!;
     [Dependency] private IPlayerManager _player = default!;
 
-    private static DateTime LastValidReadTime => DateTime.UtcNow - TimeSpan.FromDays(60);
-
     public void Initialize()
     {
         _netManager.Connected += OnConnected;
@@ -33,9 +31,11 @@ public sealed partial class RulesManager
                             _cfg.GetCVar(CCVars.RulesExemptLocal);
 
         var lastRead = await _dbManager.GetLastReadRules(e.Channel.UserId);
-        var hasCooldown = lastRead > LastValidReadTime;
+        //Tutorial - Begin: rules.enabled gates the popup; validity_days=0 re-shows after a rules rewrite
+        var validityDays = Math.Max(0, _cfg.GetCVar(CCVars.RulesValidityDays));
+        var lastValid = DateTime.UtcNow - TimeSpan.FromDays(validityDays);
+        var hasCooldown = lastRead > lastValid;
 
-        //Wizden - Begin: rules.enabled gates the connect popup for everyone
         var rulesEnabled = _cfg.GetCVar(CCVars.RulesEnabled);
         var showRulesMessage = new SendRulesInformationMessage
         {
@@ -43,7 +43,7 @@ public sealed partial class RulesManager
             CoreRules = _cfg.GetCVar(CCVars.RulesFile),
             ShouldShowRules = rulesEnabled && !isLocalhost && !hasCooldown,
         };
-        //Wizden - End
+        //Tutorial - End
         _netManager.ServerSendMessage(showRulesMessage, e.Channel);
     }
 

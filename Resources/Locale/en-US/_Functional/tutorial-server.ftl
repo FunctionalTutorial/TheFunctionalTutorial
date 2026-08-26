@@ -1,12 +1,16 @@
 tutorial-server-preset-title = The Functional Tutorial Server
-tutorial-server-preset-description = Solo job and antagonist tutorials on private maps. Press Join in the lobby, then pick a job (Passenger is listed first for the basics). No player chat. Use the Choose a tutorial action (dollar sign) to switch roles.
+tutorial-server-preset-description = Solo job and antagonist tutorials on private maps. Press Join in the lobby to open the tutorial picker. No player chat. Use the Choose a tutorial action (dollar sign) to switch roles.
 tutorial-server-dead-chat-disabled = Dead chat is disabled on the tutorial server. Use the Choose a tutorial action (click the dollar sign on the left side of the game window, or right-click yourself) to open the role picker.
+tutorial-server-looc-disabled = LOOC is disabled on the tutorial server.
 tutorial-server-picker-title = Choose a tutorial
 tutorial-server-picker-subtitle = Pick any job or antagonist. Grey entries are incomplete stubs.
 tutorial-server-picker-quit = Quit
 tutorial-server-picker-quit-tip = You left the role picker. Use the Choose a tutorial action (click the dollar sign on the left side of the game window, or right-click yourself as a ghost) to open it again.
 tutorial-server-ghost-choose = Choose a tutorial
 tutorial-server-ghost-choose-desc = Open the Tutorial Server role picker. Click the dollar sign on the left side of the game window.
+tutorial-server-join-round-not-started = Wait until the round starts.
+tutorial-server-join-round-already-in-game = You are already in the round.
+tutorial-server-join-round-not-tutorial = The tutorial server is not active.
 ent-ActionTutorialChooseRole = Choose a tutorial
     .desc = Open the Tutorial Server role picker. Click the dollar sign on the left side of the game window.
 tutorial-server-guide-tip = Urist McTutorial is in your off-hand (left). Activate it anytime to reopen the checklist. You can drop it with Q (default) if you need both hands free.
@@ -16,7 +20,7 @@ tutorial-server-mentor-tip = Your mentor talks you through each step. Empty-hand
 tutorial-server-mentor-highlight = Tutorial mentor
 tutorial-server-progress-toast = Next: {$text}
 tutorial-server-prompt-hint = Hint
-tutorial-server-picker-stub-entry = {$name} (stub / incomplete)
+tutorial-server-picker-stub-entry = stub {$name}
 tutorial-server-picker-species-entry = {$name} (not for your species)
 tutorial-server-picker-species-tooltip = Your current character's species is not fit for this tutorial.
 tutorial-server-stub-confirm-text = This tutorial is incomplete (stub). Continue anyway?
@@ -36,7 +40,7 @@ tutorial-server-chamber-pad-stuck = Ignore sealed vault doors ? they are not the
 tutorial-server-prompt-title = Tutorial
 tutorial-server-prompt-back = Back
 tutorial-server-prompt-next = Next
-tutorial-server-prompt-waiting = Waiting for you to complete this step in the world?
+tutorial-server-prompt-waiting = Waiting for you to complete this step in the world.
 tutorial-server-prompt-no-tutorial = You are not in a tutorial.
 tutorial-server-prompt-past-step = Previously completed step {$index}.
 
@@ -103,7 +107,7 @@ tutorial-job-janitor-done = Janitor tutorial complete. Use the Choose a tutorial
 
 tutorial-job-cargo-technician-intro = Order cargo, haul a crate to sell at the ATS, and bring your purchase home.
 tutorial-job-cargo-technician-duties = Order cargo, haul crates, pilot the shuttle, sell at the ATS, retrieve purchases, and dock home.
-tutorial-job-cargo-technician-gear = Practice with the cargo order console, shuttle helm, sell pallets, and buy pallets.
+tutorial-job-cargo-technician-gear = Practice with the Cargo Request Computer, shuttle helm, sell pallets, and buy pallets.
 tutorial-job-cargo-technician-done = Cargo Tech tutorial complete. Use the Choose a tutorial action (click the dollar sign on the left side of the game window) to pick another role.
 
 tutorial-job-quartermaster-intro = You are the Quartermaster. Lead Cargo and manage the budget.

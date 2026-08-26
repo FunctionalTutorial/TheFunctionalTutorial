@@ -64,7 +64,7 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
         ChangeAnomalyStability(anomaly, Random.NextFloat(anomaly.Comp.InitialStabilityRange.Item1 , anomaly.Comp.InitialStabilityRange.Item2), anomaly.Comp);
         ChangeAnomalySeverity(anomaly, Random.NextFloat(anomaly.Comp.InitialSeverityRange.Item1, anomaly.Comp.InitialSeverityRange.Item2), anomaly.Comp);
 
-        //Wizden - Begin: honor Learn/tutorial particle + behavior locks
+        //Tutorial - Begin: honor Learn/tutorial particle + behavior locks
         if (anomaly.Comp.LockParticles)
         {
             Dirty(anomaly);
@@ -89,12 +89,12 @@ public sealed partial class AnomalySystem : SharedAnomalySystem
             anomaly.Comp.Continuity = _random.NextFloat(anomaly.Comp.MinContituty, anomaly.Comp.MaxContituty);
             SetBehavior(anomaly, GetRandomBehavior());
         }
-        //Wizden - End
+        //Tutorial - End
     }
 
     public void ShuffleParticlesEffect(Entity<AnomalyComponent> anomaly)
     {
-        //Wizden: tutorial / locked anomalies keep fixed particle roles
+        //Tutorial: tutorial / locked anomalies keep fixed particle roles
         if (anomaly.Comp.LockParticles)
             return;
 

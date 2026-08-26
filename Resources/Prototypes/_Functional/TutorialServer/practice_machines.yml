@@ -308,6 +308,15 @@
   description: A volunteer practice patient who hurts on purpose.
   suffix: Tutorial, Patient
   components:
+  - type: TutorialPracticeMob
+    spawnDamage:
+      types:
+        Blunt: 30
+        Slash: 10
+        Heat: 20
+    postHealCritDamage:
+      types:
+        Blunt: 101
   - type: DatasetVocalizer
     dataset: TutorialPracticeMobPatientAds
 
@@ -370,6 +379,101 @@
   components:
   - type: DatasetVocalizer
     dataset: TutorialPracticeMobVictimAds
+
+# Idle pacified prey for Space Dragon (wander only — never fight back).
+- type: entity
+  abstract: true
+  parent: [TutorialPracticeMob, TutorialPracticeMobSpeakingBase]
+  id: TutorialPracticeMobIdlePrey
+  suffix: Tutorial, IdlePrey
+  components:
+  - type: Pacified
+  - type: NpcFactionMember
+    factions: []
+  - type: InputMover
+  - type: MobMover
+  - type: HTN
+    rootTask:
+      task: IdleCompound
+    blackboard:
+      IdleRange: !type:Single
+        6.0
+      MinimumIdleTime: !type:Single
+        2.0
+      MaximumIdleTime: !type:Single
+        6.0
+
+- type: entity
+  parent: TutorialPracticeMobIdlePrey
+  id: TutorialPracticeMobIdleVictim
+  name: Urist McVictim
+  description: An idle practice crewmember who will not fight back.
+  suffix: Tutorial, IdlePrey
+  components:
+  - type: DatasetVocalizer
+    dataset: TutorialPracticeMobVictimAds
+
+- type: entity
+  parent: TutorialPracticeMobIdlePrey
+  id: TutorialPracticeMobIdleAudience
+  name: Urist McAudience
+  description: An idle practice spectator. Pacified even under fire.
+  suffix: Tutorial, IdlePrey
+  components:
+  - type: DatasetVocalizer
+    dataset: TutorialPracticeMobAudienceAds
+
+- type: entity
+  parent: TutorialPracticeMobIdlePrey
+  id: TutorialPracticeMobIdleParishioner
+  name: Urist McFaithful
+  description: An idle practice parishioner. Will not retaliate.
+  suffix: Tutorial, IdlePrey
+  components:
+  - type: DatasetVocalizer
+    dataset: TutorialPracticeMobParishionerAds
+
+- type: entity
+  parent: TutorialPracticeMobIdlePrey
+  id: TutorialPracticeMobIdleCrew
+  name: Urist McCrew
+  description: An idle practice crewmember. Pacified for dragon drills.
+  suffix: Tutorial, IdlePrey
+  components:
+  - type: DatasetVocalizer
+    dataset: TutorialPracticeMobConvertibleAds
+
+- type: entity
+  parent: TutorialPracticeMobIdlePrey
+  id: TutorialPracticeMobIdlePassenger
+  name: Urist McTourist
+  description: An idle practice passenger. Does not fight dragons.
+  suffix: Tutorial, IdlePrey
+  components:
+  - type: DatasetVocalizer
+    dataset: TutorialPracticeMobVictimAds
+
+- type: entity
+  parent: TutorialPracticeMobIdlePrey
+  id: TutorialPracticeMobIdleEngineer
+  name: Urist McWrench
+  description: An idle practice engineer. Pacified for dragon drills.
+  suffix: Tutorial, IdlePrey
+  components:
+  - type: DatasetVocalizer
+    dataset: TutorialPracticeMobVictimAds
+
+- type: entity
+  parent: [ PinpointerStation ]
+  id: TutorialPinpointerDragonStation
+  name: station pinpointer
+  description: Points toward the practice station. Activate it on the ground — dragons have no pockets.
+  suffix: Tutorial, Dragon
+  components:
+  - type: Pinpointer
+    component: TutorialDragonPreyBeacon
+    targetName: the station
+    canRetarget: false
 
 - type: entity
   parent: [TutorialPracticeMob, TutorialPracticeMobSpeakingBase]
@@ -814,6 +918,15 @@
         0.5
       MaximumIdleTime: !type:Single
         1.5
+
+# CMO outfit for the medical doctor tutorial mentor (Urist McMalpractice).
+- type: entity
+  parent: TutorialMentor
+  id: TutorialMedicalMentor
+  suffix: Tutorial, Mentor, Medical
+  components:
+  - type: Loadout
+    prototypes: [VisitorCMO]
 
 # Stationary cargo-bay QM for Cargo Tech (no HTN follow). Speaks tips; click to repeat / Acknowledge.
 - type: entity

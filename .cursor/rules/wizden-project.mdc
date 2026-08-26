@@ -30,33 +30,33 @@ Organize by feature (e.g. `Content.Server/Wizden/Example/ExampleSystem.cs`, `Con
 
 Do **not** add new standalone features as loose files outside Wizden paths.
 
-### Editing upstream files — mark every change with `//Wizden`
+### Editing upstream files — mark every change with `//Tutorial`
 
-When modifying **existing** files that are **not** inside a Wizden subfolder, annotate every changed line or block:
+When modifying **existing** files that are **not** inside a Wizden or Tutorial (`_Functional`) subfolder, annotate every changed line or block:
 
-**Single-line change** — append `//Wizden` (optional short note):
+**Single-line change** — append `//Tutorial` (optional short note):
 
 ```csharp
-using Content.Server.Wizden.Chat; //Wizden
-public int Range { get; private set; } = 6; //Wizden: 10>6 to reduce spam
+using Content.Server._Functional.TutorialServer; //Tutorial
+public int Range { get; private set; } = 6; //Tutorial: 10>6 to reduce spam
 ```
 
 **Multi-line block** — wrap with begin/end comments:
 
 ```csharp
-//Wizden - Begin
+//Tutorial - Begin
 public void SetYield(SeedData seed, int newYield)
 {
     seed.Yield = newYield;
 }
-//Wizden - End
+//Tutorial - End
 ```
 
-Also acceptable: `//Wizden Block start` / `//Wizden block end`, or descriptive variants like `//Wizden - FeatureName Start`.
+Also acceptable: `//Tutorial Block start` / `//Tutorial block end`, or descriptive variants like `//Tutorial - FeatureName Start`.
 
-Apply the same rule to YAML edits in non-Wizden prototype files when adding or changing Wizden content inline.
+Apply the same rule to YAML, TOML, and Fluent edits in non-Tutorial prototype files (`#Tutorial` instead of `//Tutorial`).
 
-Files already under `Wizden/` or `_Wizden/` paths do **not** need these markers.
+Files already under `Wizden/`, `_Wizden/`, or `_Functional/` paths do **not** need these markers.
 
 ---
 

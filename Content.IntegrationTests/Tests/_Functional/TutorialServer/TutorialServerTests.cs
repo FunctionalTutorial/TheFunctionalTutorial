@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -31,8 +31,10 @@ using Content.Shared.Fluids.Components;
 using Content.Shared.GameTicking;
 using Content.Shared.Ghost;
 using Content.Shared.Gravity;
+using Content.Shared.Guidebook;
 using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Humanoid.Prototypes;
 using Content.Shared.Interaction;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Inventory;
@@ -47,6 +49,7 @@ using Content.Shared.Objectives.Systems;
 using Content.Shared.Nutrition.EntitySystems;
 using Content.Shared.Physics;
 using Content.Shared.Preferences.Loadouts;
+using Content.Shared.Random;
 using Content.Shared.Clothing.Components;
 using Content.Shared.Roles;
 using Content.Shared.Silicons.Borgs;
@@ -59,6 +62,8 @@ using Content.Server.Shuttles.Components;
 using Content.Server.Shuttles.Systems;
 using Robust.Server.GameObjects;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
@@ -114,10 +119,34 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(cfg.GetCVar(CCVars.OocEnabled), Is.False);
             Assert.That(cfg.GetCVar(CCVars.LoocEnabled), Is.False);
             Assert.That(cfg.GetCVar(CCVars.DeadChatEnabled), Is.False);
+            Assert.That(cfg.GetCVar(CCVars.OocEnableDuringRound), Is.True,
+                "ooc.enable_during_round must be true so ChatSystem does not turn OOC back on at round end");
             Assert.That(cfg.GetCVar(CCVars.EmergencyShuttleAutoCallTime), Is.EqualTo(0),
                 "TutorialServer must disable emergency shuttle auto-call (lobby has no evac shuttle)");
             Assert.That(server.EntMan.Count<Content.Server.Shuttles.Components.StationCentcommComponent>(), Is.EqualTo(0),
                 "TutorialServer must not spawn CentComm");
+        });
+    }
+
+    [Test]
+    public async Task TutorialServerRules_DocumentContainsHostRules()
+    {
+        var pair = Pair;
+        var client = pair.Client;
+        await client.WaitIdleAsync();
+        var protoMan = client.ResolveDependency<IPrototypeManager>();
+        var resMan = client.ResolveDependency<IResourceManager>();
+
+        await client.WaitAssertion(() =>
+        {
+            Assert.That(protoMan.TryIndex<GuideEntryPrototype>("TutorialServerRules", out var proto), Is.True);
+            Assert.That(proto!.RuleEntry, Is.True);
+
+            using var reader = resMan.ContentFileReadText(proto.Text);
+            var text = reader.ReadToEnd();
+            Assert.That(text, Does.Contain("Please do not intentionally try to crash the server."));
+            Assert.That(text, Does.Contain("The intent of this server is to provide a way for people to learn to play the game."));
+            Assert.That(text, Does.Contain("When joining other servers please read their rules carefully, as each server has different expectations of their players."));
         });
     }
 
@@ -239,6 +268,72 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(ev.Cancelled, Is.True, "Tutorial isolation must cancel ghost dead chat");
 
             cfg.SetCVar(CCVars.DeadChatEnabled, false);
+        });
+    }
+
+    [Test]
+    public async Task TutorialServer_BlocksLooc()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var cfg = server.ResolveDependency<IConfigurationManager>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(cfg.GetCVar(CCVars.LoocEnabled), Is.False);
+
+            cfg.SetCVar(CCVars.LoocEnabled, true);
+
+            var session = pair.Client.Session!;
+            var ev = new Content.Shared.Chat.InGameOocMessageAttemptEvent(
+                session,
+                Content.Shared.Chat.InGameOOCChatType.Looc);
+            server.EntMan.EventBus.RaiseEvent(EventSource.Local, ref ev);
+            Assert.That(ev.Cancelled, Is.True, "Tutorial isolation must cancel LOOC");
+
+            cfg.SetCVar(CCVars.LoocEnabled, false);
+        });
+    }
+
+    [Test]
+    public async Task TutorialServer_PostRound_DoesNotEnableOoc()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var cfg = server.ResolveDependency<IConfigurationManager>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(cfg.GetCVar(CCVars.OocEnabled), Is.False);
+            Assert.That(cfg.GetCVar(CCVars.OocEnableDuringRound), Is.True);
+
+            // ChatSystem turns OOC on for PostRound / PreRoundLobby unless ooc.enable_during_round is set.
+            server.EntMan.EventBus.RaiseEvent(
+                EventSource.Local,
+                new GameRunLevelChangedEvent(GameRunLevel.InRound, GameRunLevel.PostRound));
+
+            Assert.That(cfg.GetCVar(CCVars.OocEnabled), Is.False,
+                "End-of-round must not re-enable OOC on TutorialServer");
+            Assert.That(cfg.GetCVar(CCVars.LoocEnabled), Is.False);
+            Assert.That(cfg.GetCVar(CCVars.DeadChatEnabled), Is.False);
         });
     }
 
@@ -410,18 +505,22 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(botany.PracticeSpawns.Any(p => p.Id == "TutorialVendingMachineSeeds"));
 
             var doctor = proto.Index<TutorialRolePrototype>("TutorialMedicalDoctor");
+            Assert.That(Sub(doctor, "hug-mentor").Complete, Is.EqualTo(TutorialStepComplete.InteractMentor));
             Assert.That(Sub(doctor, "heal-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDamageBelow));
             Assert.That(Sub(doctor, "scan-patient").Complete, Is.EqualTo(TutorialStepComplete.InteractTargetHolding));
             Assert.That(Sub(doctor, "scan-patient").Entity, Is.EqualTo(new EntProtoId("HandheldHealthAnalyzer")));
             Assert.That(Sub(doctor, "scan-patient").Tag, Is.EqualTo("TutorialPracticePatient"));
-            Assert.That(Sub(doctor, "use-epi").Complete, Is.EqualTo(TutorialStepComplete.UseInHand));
+            Assert.That(Sub(doctor, "use-epi").Complete, Is.EqualTo(TutorialStepComplete.InteractTargetHolding));
             Assert.That(Sub(doctor, "use-epi").Entity, Is.EqualTo(new EntProtoId("EmergencyMedipen")));
+            Assert.That(Sub(doctor, "use-epi").Tag, Is.EqualTo("TutorialPracticePatient"));
             Assert.That(Sub(doctor, "revive-corpse").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobRevived));
+            Assert.That(doctor.MentorEntity, Is.EqualTo(new EntProtoId("TutorialMedicalMentor")));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "TutorialPracticeMobPatient"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "TutorialPracticeMobCorpse"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "DefibrillatorOneHandedUnpowered"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "ClothingEyesHudMedical"));
             Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "EmergencyMedipen"));
+            Assert.That(doctor.PracticeSpawns.Any(p => p.Id == "TutorialStepMarker"), Is.False);
 
             var sec = proto.Index<TutorialRolePrototype>("TutorialSecurityOfficer");
             Assert.That(sec.RoomTemplate, Is.EqualTo(new ProtoId<TutorialRoomTemplatePrototype>("TutorialSectionSecurity")));
@@ -631,7 +730,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(botany, "get-wheat").Entity, Is.EqualTo(new EntProtoId("WheatBushel")));
 
             var surgery = proto.Index<TutorialRolePrototype>("TutorialSurgeryStarlight");
-            Assert.That(surgery.Stub, Is.True); //Wizden: temporarily greyed pending manual test
+            Assert.That(surgery.Stub, Is.True); //Tutorial: temporarily greyed pending manual test
             Assert.That(surgery.Category, Is.EqualTo("Server specific"));
             Assert.That(surgery.SubCategory, Is.EqualTo("Starlight"));
             Assert.That(surgery.Name, Is.EqualTo("tutorial-job-surgery-starlight-name"));
@@ -642,7 +741,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(surgery.PracticeSpawns.Any(p => p.Id == "TutorialStarlightEyeImplantWelding"));
 
             var cyberMed = proto.Index<TutorialRolePrototype>("TutorialSurgeryCyberMed");
-            Assert.That(cyberMed.Stub, Is.True); //Wizden: temporarily greyed pending manual test
+            Assert.That(cyberMed.Stub, Is.True); //Tutorial: temporarily greyed pending manual test
             Assert.That(cyberMed.Category, Is.EqualTo("Server specific"));
             Assert.That(cyberMed.SubCategory, Is.EqualTo("BPL14"));
             Assert.That(cyberMed.Name, Is.EqualTo("tutorial-job-surgery-cybermed-name"));
@@ -989,16 +1088,33 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(entries[1].RoleId, Is.EqualTo("TutorialItems"));
             Assert.That(entries.Any(e => e.RoleId.Contains("ERT", StringComparison.OrdinalIgnoreCase)), Is.False);
 
-            var firstAntag = entries.FindIndex(e => e.Category == "Wizden antagonists");
+            var stationJobs = entries.Where(e => e.Category == "Station Jobs").Select(e => e.RoleId).ToList();
+            Assert.That(stationJobs, Is.EqualTo(new[]
+            {
+                "TutorialTide",
+                "TutorialCargoTechnician",
+                "TutorialMedicalDoctor",
+                "TutorialChemist",
+                "TutorialTechnicalAssistant",
+            }));
+
+            var firstAntag = entries.FindIndex(e => e.Category is "Antagonist" or "Wizden antagonists");
             Assert.That(firstAntag, Is.GreaterThan(0));
-            Assert.That(entries.Skip(firstAntag).All(e => e.Category == "Wizden antagonists"), Is.True,
-                "Wizden antagonists must be grouped at the bottom");
+            Assert.That(entries.Skip(firstAntag).All(e => e.Category is "Antagonist" or "Wizden antagonists"), Is.True,
+                "Antagonist tutorials must be grouped at the bottom");
 
             var lastNonAntag = entries.Take(firstAntag).Last();
-            Assert.That(lastNonAntag.Category, Is.Not.EqualTo("Wizden antagonists"));
+            Assert.That(lastNonAntag.Category is not ("Antagonist" or "Wizden antagonists"));
             Assert.That(entries.Take(firstAntag).Any(e => e.Category is "Command" or "Security" or "Medical"),
                 Is.True,
                 "Department roles should appear before antagonists");
+
+            Assert.That(entries.Single(e => e.RoleId == "TutorialAntagDragon").Category, Is.EqualTo("Antagonist"));
+            Assert.That(entries.Single(e => e.RoleId == "TutorialAntagNukeops").Category, Is.EqualTo("Antagonist"));
+            Assert.That(entries.Single(e => e.RoleId == "TutorialAntagNukeopsCommander").Category,
+                Is.EqualTo("Wizden antagonists"));
+            Assert.That(entries.Single(e => e.RoleId == "TutorialAntagNukeopsMedic").Category,
+                Is.EqualTo("Wizden antagonists"));
 
             var serverSpecific = entries.Where(e => e.Category == "Server specific").ToList();
             Assert.That(serverSpecific, Is.Not.Empty);
@@ -1007,7 +1123,88 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialSurgeryStarlight").DisplayName, Is.EqualTo("Surgery"));
             Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialAntagVampire").SubCategory, Is.EqualTo("Starlight"));
             Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialAntagChangeling").SubCategory, Is.EqualTo("Starlight"));
-            Assert.That(entries.All(e => e.Category != "Antagonist"), Is.True);
+        });
+    }
+
+    [Test]
+    public async Task TutorialRolePicker_LiveTutorials_ShowsOnlyAllowlistedRoles()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var cfg = server.ResolveDependency<IConfigurationManager>();
+
+        await server.WaitAssertion(() =>
+        {
+            cfg.SetCVar(TutorialCVars.LiveTutorials, true);
+            try
+            {
+                var entries = tutorial.BuildPickerEntries();
+                Assert.That(entries.Select(e => e.RoleId), Is.EqualTo(new[]
+                {
+                    "TutorialBasics",
+                    "TutorialItems",
+                    "TutorialTide",
+                    "TutorialCargoTechnician",
+                    "TutorialMedicalDoctor",
+                    "TutorialChemist",
+                    "TutorialTechnicalAssistant",
+                    "TutorialAntagDragon",
+                    "TutorialAntagNukeops",
+                }));
+                Assert.That(entries.Select(e => e.Category).Distinct(),
+                    Is.EqualTo(new[] { "Start Here", "Station Jobs", "Antagonist" }));
+                Assert.That(entries.All(e => !e.Stub), Is.True);
+                Assert.That(entries.Any(e => e.RoleId is "TutorialAntagNukeopsCommander" or "TutorialAntagNukeopsMedic"),
+                    Is.False);
+            }
+            finally
+            {
+                cfg.SetCVar(TutorialCVars.LiveTutorials, false);
+            }
+        });
+    }
+
+    [Test]
+    public async Task TutorialRolePicker_Development_PrefixesNonLiveAsStubs()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var cfg = server.ResolveDependency<IConfigurationManager>();
+
+        await server.WaitAssertion(() =>
+        {
+            cfg.SetCVar(TutorialCVars.LiveTutorials, false);
+
+            var entries = tutorial.BuildPickerEntries();
+            Assert.That(entries.Single(e => e.RoleId == "TutorialBasics").Stub, Is.False);
+            Assert.That(entries.Single(e => e.RoleId == "TutorialCargoTechnician").Stub, Is.False);
+            Assert.That(entries.Single(e => e.RoleId == "TutorialAntagNukeops").Stub, Is.False);
+
+            Assert.That(entries.Single(e => e.RoleId == "TutorialChef").Stub, Is.True,
+                "Non-live tutorials must show as stubs in development");
+            Assert.That(entries.Single(e => e.RoleId == "TutorialPassenger").Stub, Is.True);
+            Assert.That(entries.Single(e => e.RoleId == "TutorialAntagNukeopsCommander").Stub, Is.True);
+            Assert.That(entries.Single(e => e.RoleId == "TutorialLawyer").Stub, Is.True);
+        });
+    }
+
+    [Test]
+    public async Task TutorialServer_VoxIsNotRoundstartSpecies()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var proto = server.ProtoMan;
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(proto.Index<SpeciesPrototype>("Vox").RoundStart, Is.False,
+                "Vox nitrogen internals are too advanced for the tutorial server");
+
+            var weights = proto.Index<WeightedRandomSpeciesPrototype>("SpeciesWeights");
+            Assert.That(weights.Weights.ContainsKey("Vox"), Is.False,
+                "Random species weights must not pick Vox");
         });
     }
 
@@ -1204,7 +1401,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
                 .Any(s => s.Id == "controls" && s.Complete == TutorialStepComplete.Acknowledge));
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
-                .Any(s => s.Id == "sell-crate" && s.Complete == TutorialStepComplete.CargoSold));
+                .Any(s => s.Id == "sell-crate" && s.Complete == TutorialStepComplete.CargoSold
+                          && s.Tag == "TutorialCargoBayCrate"));
             Assert.That(cargo.Goals.SelectMany(g => g.SubGoals)
                 .Any(s => s.Id == "retrieve" && s.Complete == TutorialStepComplete.PullTag
                           && s.Tag == "TutorialCargoPurchase"));
@@ -1659,7 +1857,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(atsHasBank, Is.True, "ATS grid should be a station member with a bank");
 
             var tags = server.System<TagSystem>();
-            var bayHaulCrate = false;
+            var bayHaulCrateCount = 0;
             var boardMarker = false;
             var sellPadTiles = new HashSet<Vector2i>();
             var markerQuery = server.EntMan.AllEntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
@@ -1682,7 +1880,7 @@ public sealed class TutorialServerTests : GameTest
                     tags.HasTag(crateUid, "TutorialCargoBayCrate") &&
                     !crateXform.Anchored)
                 {
-                    bayHaulCrate = true;
+                    bayHaulCrateCount++;
                 }
             }
 
@@ -1715,7 +1913,8 @@ public sealed class TutorialServerTests : GameTest
                     crateOnAtsSellPad = true;
             }
 
-            Assert.That(bayHaulCrate, Is.True, "Bay needs an unanchored TutorialCargoBayCrate haul target");
+            Assert.That(bayHaulCrateCount, Is.GreaterThanOrEqualTo(3),
+                "Bay needs three unanchored TutorialCargoBayCrate haul targets");
             Assert.That(boardMarker, Is.True, "Shuttle needs cargo-shuttle board marker");
             Assert.That(crateOnAtsSellPad, Is.False, "ATS sell pads must not preload sellable crates");
 
@@ -2285,7 +2484,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(proto.TryIndex<TutorialRolePrototype>("TutorialAntagSurvivor", out _), Is.False);
 
             var ling = proto.Index<TutorialRolePrototype>("TutorialAntagChangeling");
-            Assert.That(ling.Stub, Is.True); //Wizden: temporarily greyed pending manual test
+            Assert.That(ling.Stub, Is.True); //Tutorial: temporarily greyed pending manual test
             Assert.That(ling.Category, Is.EqualTo("Server specific"));
             Assert.That(ling.SubCategory, Is.EqualTo("Starlight"));
             Assert.That(ling.Antag, Is.EqualTo(new ProtoId<AntagPrototype>("Changeling")));
@@ -2331,7 +2530,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(arena.ShuttleMap, Is.EqualTo(new Robust.Shared.Utility.ResPath("/Maps/Shuttles/mothership.yml")));
 
             var vamp = proto.Index<TutorialRolePrototype>("TutorialAntagVampire");
-            Assert.That(vamp.Stub, Is.True); //Wizden: temporarily greyed pending manual test
+            Assert.That(vamp.Stub, Is.True); //Tutorial: temporarily greyed pending manual test
             Assert.That(vamp.Category, Is.EqualTo("Server specific"));
             Assert.That(vamp.SubCategory, Is.EqualTo("Starlight"));
             Assert.That(vamp.Antag, Is.EqualTo(new ProtoId<AntagPrototype>("Vampire")));
@@ -2393,18 +2592,26 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(dragon.Stub, Is.False);
             Assert.That(dragon.Antag, Is.EqualTo(new ProtoId<AntagPrototype>("Dragon")));
             Assert.That(dragon.SpawnEntity, Is.EqualTo(new EntProtoId("MobDragon")));
-            Assert.That(dragon.RoomTemplate,
-                Is.EqualTo(new ProtoId<TutorialRoomTemplatePrototype>("TutorialSectionMaintAntag")));
-            Assert.That(Sub(dragon, "use-breath").Complete, Is.EqualTo(TutorialStepComplete.ActionUsed));
-            Assert.That(Sub(dragon, "use-breath").Entity, Is.EqualTo(new EntProtoId("ActionDragonsBreath")));
-            Assert.That(Sub(dragon, "kill-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDead));
-            Assert.That(Sub(dragon, "devour-human").Complete, Is.EqualTo(TutorialStepComplete.DragonDevoured));
+            Assert.That(dragon.RoomTemplate, Is.Null);
+            Assert.That(dragon.DragonArena,
+                Is.EqualTo(new ProtoId<TutorialDragonArenaPrototype>("TutorialDragonPrey")));
+            Assert.That(dragon.Goals.Select(g => g.Id).ToArray(),
+                Is.EqualTo(new[] { "welcome", "approach", "portal", "feast", "abilities", "finish" }));
+            Assert.That(Sub(dragon, "reach-station").Complete, Is.EqualTo(TutorialStepComplete.ReachMarker));
+            Assert.That(Sub(dragon, "reach-station").Marker, Is.EqualTo("dragon-station"));
             Assert.That(Sub(dragon, "open-rift").Complete, Is.EqualTo(TutorialStepComplete.MapHasEntity));
             Assert.That(Sub(dragon, "open-rift").Entity, Is.EqualTo(new EntProtoId("CarpRift")));
-            Assert.That(dragon.PracticeSpawns.Count(p => p.Id == "TutorialPracticeMobVictim"), Is.GreaterThanOrEqualTo(2));
+            Assert.That(Sub(dragon, "kill-dummy").Complete, Is.EqualTo(TutorialStepComplete.PracticeMobDead));
+            Assert.That(Sub(dragon, "devour-human").Complete, Is.EqualTo(TutorialStepComplete.DragonDevoured));
+            Assert.That(Sub(dragon, "use-breath").Complete, Is.EqualTo(TutorialStepComplete.ActionUsed));
+            Assert.That(Sub(dragon, "use-breath").Entity, Is.EqualTo(new EntProtoId("ActionDragonsBreath")));
+            Assert.That(dragon.PracticeSpawns.Count(p =>
+                    p.Id.Id.StartsWith("TutorialPracticeMobIdle", StringComparison.Ordinal)),
+                Is.GreaterThanOrEqualTo(6));
             Assert.That(proto.HasIndex(new EntProtoId("ActionSpawnRift")));
             Assert.That(proto.HasIndex(new EntProtoId("ActionDevour")));
             Assert.That(proto.HasIndex(new EntProtoId("MindRoleDragon")));
+            Assert.That(proto.HasIndex(new EntProtoId("TutorialPinpointerDragonStation")));
         });
     }
 
@@ -2465,9 +2672,133 @@ public sealed class TutorialServerTests : GameTest
 
             var dragon = proto.Index<TutorialRolePrototype>("TutorialAntagDragon");
             Assert.That(maps.TryLoadTutorialMap(dragon, out var dragonMap, out _, out var dragonSpawn), Is.True,
-                "Space Dragon maint arena must load");
+                "Space Dragon prey arena must load");
             Assert.That(dragonSpawn != default, Is.True);
             maps.UnloadTutorialMap(dragonMap);
+        });
+    }
+
+    [Test]
+    public async Task TutorialDragonArena_SpawnsInSpaceWithPinpointerAndPacifiedPrey()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var maps = server.System<TutorialMapSystem>();
+        var proto = server.ProtoMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var dragon = proto.Index<TutorialRolePrototype>("TutorialAntagDragon");
+            Assert.That(TutorialServerRuleSystem.UsesTravelingCoach(dragon), Is.True);
+            Assert.That(maps.TryLoadTutorialMap(dragon, out var mapUid, out var stationUid, out var spawnCoords),
+                Is.True);
+
+            Assert.That(server.EntMan.HasComponent<TutorialDockStationComponent>(stationUid));
+            Assert.That(server.EntMan.GetComponent<TutorialDockStationComponent>(stationUid).StationId,
+                Is.EqualTo("dragon-prey"));
+            Assert.That(server.EntMan.TryGetComponent<TutorialRoomLayoutComponent>(stationUid, out var layout));
+            Assert.That(layout!.ChamberCenters.Count, Is.EqualTo(1));
+
+            // Dragon spawn is map-parented (space), not on the station grid.
+            var spawnXform = spawnCoords.EntityId;
+            Assert.That(spawnXform, Is.EqualTo(mapUid),
+                "Dragon must spawn on the map entity (open space), not the station grid");
+
+            EntityUid? pin = null;
+            EntityUid? beacon = null;
+            var pinQuery = server.EntMan.AllEntityQueryEnumerator<Content.Shared.Pinpointer.PinpointerComponent, TransformComponent>();
+            while (pinQuery.MoveNext(out var uid, out var pinComp, out var xform))
+            {
+                if (xform.MapUid != mapUid)
+                    continue;
+                if (server.EntMan.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID !=
+                    "TutorialPinpointerDragonStation")
+                    continue;
+                pin = uid;
+                Assert.That(pinComp.IsActive, Is.True, "Pinpointer should start active");
+                Assert.That(pinComp.Target, Is.Not.Null, "Pinpointer should target the prey beacon");
+                break;
+            }
+
+            Assert.That(pin, Is.Not.Null, "Expected TutorialPinpointerDragonStation near space spawn");
+
+            var beaconQuery = server.EntMan.AllEntityQueryEnumerator<TutorialDragonPreyBeaconComponent, TransformComponent>();
+            while (beaconQuery.MoveNext(out var uid, out _, out var xform))
+            {
+                if (xform.GridUid == stationUid)
+                    beacon = uid;
+            }
+
+            Assert.That(beacon, Is.Not.Null, "Prey station needs a TutorialDragonPreyBeacon");
+            Assert.That(server.EntMan.GetComponent<Content.Shared.Pinpointer.PinpointerComponent>(pin!.Value).Target,
+                Is.EqualTo(beacon));
+
+            var approach = false;
+            var markerQuery = server.EntMan.AllEntityQueryEnumerator<TutorialStepMarkerComponent, TransformComponent>();
+            while (markerQuery.MoveNext(out _, out var marker, out var xform))
+            {
+                if (xform.GridUid != stationUid)
+                    continue;
+                if (marker.MarkerId == TutorialDragonArenaSystem.StationApproachMarkerId)
+                    approach = true;
+            }
+
+            Assert.That(approach, Is.True, "Station needs dragon-station approach marker");
+
+            // Spawn practice prey on the station via role load path.
+            maps.UnloadTutorialMap(mapUid);
+        });
+        await pair.RunTicksSync(2);
+
+        // Full session: practice spawns + pacified idle prey on station.
+        await server.WaitPost(() =>
+        {
+            var tutorial = server.System<TutorialServerRuleSystem>();
+            tutorial.TrySelectRole(pair.Player!, "TutorialAntagDragon", confirmedStub: false);
+        });
+        await pair.RunTicksSync(15);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(pair.Player!.AttachedEntity, Is.Not.Null);
+            var mob = pair.Player.AttachedEntity!.Value;
+            Assert.That(server.EntMan.HasComponent<TutorialParticipantComponent>(mob), Is.True);
+            Assert.That(server.EntMan.HasComponent<Content.Server.Dragon.DragonComponent>(mob), Is.True);
+
+            var mobXform = server.EntMan.GetComponent<TransformComponent>(mob);
+            Assert.That(mobXform.GridUid, Is.Null,
+                "Dragon body should start in space (no grid)");
+
+            var prey = 0;
+            var pacified = 0;
+            var query = server.EntMan.AllEntityQueryEnumerator<TutorialPracticeMobComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out _, out var xform))
+            {
+                if (xform.MapUid != mobXform.MapUid)
+                    continue;
+                if (uid == mob)
+                    continue;
+                if (server.EntMan.HasComponent<TutorialMentorComponent>(uid))
+                    continue;
+                prey++;
+                if (server.EntMan.HasComponent<Content.Shared.CombatMode.Pacification.PacifiedComponent>(uid))
+                    pacified++;
+                Assert.That(server.EntMan.HasComponent<Content.Server.NPC.HTN.HTNComponent>(uid), Is.True,
+                    "Idle prey keep IdleCompound HTN");
+                Assert.That(xform.GridUid, Is.Not.Null, "Prey must stand on the station grid");
+            }
+
+            Assert.That(prey, Is.GreaterThanOrEqualTo(6), "Expected idle prey variety on the bay");
+            Assert.That(pacified, Is.EqualTo(prey), "All dragon prey must be Pacified");
         });
     }
 
@@ -2796,13 +3127,16 @@ public sealed class TutorialServerTests : GameTest
             tutorialSys.AdvanceSubGoal(mob); // confirm
             tutorialSys.AdvanceSubGoal(mob); // drag-crate
             tutorialSys.AdvanceSubGoal(mob); // board-shuttle
-            tutorialSys.AdvanceSubGoal(mob); // controls (force-opens guide)
+            ui.CloseUi(session.GuideUid, TutorialPromptUiKey.Key, mob);
+            tutorialSys.AdvanceSubGoal(mob); // controls
             Assert.That(entMan.TryGetComponent(mob, out part));
             Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.Acknowledge));
             Assert.That(tutorialSys.TryGetCurrentSubGoal(mob, part, out var controlsSub));
             Assert.That(controlsSub.Id, Is.EqualTo("controls"));
-            Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.True,
-                "Controls step must force-open the guide tablet");
+            Assert.That(controlsSub.SuppressControlHint, Is.True);
+            Assert.That(session.GuideAutoOpened, Is.False);
+            Assert.That(ui.IsUiOpen(session.GuideUid, TutorialPromptUiKey.Key, mob), Is.False,
+                "Controls step should not force-open the guide tablet");
 
             tutorialSys.AdvanceSubGoal(mob); // open-console
             Assert.That(entMan.TryGetComponent(mob, out part));
@@ -3058,6 +3392,37 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(entMan.GetComponent<TutorialParticipantComponent>(mob).StepComplete,
                 Is.EqualTo(TutorialStepComplete.HoldItem),
                 "World-dropping a Crowbar should advance DropItem to hold-light");
+        });
+    }
+
+    [Test]
+    public async Task TutorialJoinCommand_OpensRolePicker()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var console = server.ResolveDependency<IConsoleHost>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() => console.ExecuteCommand(pair.Player!, "jointutorial"));
+        await pair.RunTicksSync(10);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(tutorial.IsPickerOpen(pair.Player!), Is.True,
+                "jointutorial should open the Choose a tutorial picker");
+            var player = pair.Player!;
+            Assert.That(player.AttachedEntity, Is.Not.Null);
+            Assert.That(server.EntMan.HasComponent<GhostComponent>(player.AttachedEntity!.Value), Is.True,
+                "jointutorial must attach an observer so the client has a valid map");
         });
     }
 
@@ -3584,7 +3949,7 @@ public sealed class TutorialServerTests : GameTest
         await server.WaitPost(() =>
         {
             server.System<TutorialServerRuleSystem>()
-                .TrySelectRole(pair.Player!, "TutorialSurgeryStarlight", confirmedStub: true); //Wizden: stub greyed pending manual test
+                .TrySelectRole(pair.Player!, "TutorialSurgeryStarlight", confirmedStub: true); //Tutorial: stub greyed pending manual test
         });
         await pair.RunTicksSync(60);
 
@@ -4511,13 +4876,14 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
-    public async Task TutorialAtmosStamp_KeepsEastAxis()
+    public async Task TutorialAtmosStamp_StacksSouthThroughCenterCorridor()
     {
         await AssertSectionStampAxisAndForbiddenDoors(
             "TutorialSectionAtmos",
-            TutorialRoomDoorSide.East,
+            TutorialRoomDoorSide.South,
             forbiddenDoorProtos: Array.Empty<string>(),
-            requireVaults: true);
+            requireVaults: true,
+            requireWalkableCenterToNextChamber: true);
     }
 
     [Test]
@@ -4538,13 +4904,17 @@ public sealed class TutorialServerTests : GameTest
         TutorialRoomDoorSide expectedDirection,
         string[] forbiddenDoorProtos,
         bool requireVaults = false,
-        string? forbiddenDoorSubstring = null)
+        string? forbiddenDoorSubstring = null,
+        bool requireWalkableCenterToNextChamber = false)
     {
         var pair = Pair;
         var server = pair.Server;
         var ticker = server.System<GameTicker>();
         var templates = server.System<TutorialRoomTemplateSystem>();
         var maps = server.System<TutorialMapSystem>();
+        var rooms = server.System<TutorialPracticeRoomSystem>();
+        var turf = server.System<TurfSystem>();
+        var mapSys = server.System<MapSystem>();
         var proto = server.ProtoMan;
 
         await server.WaitPost(() =>
@@ -4619,8 +4989,91 @@ public sealed class TutorialServerTests : GameTest
                     $"{templateId}: off-path crop doors should become sealed vaults");
             }
 
+            if (requireWalkableCenterToNextChamber)
+            {
+                rooms.UnlockGatesForGoal(gridUid, 1);
+                var grid = server.EntMan.GetComponent<MapGridComponent>(gridUid);
+                var start = new Vector2i((int) MathF.Floor(c0.X), (int) MathF.Floor(c0.Y));
+                var goal = new Vector2i((int) MathF.Floor(c1.X), (int) MathF.Floor(c1.Y));
+                Assert.That(
+                    TryWalkMobPath(server.EntMan, mapSys, turf, gridUid, grid, start, goal),
+                    Is.True,
+                    $"{templateId}: chamber 0 center must walk to chamber 1 after gate unlock (no vault maze)");
+            }
+
             maps.UnloadTutorialMap(mapUid);
         });
+    }
+
+    /// <summary>
+    /// BFS on grid tiles: vault doors block; unlocked tutorial gates and open floor are walkable.
+    /// </summary>
+    private static bool TryWalkMobPath(
+        IEntityManager entMan,
+        MapSystem mapSys,
+        TurfSystem turf,
+        EntityUid gridUid,
+        MapGridComponent grid,
+        Vector2i start,
+        Vector2i goal)
+    {
+        if (mapSys.GetTileRef(gridUid, grid, start).Tile.IsEmpty ||
+            mapSys.GetTileRef(gridUid, grid, goal).Tile.IsEmpty)
+            return false;
+
+        bool Walkable(Vector2i tile)
+        {
+            if (mapSys.GetTileRef(gridUid, grid, tile).Tile.IsEmpty)
+                return false;
+
+            foreach (var ent in mapSys.GetAnchoredEntities(gridUid, grid, tile))
+            {
+                if (entMan.HasComponent<TutorialGateDoorComponent>(ent))
+                    return true;
+
+                var id = entMan.GetComponent<MetaDataComponent>(ent).EntityPrototype?.ID;
+                if (id == "TutorialVaultDoor")
+                    return false;
+
+                if (entMan.HasComponent<Content.Shared.Doors.Components.DoorComponent>(ent))
+                    return false;
+            }
+
+            return !turf.IsTileBlocked(gridUid, tile, CollisionGroup.MobMask);
+        }
+
+        if (!Walkable(start) || !Walkable(goal))
+            return false;
+
+        var cameFrom = new HashSet<Vector2i> { start };
+        var queue = new Queue<Vector2i>();
+        queue.Enqueue(start);
+        var dirs = new[]
+        {
+            new Vector2i(1, 0),
+            new Vector2i(-1, 0),
+            new Vector2i(0, 1),
+            new Vector2i(0, -1),
+        };
+
+        while (queue.Count > 0)
+        {
+            var cur = queue.Dequeue();
+            if (cur == goal)
+                return true;
+
+            foreach (var dir in dirs)
+            {
+                var next = cur + dir;
+                if (!cameFrom.Add(next))
+                    continue;
+                if (!Walkable(next))
+                    continue;
+                queue.Enqueue(next);
+            }
+        }
+
+        return false;
     }
 
     [Test]
@@ -5599,7 +6052,7 @@ public sealed class TutorialServerTests : GameTest
                     break;
                 if (sub.Id == "scan-patient")
                     break;
-                if (sub.Complete == TutorialStepComplete.Acknowledge)
+                if (sub.Complete is TutorialStepComplete.Acknowledge or TutorialStepComplete.InteractMentor)
                     tutorial.AdvanceSubGoal(mob);
                 else if (sub.Complete == TutorialStepComplete.HoldItem &&
                          sub.Entity == new EntProtoId("ClothingEyesHudMedical"))
@@ -5681,6 +6134,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var afterHeal));
             Assert.That(afterHeal.Id, Is.Not.EqualTo("heal-dummy"),
                 "PracticeMobDamageBelow must ignore Dead corpses and advance when the living patient is healed");
+            Assert.That(entMan.GetComponent<MobStateComponent>(patient).CurrentState, Is.EqualTo(MobState.Critical),
+                "Healed patient should drop into critical for medipen practice");
 
             // Force-advance past epi/crit tips into the revive goal, then pick up the defib.
             for (var i = 0; i < 30; i++)
@@ -5729,9 +6184,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(entMan.GetComponent<MobStateComponent>(corpse).CurrentState, Is.EqualTo(MobState.Critical),
                 "210 damage corpse with 50 asphyx should revive after one zap (-40 asphyx + electrocution)");
             Assert.That(tutorial.TryGetCurrentSubGoal(mob, entMan.GetComponent<TutorialParticipantComponent>(mob), out var afterRevive));
-            // ReachMarker may auto-complete if the player already stands on med-pass.
-            Assert.That(afterRevive.Id, Is.EqualTo("walk").Or.EqualTo("done"),
-                $"PracticeMobRevived should leave revive-corpse (at {afterRevive.Id})");
+            Assert.That(afterRevive.Id, Is.EqualTo("done"),
+                $"PracticeMobRevived should advance revive-corpse to done (at {afterRevive.Id})");
             Assert.That(afterRevive.Complete, Is.Not.EqualTo(TutorialStepComplete.PracticeMobRevived));
         });
     }

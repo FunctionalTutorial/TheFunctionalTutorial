@@ -5,8 +5,10 @@
   mentorName: Urist McMeth
   job: Chemist
   stub: false
+  liveTutorial: true
   simplifiedEnvironment: true
-  category: Medical
+  category: Station Jobs
+  pickerOrder: 3
   map: /Maps/_Functional/TutorialServer/Roles/Chemist.yml
   roomTemplate: TutorialSectionChem
   guidebook: Medical

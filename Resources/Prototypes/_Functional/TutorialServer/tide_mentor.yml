@@ -24,7 +24,7 @@
   - type: Loadout
     prototypes: [TutorialTideGear]
   - type: Access
-    groups:
+    tags:
     - Maintenance
   - type: Tag
     tags:
