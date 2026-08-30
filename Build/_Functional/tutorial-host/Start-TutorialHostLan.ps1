@@ -114,16 +114,45 @@ if ($still.Count -gt 0) {
     throw ("Port $Port and/or 1213 still in use by PID(s): " + ($still -join ', '))
 }
 
-Write-Step "Starting TutorialServer on ${BindHost}:${Port} (hub.advertise=false)"
+# loginlocal only promotes 127.0.0.1 clients. LAN bind means you need login_host_user.
+# Prefer gitignored server_config.local.toml next to this script, then next to the server dll.
+function Get-LoginHostUser([string[]]$CandidatePaths) {
+    foreach ($candidate in $CandidatePaths) {
+        if (-not (Test-Path -LiteralPath $candidate)) { continue }
+        foreach ($line in Get-Content -LiteralPath $candidate) {
+            if ($line -match '^\s*login_host_user\s*=\s*"?([^"#]+)"?\s*$') {
+                $name = $Matches[1].Trim()
+                if ($name.Length -gt 0) {
+                    Write-Host "Using console.login_host_user='$name' from $candidate"
+                    return $name
+                }
+            }
+        }
+    }
+    return $null
+}
+
+$loginHostUser = Get-LoginHostUser @(
+    (Join-Path $PSScriptRoot 'server_config.local.toml'),
+    (Join-Path $LiveRoot 'bin\Content.Server\server_config.local.toml'),
+    (Join-Path $ToolsRoot 'server_config.local.toml')
+)
+
+Write-Step "Starting TutorialServer on ${BindHost}:${Port} (hub.advertise=true)"
 Write-Host "WorkingDirectory=$LiveRoot"
 Write-Host 'Click Allow if Windows Firewall prompts for dotnet.'
-Write-Host 'Connect: ss14://192.168.1.4:1212  (LAN)  or  ss14://24.32.95.172:1212  (internet)'
+Write-Host 'Connect: ss14://192.168.1.4:1212  (LAN)  or  ss14://ss14tutorial.mynetgear.com:1212  (hub/public)'
 Write-Host 'Ctrl+C stops the server when you are done.'
+if (-not $loginHostUser) {
+    Write-Host "WARNING: no login_host_user found. Copy server_config.local.toml.example -> server_config.local.toml next to this script." -ForegroundColor Yellow
+}
 Write-Host ''
 
 $argList = @(
     $serverDll,
-    '--cvar', 'hub.advertise=false',
+    '--cvar', 'hub.advertise=true',
+    '--cvar', 'hub.hub_urls=https://hub.spacestation14.com/',
+    '--cvar', 'hub.server_url=ss14://ss14tutorial.mynetgear.com:1212',
     '--cvar', 'net.upnp=false',
     '--cvar', "net.port=$Port",
     '--cvar', "net.bindto=$BindHost",
@@ -147,8 +176,14 @@ $argList = @(
     '--cvar', 'dead_chat.enabled=false',
     '--cvar', 'tutorial.live_tutorials=true',
     '--cvar', 'console.loginlocal=true',
+    '--cvar', 'infolinks.discord=https://discord.gg/jkvg7k9w2n',
+    '--cvar', 'infolinks.github=https://github.com/FunctionalTutorial/TheFunctionalTutorial',
     '--cvar', 'log.level=Info'
 )
+
+if ($loginHostUser) {
+    $argList += @('--cvar', "console.login_host_user=$loginHostUser")
+}
 
 Set-Location -LiteralPath $LiveRoot
 & $DotnetExe @argList

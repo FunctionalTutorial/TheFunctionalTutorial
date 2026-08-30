@@ -1020,6 +1020,12 @@ public enum TutorialStepComplete : byte
     HandsEmpty,
 
     /// <summary>
+    /// The player's active hand holds nothing. Unlike <see cref="HandsEmpty"/>, the other hand
+    /// may still be full. For drills that need a free hand to pick something up.
+    /// </summary>
+    ActiveHandEmpty,
+
+    /// <summary>
     /// A tagged entity is parked on <see cref="TutorialSubGoalData.Marker"/> and nobody is pulling
     /// it. The release matters: letting go is a separate control from taking hold.
     /// </summary>
@@ -1059,6 +1065,9 @@ public enum TutorialStepComplete : byte
     /// </summary>
     EntityAtMarker,
 
-    /// <summary>Player hugged their tutorial mentor (empty-hand interaction popup success).</summary>
+    /// <summary>
+    /// Player hugged their tutorial mentor (empty-hand <c>InteractionPopup</c> success).
+    /// Mentor click handling must not mark the interact handled before the popup runs.
+    /// </summary>
     InteractMentor,
 }

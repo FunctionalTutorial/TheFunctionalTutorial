@@ -10573,6 +10573,17 @@ entities:
     - type: Transform
       parent: 1
       pos: 6.5,1.5
+# Wall-mounted sink on the east reinforced wall beside ChemDispenser (7.5,3.5).
+# Rotation matches other east-wall mounts in this crop (e.g. Poweredlight at 7.5,4.5).
+- proto: SinkStemlessWater
+  entities:
+  - uid: 371
+    mapInit: true
+    components:
+    - type: Transform
+      parent: 1
+      rot: -1.5707963267948966 rad
+      pos: 8.5,3.5
 - proto: SmartFridge
   entities:
   - uid: 320

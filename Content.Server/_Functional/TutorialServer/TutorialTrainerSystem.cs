@@ -385,13 +385,12 @@ public sealed class TutorialTrainerSystem : EntitySystem
         if (!TryResolveDialogue(ent, ent.Comp, args.User, part, out var subGoalId, out var dialogue))
             return;
 
-        args.Handled = true;
-
         // Mid-segment: clicking pulls the next line forward for players who read faster than the
         // coach talks, rather than repeating what they just heard.
         var pending = ActiveQueue(ent.Comp);
         if (pending.Count > 0)
         {
+            args.Handled = true;
             var next = pending.Dequeue();
             ent.Comp.NextLineAt = _timing.CurTime + ResolveNextLineDelay(ent.Comp);
             Dirty(ent.Owner, ent.Comp);
@@ -407,11 +406,19 @@ public sealed class TutorialTrainerSystem : EntitySystem
         // click still does its two useful jobs below.
         if (part.StepComplete == TutorialStepComplete.Acknowledge)
         {
+            args.Handled = true;
             _tutorial.AdvanceSubGoal(args.User);
             return;
         }
 
+        // InteractMentor is completed by InteractionPopupSystem → InteractionSuccessEvent
+        // (TutorialGoalSensorSystem.OnMentorHugged). Do not mark Handled or the hug never fires
+        // and the stuck hint loops forever on every empty-hand click.
+        if (part.StepComplete == TutorialStepComplete.InteractMentor)
+            return;
+
         // Waiting on a sensor: click shows the stuck hint when authored.
+        args.Handled = true;
         if (!string.IsNullOrEmpty(part.StuckHintText))
             _tutorial.SendTipChat(args.User, part.StuckHintText);
     }

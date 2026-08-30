@@ -24,7 +24,7 @@ max_connections = 256
 # Name of the server. This is what will be displayed in the server list and lobby.
 hostname = "MyServer"
 # Description of the server. This is what will be displayed in the server list.
-desc = "Just another server, don't mind me!"
+desc = "Interactive tutorials with NPC guides that teach players game mechanics."
 # The maximum number of players that can connect to the server. (Exluding admins)
 soft_max_players = 40 #Tutorial: TutorialServer cap
 # Controls the lobby timer in seconds.
@@ -85,6 +85,7 @@ loginlocal = true
 # A player username that will be automatically elevated to full admin privileges on join.
 # Please only use this to give yourself admin privileges temporarily.
 # For a more permanent solution, use the permissions pannel in the game. (f7 -> Permissions Pannel, or `permissions` in the client console)
+# Or copy server_config.local.toml.example to server_config.local.toml (gitignored) and set login_host_user there.
 login_host_user = ""
 
 [whitelist]
@@ -116,17 +117,19 @@ live_tutorials = true
 # Set to true to show this server on the public server list
 # Before enabling this, read: https://docs.spacestation14.com/en/community/space-wizards-hub-rules.html
 # By advertising your server, you agree to follow the rules of the hub.
-advertise = false
+#Tutorial: advertise Functional Tutorial on WizDen hub
+advertise = true
 # Comma-separated list of tags, useful for categorizing your server. For a list of standard tags, see the link below.
 # https://docs.spacestation14.com/en/robust-toolbox/server-http-api.html?highlight=http#standard-tags
-tags = ""
+tags = "lang:en,region:am_n_c"
 # Comma-separated list of URLs of hub servers to advertise to.
 hub_urls = "https://hub.spacestation14.com/"
 # URL of your server. Fill this in if you have a domain name,
 # want to use HTTPS (with a reverse proxy), or other advanced scenarios.
 # Must be in the form of an ss14:// or ss14s:// URI pointing to the status API.
 # Example: ss14://mydomain.com
-server_url = ""
+#Tutorial
+server_url = "ss14://ss14tutorial.mynetgear.com:1212"
 
 [status]
 # This is the address of the SS14 server as the launcher uses it.
@@ -137,8 +140,10 @@ connectaddress = ""
 
 [infolinks]
 # Links to be displayed in the launcher.
+#Tutorial: Functional Tutorial community links
+discord = "https://discord.gg/jkvg7k9w2n"
 forum = ""
-github = ""
+github = "https://github.com/FunctionalTutorial/TheFunctionalTutorial"
 website = ""
 wiki = ""
 patreon = ""

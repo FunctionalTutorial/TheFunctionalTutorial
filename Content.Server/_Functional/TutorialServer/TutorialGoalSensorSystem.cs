@@ -444,6 +444,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 case TutorialStepComplete.TargetAnchored:
                 case TutorialStepComplete.TargetAbsent:
                 case TutorialStepComplete.HandsEmpty:
+                case TutorialStepComplete.ActiveHandEmpty:
                 case TutorialStepComplete.TargetParkedAtMarker:
                 case TutorialStepComplete.InternalsOff:
                     UpdateItemSensors(uid, xform, sub);

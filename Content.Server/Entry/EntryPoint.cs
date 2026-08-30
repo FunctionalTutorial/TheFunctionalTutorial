@@ -99,6 +99,10 @@ namespace Content.Server.Entry
 
             LoadConfigPresets(_cfg, _res, _log.GetSawmill("configpreset"));
 
+            //Tutorial - Begin
+            LoadLocalServerConfig(_cfg, _log.GetSawmill("config"));
+            //Tutorial - End
+
             var aczProvider = new ContentMagicAczProvider(Dependencies);
             _host.SetMagicAczProvider(aczProvider);
 

@@ -36,6 +36,7 @@ using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Humanoid.Prototypes;
 using Content.Shared.Interaction;
+using Content.Shared.Interaction.Components;
 using Content.Shared.Interaction.Events;
 using Content.Shared.Inventory;
 using Content.Shared.Item;
@@ -444,11 +445,16 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(chemist, "pills").Complete, Is.EqualTo(TutorialStepComplete.ObtainItem));
             Assert.That(Sub(chemist, "pills").Entity, Is.EqualTo(new EntProtoId("PillCanister")));
             Assert.That(Sub(chemist, "pills").MinCount, Is.EqualTo(1));
+            Assert.That(Sub(chemist, "table-salt").Complete, Is.EqualTo(TutorialStepComplete.SolutionContains));
+            Assert.That(Sub(chemist, "table-salt").Reagent, Is.EqualTo(new ProtoId<Content.Shared.Chemistry.Reagent.ReagentPrototype>("TableSalt")));
+            Assert.That(Sub(chemist, "make-saline").Complete, Is.EqualTo(TutorialStepComplete.SolutionContains));
+            Assert.That(Sub(chemist, "make-saline").Reagent, Is.EqualTo(new ProtoId<Content.Shared.Chemistry.Reagent.ReagentPrototype>("Saline")));
             // Machines come from the Saltern crop (tagged by TutorialChemBootstrapSystem).
             Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "TutorialChemDispenser"), Is.False);
             Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "TutorialChemMaster"), Is.False);
             Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "TutorialKitchenReagentGrinder"), Is.False);
             Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "PillCanister"));
+            Assert.That(chemist.PracticeSpawns.Any(p => p.Id == "JugWater"));
             // Glassware stays off the north machine row / drain tile.
             Assert.That(chemist.PracticeSpawns.All(p => p.Offset.Y < 0.75f),
                 "Chemist practice spawns must stay south of the crop machine row (y+1)");
@@ -2698,7 +2704,8 @@ public sealed class TutorialServerTests : GameTest
         await server.WaitAssertion(() =>
         {
             var dragon = proto.Index<TutorialRolePrototype>("TutorialAntagDragon");
-            Assert.That(TutorialServerRuleSystem.UsesTravelingCoach(dragon), Is.True);
+            Assert.That(TutorialServerRuleSystem.UsesTravelingCoach(dragon), Is.False,
+                "Dragons cannot hold Urist McTutorial; they get a soft-following mentor instead");
             Assert.That(maps.TryLoadTutorialMap(dragon, out var mapUid, out var stationUid, out var spawnCoords),
                 Is.True);
 
@@ -2778,8 +2785,22 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(mobXform.GridUid, Is.Null,
                 "Dragon body should start in space (no grid)");
 
+            var tutorial = server.System<TutorialServerRuleSystem>();
+            Assert.That(tutorial.TryGetSession(mob, out var session), Is.True);
+            Assert.That(session!.GuideUid, Is.EqualTo(EntityUid.Invalid),
+                "Dragon must not get the Urist McTutorial tablet");
+            Assert.That(session.MentorUid, Is.Not.EqualTo(EntityUid.Invalid),
+                "Dragon gets Urist McRift as a soft-following mentor");
+            Assert.That(server.EntMan.GetComponent<MetaDataComponent>(session.MentorUid).EntityName,
+                Is.EqualTo("Urist McRift"));
+            Assert.That(server.EntMan.HasComponent<Content.Shared.Damage.Components.GodmodeComponent>(session.MentorUid),
+                Is.True,
+                "Dragon mentor starts in vacuum beside the player");
+
+            ProtoId<Content.Shared.NPC.Prototypes.NpcFactionPrototype> nanoTrasenFaction = "NanoTrasen";
             var prey = 0;
             var pacified = 0;
+            var nanoTrasen = 0;
             var query = server.EntMan.AllEntityQueryEnumerator<TutorialPracticeMobComponent, TransformComponent>();
             while (query.MoveNext(out var uid, out _, out var xform))
             {
@@ -2792,6 +2813,9 @@ public sealed class TutorialServerTests : GameTest
                 prey++;
                 if (server.EntMan.HasComponent<Content.Shared.CombatMode.Pacification.PacifiedComponent>(uid))
                     pacified++;
+                if (server.EntMan.TryGetComponent<Content.Shared.NPC.Components.NpcFactionMemberComponent>(uid, out var faction) &&
+                    faction.Factions.Contains(nanoTrasenFaction))
+                    nanoTrasen++;
                 Assert.That(server.EntMan.HasComponent<Content.Server.NPC.HTN.HTNComponent>(uid), Is.True,
                     "Idle prey keep IdleCompound HTN");
                 Assert.That(xform.GridUid, Is.Not.Null, "Prey must stand on the station grid");
@@ -2799,6 +2823,8 @@ public sealed class TutorialServerTests : GameTest
 
             Assert.That(prey, Is.GreaterThanOrEqualTo(6), "Expected idle prey variety on the bay");
             Assert.That(pacified, Is.EqualTo(prey), "All dragon prey must be Pacified");
+            Assert.That(nanoTrasen, Is.EqualTo(prey),
+                "Idle prey must be NanoTrasen so Dragon-faction carp attack them");
         });
     }
 
@@ -4713,6 +4739,7 @@ public sealed class TutorialServerTests : GameTest
             var taggedDispenser = false;
             var taggedMaster = false;
             var taggedGrinder = false;
+            var taggedHotplate = false;
             var query = entMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
             while (query.MoveNext(out var uid, out var meta, out var xform))
             {
@@ -4728,11 +4755,39 @@ public sealed class TutorialServerTests : GameTest
                 if (meta.EntityPrototype?.ID == "KitchenReagentGrinder" &&
                     tags.HasTag(uid, new ProtoId<TagPrototype>("TutorialGrinder")))
                     taggedGrinder = true;
+                if (meta.EntityPrototype?.ID == "ChemistryHotplate" &&
+                    tags.HasTag(uid, new ProtoId<TagPrototype>("TutorialHotplate")))
+                    taggedHotplate = true;
             }
 
             Assert.That(taggedDispenser, Is.True, "Crop ChemDispenser must be tagged for the open-UI step");
             Assert.That(taggedMaster, Is.True, "Crop ChemMaster must be tagged");
             Assert.That(taggedGrinder, Is.True, "Crop reagent grinder must be tagged");
+            Assert.That(taggedHotplate, Is.True, "Crop hotplate must be tagged/powered for table salt");
+
+            EntityUid? dispenserUid = null;
+            EntityUid? sinkUid = null;
+            var fixtureQuery = entMan.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            while (fixtureQuery.MoveNext(out var uid, out var meta, out var xform))
+            {
+                if (xform.GridUid != gridUid)
+                    continue;
+                if (meta.EntityPrototype?.ID == "ChemDispenser")
+                    dispenserUid = uid;
+                if (meta.EntityPrototype?.ID == "SinkStemlessWater")
+                    sinkUid = uid;
+            }
+
+            Assert.That(dispenserUid, Is.Not.Null, "Chemist crop must include a ChemDispenser");
+            Assert.That(sinkUid, Is.Not.Null, "Chemist crop must include a wall-mounted sink for water");
+            var dispenserPos = entMan.GetComponent<TransformComponent>(dispenserUid!.Value).LocalPosition;
+            var sinkXform = entMan.GetComponent<TransformComponent>(sinkUid!.Value);
+            var sinkPos = sinkXform.LocalPosition;
+            Assert.That((sinkPos - dispenserPos).Length(), Is.LessThanOrEqualTo(1.1f),
+                "Sink must sit on the wall tile adjacent to the ChemDispenser");
+            // East-wall mounts in this crop face west (same as the powered light on that wall).
+            Assert.That(sinkXform.LocalRotation.Theta, Is.EqualTo(-Math.PI / 2).Within(0.01),
+                "Sink rotation must match the east wall behind the dispenser");
 
             var chemist = proto.Index<TutorialRolePrototype>("TutorialChemist");
             Assert.That(entMan.TryGetComponent<TutorialRoomLayoutComponent>(gridUid!.Value, out var layout));
@@ -5958,6 +6013,76 @@ public sealed class TutorialServerTests : GameTest
         });
 
         await server.WaitPost(() => entMan.DeleteEntity(borg));
+    }
+
+    /// <summary>
+    /// Empty-hand click on the medical mentor must complete InteractMentor (hug). The trainer
+    /// must not swallow the interact before InteractionPopup raises InteractionSuccessEvent —
+    /// otherwise the welcome step loops on its stuck hint forever.
+    /// </summary>
+    [Test]
+    public async Task TutorialMedicalDoctor_HugMentorAdvancesWelcomeStep()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialMedicalDoctor", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            Assert.That(player.AttachedEntity, Is.Not.Null);
+            var mob = player.AttachedEntity!.Value;
+
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob,
+                entMan.GetComponent<TutorialParticipantComponent>(mob), out var sub));
+            Assert.That(sub.Id, Is.EqualTo("hug-mentor"));
+            Assert.That(sub.Complete, Is.EqualTo(TutorialStepComplete.InteractMentor));
+
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.MentorUid, Is.Not.EqualTo(EntityUid.Invalid));
+            Assert.That(entMan.HasComponent<InteractionPopupComponent>(session.MentorUid), Is.True,
+                "Mentor must keep species InteractionPopup so hugs raise InteractionSuccessEvent");
+
+            // Drain any leftover coach segment so the click is not consumed as "next line".
+            if (entMan.TryGetComponent<TutorialTrainerComponent>(session.MentorUid, out var trainer))
+            {
+                trainer.PendingLines.Clear();
+                trainer.PendingAfterLines.Clear();
+                trainer.ReactingFor = null;
+            }
+
+            var interact = new InteractHandEvent(mob, session.MentorUid);
+            entMan.EventBus.RaiseLocalEvent(session.MentorUid, interact);
+
+            Assert.That(tutorial.TryGetCurrentSubGoal(mob,
+                entMan.GetComponent<TutorialParticipantComponent>(mob), out var after));
+            Assert.That(after.Id, Is.Not.EqualTo("hug-mentor"),
+                "Empty-hand mentor hug must advance past InteractMentor");
+        });
     }
 
     [Test]

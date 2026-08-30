@@ -122,6 +122,82 @@ public sealed class TutorialItemsSessionTests : GameTest
         });
     }
 
+    /// <summary>
+    /// The mask-prep drill waits for an empty active hand, not a swap itself. A player who still
+    /// holds something (a lantern, a leftover tool) must switch; a swap onto a full hand must not
+    /// count.
+    /// </summary>
+    [Test]
+    public async Task TutorialItems_EmptyActiveHandAdvancesTheMaskPrepDrill()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var hands = server.System<SharedHandsSystem>();
+        var entMan = server.EntMan;
+
+        await StartSession();
+
+        var mob = EntityUid.Invalid;
+        var wrench = EntityUid.Invalid;
+
+        await server.WaitAssertion(() =>
+        {
+            mob = pair.Player!.AttachedEntity!.Value;
+            Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part), Is.True);
+
+            for (var i = 0; i < 200; i++)
+            {
+                if (tutorial.TryGetCurrentSubGoal(mob, part!, out var current) && current.Id == "take-tool")
+                    break;
+
+                tutorial.AdvanceSubGoal(mob);
+            }
+
+            Assert.That(CurrentSubGoal(mob), Is.EqualTo("take-tool"), "never reached the first tool drill");
+
+            var query = entMan.EntityQueryEnumerator<TransformComponent>();
+            while (query.MoveNext(out var uid, out _))
+            {
+                if (entMan.GetComponentOrNull<MetaDataComponent>(uid)?.EntityPrototype?.ID != "TutorialWrench")
+                    continue;
+
+                wrench = uid;
+                break;
+            }
+
+            Assert.That(wrench, Is.Not.EqualTo(EntityUid.Invalid), "no wrench in the suite");
+        });
+
+        await server.WaitPost(() => hands.TryPickupAnyHand(mob, wrench));
+        await pair.RunTicksSync(5);
+        Assert.That(CurrentSubGoal(mob), Is.EqualTo("swap-hands"));
+
+        await server.WaitPost(() =>
+        {
+            if (!entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part))
+                return;
+
+            for (var i = 0; i < 200; i++)
+            {
+                if (tutorial.TryGetCurrentSubGoal(mob, part, out var current) &&
+                    current.Id == "empty-hand-for-mask")
+                    break;
+
+                tutorial.AdvanceSubGoal(mob);
+            }
+        });
+        await pair.RunTicksSync(5);
+
+        Assert.That(CurrentSubGoal(mob), Is.EqualTo("empty-hand-for-mask"),
+            "holding an item should keep the empty-hand drill from auto-completing");
+
+        await server.WaitPost(() => hands.SwapHands(mob));
+        await pair.RunTicksSync(5);
+        Assert.That(CurrentSubGoal(mob), Is.EqualTo("take-mask"),
+            "switching to an empty hand did not advance the mask-prep drill");
+    }
+
     [Test]
     public async Task TutorialItems_SuiteProvidesEveryDrillProp()
     {

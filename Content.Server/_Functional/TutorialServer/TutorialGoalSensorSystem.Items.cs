@@ -79,6 +79,10 @@ public sealed partial class TutorialGoalSensorSystem
                 if (AreHandsEmpty(uid))
                     _tutorial.AdvanceSubGoal(uid);
                 break;
+            case TutorialStepComplete.ActiveHandEmpty:
+                if (_hands.ActiveHandIsEmpty(uid))
+                    _tutorial.AdvanceSubGoal(uid);
+                break;
             case TutorialStepComplete.TargetParkedAtMarker:
                 if (IsTargetParkedAtMarker(xform, sub))
                     _tutorial.AdvanceSubGoal(uid);

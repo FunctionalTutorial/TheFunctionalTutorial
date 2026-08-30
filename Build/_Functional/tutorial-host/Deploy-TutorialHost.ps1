@@ -15,18 +15,24 @@
   The host supervisor (Watch-TutorialServer.ps1) applies the package:
   stop SS14 -> extract -> start SS14 (infra stays up).
 
-  Prefer -Configuration DebugOpt (Release treats Robust analyzers as errors).
+  Defaults to Release so the live host does not ship DEBUG asserts
+  (DebugTools.Assert / DebugAssertException can crash the process).
+  Release builds pass /p:TreatWarningsAsErrors=false so analyzer noise
+  does not block packaging; use -Configuration DebugOpt for local assert checks.
 
 .EXAMPLE
   .\Deploy-TutorialHost.ps1
 
 .EXAMPLE
-  .\Deploy-TutorialHost.ps1 -SkipBuild -Configuration DebugOpt
+  .\Deploy-TutorialHost.ps1 -SkipBuild
+
+.EXAMPLE
+  .\Deploy-TutorialHost.ps1 -Configuration DebugOpt
 #>
 param(
     [string] $RepoRoot = "",
     [ValidateSet("Debug", "DebugOpt", "Release")]
-    [string] $Configuration = "DebugOpt",
+    [string] $Configuration = "Release",
     [switch] $SkipBuild,
     [string] $DropRoot = "",
     [switch] $ResourcesOnly,
@@ -62,12 +68,18 @@ try {
     New-Item -ItemType Directory -Path $stageRoot -Force | Out-Null
 
     if (-not $SkipBuild -and -not $ResourcesOnly) {
+        # Release treats warnings as errors in Content.props; clear that for host packaging.
+        $buildArgs = @("--nologo")
+        if ($Configuration -eq "Release") {
+            $buildArgs += "/p:TreatWarningsAsErrors=false"
+        }
+
         Write-Step "Building Content.Server ($Configuration)"
-        & dotnet build $serverProj -c $Configuration --nologo
+        & dotnet build $serverProj -c $Configuration @buildArgs
         if ($LASTEXITCODE -ne 0) { throw "dotnet build Content.Server failed (exit $LASTEXITCODE)" }
 
         Write-Step "Building Content.Client ($Configuration)"
-        & dotnet build $clientProj -c $Configuration --nologo
+        & dotnet build $clientProj -c $Configuration @buildArgs
         if ($LASTEXITCODE -ne 0) { throw "dotnet build Content.Client failed (exit $LASTEXITCODE)" }
     }
 

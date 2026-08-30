@@ -92,6 +92,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     [Dependency] private readonly SharedObjectivesSystem _objectives = default!;
     [Dependency] private readonly TutorialGoalConditionSystem _goalObjectives = default!;
     [Dependency] private readonly DamageableSystem _damageable = default!;
+    [Dependency] private readonly SharedGodmodeSystem _godmode = default!;
     [Dependency] private readonly PowerReceiverSystem _power = default!;
     [Dependency] private readonly RespawnRuleSystem _respawn = default!;
     [Dependency] private readonly SharedVisualBodySystem _visualBody = default!;
@@ -902,10 +903,11 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// Travel/off-grid arenas use a speaking handheld guide; single-grid roles get a soft-following mentor.
+    /// Travel/off-grid arenas use a speaking handheld guide; single-grid roles (and Space Dragon,
+    /// who cannot hold the tablet) get a soft-following mentor.
     /// </summary>
     public static bool UsesTravelingCoach(TutorialRolePrototype role) =>
-        role.ShuttleArena != null || role.SalvageArena != null || role.DragonArena != null;
+        role.ShuttleArena != null || role.SalvageArena != null;
 
     private void GiveTutorialCoach(
         EntityUid mob,
@@ -981,6 +983,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         // A coach carrying gloves, a belt and a card the curriculum leans on is a coach worth
         // robbing, and a player who strips him is a player whose tutorial quietly stops working.
         RemComp<StrippableComponent>(mentor);
+
+        // Dragon coaches spawn beside the player in vacuum and snap-follow into the bay.
+        if (roleProto.DragonArena != null)
+            _godmode.EnableGodmode(mentor);
 
         // The three dots over his head between lines: a pause with no indicator reads as a coach
         // who has finished talking. Added here rather than on the prototype because the visualiser

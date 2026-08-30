@@ -1,5 +1,5 @@
-# Medical chemistry — Saltern chem crop already has dispenser / ChemMaster / grinder.
-# Practice spawns are glassware + apple only; machines are tagged by TutorialChemBootstrapSystem.
+# Medical chemistry — Saltern chem crop already has dispenser / ChemMaster / grinder / hotplate.
+# Practice spawns are glassware + water jug + apple; machines are tagged by TutorialChemBootstrapSystem.
 - type: tutorialRole
   id: TutorialChemist
   mentorName: Urist McMeth
@@ -28,6 +28,9 @@
   - id: PillCanister
     room: 0
     offset: -1.0, -0.5
+  - id: JugWater
+    room: 0
+    offset: 1.0, -0.5
   - id: FoodApple
     room: 0
     offset: 0.5, -0.05
@@ -79,6 +82,28 @@
       complete: ObtainItem
       entity: PillCanister
       minCount: 1
+  - id: saline
+    title: tutorial-job-chemist-goal-saline
+    subGoals:
+    - id: hotplate-tip
+      text: tutorial-job-chemist-sg-hotplate
+      hint: tutorial-job-chemist-hint-hotplate
+      stuckHint: tutorial-job-chemist-stuck-hotplate
+      complete: Acknowledge
+    - id: table-salt
+      text: tutorial-job-chemist-sg-table-salt
+      hint: tutorial-job-chemist-hint-table-salt
+      stuckHint: tutorial-job-chemist-stuck-table-salt
+      complete: SolutionContains
+      reagent: TableSalt
+      minAmount: 1
+    - id: make-saline
+      text: tutorial-job-chemist-sg-saline
+      hint: tutorial-job-chemist-hint-saline
+      stuckHint: tutorial-job-chemist-stuck-saline
+      complete: SolutionContains
+      reagent: Saline
+      minAmount: 1
   - id: grind
     title: tutorial-job-chemist-goal-grind
     subGoals:

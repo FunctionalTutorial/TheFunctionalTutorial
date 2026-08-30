@@ -231,9 +231,13 @@
       dialogue: tutorial-items-nanci-wear-suit-1
     - subGoalId: wear-suit
       dialogue: tutorial-items-nanci-wear-suit-2
-      showControlHint: true
     - subGoalId: wear-suit
       dialogue: tutorial-items-nanci-wear-suit-3
+    - subGoalId: wear-suit
+      dialogue: tutorial-items-nanci-wear-suit-4
+      showControlHint: true
+    - subGoalId: wear-suit
+      dialogue: tutorial-items-nanci-wear-suit-5
     - subGoalId: deploy-helmet
       dialogue: tutorial-items-nanci-deploy-helmet-1
     - subGoalId: deploy-helmet
@@ -243,6 +247,8 @@
       showControlHint: true
     - subGoalId: deploy-helmet
       dialogue: tutorial-items-nanci-deploy-helmet-4
+    - subGoalId: deploy-helmet
+      dialogue: tutorial-items-nanci-deploy-helmet-5
     - subGoalId: find-box
       dialogue: tutorial-items-nanci-find-box-1
     - subGoalId: find-box
@@ -259,13 +265,16 @@
       dialogue: tutorial-items-nanci-open-box-2
     - subGoalId: open-box
       dialogue: tutorial-items-nanci-open-box-3
-    - subGoalId: take-mask
-      dialogue: tutorial-items-nanci-take-mask-1
-    - subGoalId: take-mask
-      dialogue: tutorial-items-nanci-take-mask-2
+    - subGoalId: empty-hand-for-mask
+      dialogue: tutorial-items-nanci-empty-hand-for-mask-1
+    - subGoalId: empty-hand-for-mask
+      dialogue: tutorial-items-nanci-empty-hand-for-mask-2
       showControlHint: true
     - subGoalId: take-mask
-      dialogue: tutorial-items-nanci-take-mask-3
+      dialogue: tutorial-items-nanci-take-mask-1
+      showControlHint: true
+    - subGoalId: take-mask
+      dialogue: tutorial-items-nanci-take-mask-2
     - subGoalId: wear-mask
       dialogue: tutorial-items-nanci-wear-mask-1
       showControlHint: true

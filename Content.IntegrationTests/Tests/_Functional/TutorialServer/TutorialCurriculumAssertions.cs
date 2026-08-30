@@ -43,6 +43,9 @@ public static class TutorialCurriculumAssertions
                     if (!string.IsNullOrEmpty(sub.ControlHint))
                         Assert.That(Loc.TryGetString(sub.ControlHint, out _), Is.True, $"missing {sub.ControlHint}");
 
+                    if (!string.IsNullOrEmpty(sub.StuckHint))
+                        Assert.That(Loc.TryGetString(sub.StuckHint, out _), Is.True, $"missing {sub.StuckHint}");
+
                     if (sub.RetryLine is { } retry)
                         Assert.That(Loc.TryGetString(retry, out _), Is.True, $"missing {retry}");
                 }

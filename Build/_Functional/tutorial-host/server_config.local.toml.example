@@ -1,0 +1,5 @@
+# Copy to server_config.local.toml (gitignored) next to Start-TutorialHostLan.ps1
+# or into the live bin folder. Grants Host admin on join.
+
+[console]
+login_host_user = ""

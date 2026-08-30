@@ -197,13 +197,16 @@
     subGoals:
     - id: wear-suit
       text: tutorial-items-sg-wear-suit
+      controlHint: tutorial-items-control-wear-suit
       complete: WearItem
       entity: ClothingOuterSuitEmergency
+      stuckHint: tutorial-items-stuck-wear-suit
     - id: deploy-helmet
       text: tutorial-items-sg-deploy-helmet
       controlHint: tutorial-items-control-deploy-helmet
       complete: WearItem
       entity: ClothingHeadHelmetEVALarge
+      stuckHint: tutorial-items-stuck-deploy-helmet
     - id: find-box
       text: tutorial-items-sg-find-box
       controlHint: tutorial-items-control-find-box
@@ -214,11 +217,16 @@
       controlHint: tutorial-items-control-open-box
       complete: StorageOpened
       tag: TutorialSurvivalBox
+    - id: empty-hand-for-mask
+      text: tutorial-items-sg-empty-hand-for-mask
+      controlHint: tutorial-items-control-empty-hand-for-mask
+      complete: ActiveHandEmpty
     - id: take-mask
       text: tutorial-items-sg-take-mask
       controlHint: tutorial-items-control-take-mask
       complete: HoldItem
       component: BreathMask
+      stuckHint: tutorial-items-stuck-take-mask
     - id: wear-mask
       text: tutorial-items-sg-wear-mask
       controlHint: tutorial-items-control-wear-mask

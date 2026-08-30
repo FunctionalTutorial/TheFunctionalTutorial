@@ -209,16 +209,22 @@ tutorial-items-nanci-open-belt-4 = That is the whole difference between a belt a
 ## Chamber 6. the suit, the survival box, the breach and the crossing
 
 tutorial-items-sg-wear-suit = Put the pressure suit on.
+tutorial-items-control-wear-suit = Click the suit into the outer clothing slot in your inventory.
+tutorial-items-stuck-wear-suit = Pick the suit up from the emergency closet, then click it into the outer clothing slot. Using it in your hand does not put it on.
 tutorial-items-nanci-wear-suit-1 = There is an emergency closet. It holds a pressure suit.
 tutorial-items-nanci-wear-suit-2 = Open it and put the suit on.
-tutorial-items-nanci-wear-suit-3 = It is rated for vacuum, and the disappointment of your supervisor.
+tutorial-items-nanci-wear-suit-3 = Not by using it. Using a suit in your hand does not put a suit on.
+tutorial-items-nanci-wear-suit-4 = It goes in the slot on your person that is shaped like a coat.
+tutorial-items-nanci-wear-suit-5 = It is rated for vacuum, and the disappointment of your supervisor.
 
 tutorial-items-sg-deploy-helmet = Deploy the suit helmet.
-tutorial-items-control-deploy-helmet = Actions appear on your hotbar. Click it, or press the associated key.
+tutorial-items-control-deploy-helmet = Click the hotbar action, or right-click the worn suit and choose deploy.
+tutorial-items-stuck-deploy-helmet = The helmet folds into the suit collar when clicked. Deploy it again from the hotbar, or by right-clicking the worn suit.
 tutorial-items-nanci-deploy-helmet-1 = The helmet is part of the suit.
 tutorial-items-nanci-deploy-helmet-2 = It is folded into the collar, which is another ability you now have.
 tutorial-items-nanci-deploy-helmet-3 = Deploy the helmet.
-tutorial-items-nanci-deploy-helmet-4 = Applicant seventeen died because they could not find the helmet.
+tutorial-items-nanci-deploy-helmet-4 = If you clicked the helmet and it vanished, it folded into the collar.
+tutorial-items-nanci-deploy-helmet-5 = Applicant seventeen died because they could not find the helmet.
 
 tutorial-items-sg-find-box = Take the survival box out of your bag.
 tutorial-items-control-find-box = Take out your survival box from your bag.
@@ -233,11 +239,16 @@ tutorial-items-nanci-open-box-1 = Open the box.
 tutorial-items-nanci-open-box-2 = It contains a breath mask, a gas tank, and one medipen.
 tutorial-items-nanci-open-box-3 = The medipen is not part of today's assessment. Try not to need it.
 
+tutorial-items-sg-empty-hand-for-mask = Switch to your empty hand.
+tutorial-items-control-empty-hand-for-mask = Press [color=#FFD24A][bold][keybind="SwapHands"][/bold][/color] to switch to your empty hand.
+tutorial-items-nanci-empty-hand-for-mask-1 = The box is in one hand. Your other hand is the one that can take things out of it.
+tutorial-items-nanci-empty-hand-for-mask-2 = Switch to the empty one.
+
 tutorial-items-sg-take-mask = Take the breath mask out of the box.
-tutorial-items-control-take-mask = Press [color=#FFD24A][bold][keybind="SwapHands"][/bold][/color] to switch to your empty hand.
-tutorial-items-nanci-take-mask-1 = The box is in one hand. Your other hand is the one that can take things out of it.
-tutorial-items-nanci-take-mask-2 = Switch hands, then take the mask.
-tutorial-items-nanci-take-mask-3 = You have done this before.
+tutorial-items-control-take-mask = Click the breath mask in the open box.
+tutorial-items-stuck-take-mask = This step completes when you are holding the breath mask. Switch to an empty hand, then click the mask in the open box.
+tutorial-items-nanci-take-mask-1 = Now take the mask.
+tutorial-items-nanci-take-mask-2 = You have done this before.
 
 tutorial-items-sg-wear-mask = Put the breath mask on.
 tutorial-items-control-wear-mask = Press [color=#FFD24A][bold][keybind="ActivateItemInHand"][/bold][/color] to put on what you are holding.

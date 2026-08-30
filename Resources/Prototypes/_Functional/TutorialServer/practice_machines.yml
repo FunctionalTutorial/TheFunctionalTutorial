@@ -381,6 +381,7 @@
     dataset: TutorialPracticeMobVictimAds
 
 # Idle pacified prey for Space Dragon (wander only — never fight back).
+# NanoTrasen so Dragon-faction carp from rifts treat them as hostile; Pacified blocks retaliation.
 - type: entity
   abstract: true
   parent: [TutorialPracticeMob, TutorialPracticeMobSpeakingBase]
@@ -389,7 +390,8 @@
   components:
   - type: Pacified
   - type: NpcFactionMember
-    factions: []
+    factions:
+    - NanoTrasen
   - type: InputMover
   - type: MobMover
   - type: HTN

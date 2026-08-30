@@ -322,5 +322,9 @@ error.glsl
 # Direnv stuff
 .direnv/
 
+# Local SS14 server config overrides (usernames, secrets)
+Content.Server/server_config.local.toml
+Build/_Functional/tutorial-host/server_config.local.toml
+
 # C# Dev Kit cache file
 *.lscache

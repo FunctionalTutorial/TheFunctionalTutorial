@@ -1,0 +1,5 @@
+# Copy this file to server_config.local.toml (gitignored) and set your SS14 username.
+# Grants full host admin on join, equivalent to promotehost.
+
+[console]
+login_host_user = ""

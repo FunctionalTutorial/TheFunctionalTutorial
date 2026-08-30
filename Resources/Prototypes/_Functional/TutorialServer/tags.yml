@@ -26,6 +26,9 @@
   id: TutorialGrinder
 
 - type: Tag
+  id: TutorialHotplate
+
+- type: Tag
   id: TutorialPracticePuddle
 
 - type: Tag

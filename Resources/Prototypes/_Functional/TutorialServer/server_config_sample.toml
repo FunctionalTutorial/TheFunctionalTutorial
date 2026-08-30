@@ -39,3 +39,13 @@ validity_days = 0
 [tutorial]
 # Deployed host: picker lists only liveTutorial roles. Development leaves this off.
 live_tutorials = true
+
+[infolinks]
+discord = "https://discord.gg/jkvg7k9w2n"
+github = "https://github.com/FunctionalTutorial/TheFunctionalTutorial"
+
+[hub]
+advertise = true
+tags = "lang:en,region:am_n_c"
+hub_urls = "https://hub.spacestation14.com/"
+server_url = "ss14://ss14tutorial.mynetgear.com:1212"
