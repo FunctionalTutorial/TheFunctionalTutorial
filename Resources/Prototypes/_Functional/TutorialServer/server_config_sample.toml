@@ -4,6 +4,7 @@
 [game]
 hostname = "The Functional Tutorial Server"
 defaultpreset = "TutorialServer"
+fallbackpreset = "TutorialServer"
 soft_max_players = 40
 
 [chat]
@@ -19,6 +20,10 @@ enable_during_round = true
 enabled = false
 
 [dead_chat]
+enabled = false
+
+[vote]
+# Player-started votes off. Admins with Moderator can still call votes.
 enabled = false
 
 [shuttle]

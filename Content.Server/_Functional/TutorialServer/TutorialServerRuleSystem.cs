@@ -182,6 +182,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     private bool _prevRoleTimers;
     private bool _prevRoleWhitelist;
     private int _prevAutoCallTime;
+    private bool _prevGhostRolesEnabled;
+    private bool _prevVoteEnabled;
 
     public override void Initialize()
     {
@@ -243,22 +245,9 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (!TryComp<ActorComponent>(args.Performer, out var actor))
             return;
 
-        var player = actor.PlayerSession;
-
-        // Living tutorial body: leave via observer transfer — MindRemoved opens the picker
-        // (same path as /ghost). Avoids double EndTutorialSession / picker open.
-        if (TryGetActiveRule(out _, out var rule, out _) &&
-            rule.Sessions.TryGetValue(player.UserId, out var session) &&
-            session.State == TutorialSessionState.InTutorial &&
-            session.BodyUid == args.Performer &&
-            !HasComp<GhostComponent>(args.Performer))
-        {
-            GameTicker.JoinAsObserver(player);
-            args.Handled = true;
-            return;
-        }
-
-        TryOpenRolePicker(player);
+        // Living InTutorial bodies open the picker in-place; leaving only happens on select.
+        // Ghosts / pending-select use the same entry point.
+        TryOpenRolePicker(actor.PlayerSession);
         args.Handled = true;
     }
 
@@ -327,6 +316,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _prevRoleTimers = _cfg.GetCVar(CCVars.GameRoleTimers);
         _prevRoleWhitelist = _cfg.GetCVar(CCVars.GameRoleWhitelist);
         _prevAutoCallTime = _cfg.GetCVar(CCVars.EmergencyShuttleAutoCallTime);
+        _prevGhostRolesEnabled = _cfg.GetCVar(TutorialCVars.GhostRolesEnabled);
+        _prevVoteEnabled = _cfg.GetCVar(CCVars.VoteEnabled);
 
         _cfg.SetCVar(CCVars.OocEnabled, false);
         _cfg.SetCVar(CCVars.LoocEnabled, false);
@@ -338,6 +329,11 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _cfg.SetCVar(CCVars.GameRoleWhitelist, false);
         // Lobby has no StationEmergencyShuttle — auto-call docks an empty set and crashes (.Max).
         _cfg.SetCVar(CCVars.EmergencyShuttleAutoCallTime, 0);
+        _cfg.SetCVar(TutorialCVars.GhostRolesEnabled, false);
+        _cfg.SetCVar(CCVars.VoteEnabled, false);
+        // Persist across restarts / round preset reset; do not restore on rule end.
+        _cfg.SetCVar(CCVars.GameLobbyDefaultPreset, "TutorialServer");
+        _cfg.SetCVar(CCVars.GameLobbyFallbackPreset, "TutorialServer");
         _cvarsApplied = true;
     }
 
@@ -354,6 +350,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _cfg.SetCVar(CCVars.GameRoleTimers, _prevRoleTimers);
         _cfg.SetCVar(CCVars.GameRoleWhitelist, _prevRoleWhitelist);
         _cfg.SetCVar(CCVars.EmergencyShuttleAutoCallTime, _prevAutoCallTime);
+        _cfg.SetCVar(TutorialCVars.GhostRolesEnabled, _prevGhostRolesEnabled);
+        _cfg.SetCVar(CCVars.VoteEnabled, _prevVoteEnabled);
         _cvarsApplied = false;
     }
 
@@ -494,6 +492,13 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             return;
         }
 
+        // Selecting a new role is what actually leaves the current tutorial.
+        if (rule.Sessions.TryGetValue(player.UserId, out var existing) &&
+            existing.State == TutorialSessionState.InTutorial)
+        {
+            LeaveCurrentTutorialForRoleChange(player);
+        }
+
         if (!rule.Sessions.TryGetValue(player.UserId, out var session))
             session = new TutorialSessionData();
 
@@ -509,6 +514,29 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         GameTicker.MakeJoinGame(player, station, silent: true);
     }
 
+    /// <summary>
+    /// Tears down an InTutorial session so a new role can spawn. Marks Exiting before any
+    /// observer transfer so <see cref="OnTutorialMindRemoved"/> does not also open the picker.
+    /// </summary>
+    private void LeaveCurrentTutorialForRoleChange(ICommonSession player)
+    {
+        if (!TryGetActiveRule(out _, out var rule, out _))
+            return;
+
+        if (!rule.Sessions.TryGetValue(player.UserId, out var session) ||
+            session.State != TutorialSessionState.InTutorial)
+            return;
+
+        // MindRemoved only acts while State == InTutorial; flip first so TransferTo is silent.
+        session.State = TutorialSessionState.Exiting;
+        rule.Sessions[player.UserId] = session;
+
+        if (player.AttachedEntity is { } body && !HasComp<GhostComponent>(body))
+            GameTicker.JoinAsObserver(player);
+
+        EndTutorialSession(player.UserId, queueRespawn: false, unloadMap: true, deleteBody: true);
+    }
+
     public void OnPickerClosed(ICommonSession player)
     {
         _openPickers.Remove(player.UserId);
@@ -521,6 +549,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             return;
 
         if (!rule.Sessions.TryGetValue(player.UserId, out var session))
+            return;
+
+        // Still in a tutorial: dismiss / Quit close is a no-op beyond closing the EUI.
+        if (session.State == TutorialSessionState.InTutorial)
             return;
 
         // Dismiss (window X) must not force-reopen — that locked living players / observers into
@@ -549,6 +581,14 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (!rule.Sessions.TryGetValue(player.UserId, out var session))
             session = new TutorialSessionData();
 
+        // Quit while mid-tutorial: close only — do not ghost or clear the session.
+        if (session.State == TutorialSessionState.InTutorial)
+        {
+            if (_openPickers.Remove(player.UserId, out var inTutorialEui))
+                inTutorialEui.Close();
+            return;
+        }
+
         session.PickerQuit = true;
         session.SelectedRoleId = null;
         session.State = TutorialSessionState.PendingSelect;
@@ -562,18 +602,29 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// Opens the role picker for a ghost / observer (or after leaving a living tutorial body).
+    /// Opens the role picker for a ghost / observer, or in-place for a living tutorial body
+    /// (cancel keeps the current tutorial; selecting a role leaves it).
     /// </summary>
     public void TryOpenRolePicker(ICommonSession player)
     {
         if (!TryGetActiveRule(out _, out var rule, out _))
             return;
 
-        if (player.AttachedEntity is not { } ent || !HasComp<GhostComponent>(ent))
-            return;
-
         if (!rule.Sessions.TryGetValue(player.UserId, out var session))
             session = new TutorialSessionData();
+
+        // Mid-tutorial: open without ending the session. Quit / dismiss leaves them in place.
+        if (session.State == TutorialSessionState.InTutorial &&
+            player.AttachedEntity is { } living &&
+            living == session.BodyUid &&
+            !HasComp<GhostComponent>(living))
+        {
+            OpenPicker(player);
+            return;
+        }
+
+        if (player.AttachedEntity is not { } ent || !HasComp<GhostComponent>(ent))
+            return;
 
         session.PickerQuit = false;
         session.SelectedRoleId = null;
@@ -824,6 +875,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         // before the first beat, and job gear is equipped by the spawn call above.
         EnsureSensorTargetsRecursive(mob);
 
+        // Wipe first (same as GameTicker.Respawn). CreateMind alone clears the old mind's UserId
+        // and PlayerDetaches the observer while that mind still owns it; GhostOnShutdown then
+        // respawns a playerless idle ghost on the lobby/observer map every tutorial start.
+        _mind.WipeMind(player);
         var mindId = _mind.CreateMind(player.UserId, profile.Name);
         _mind.SetUserId(mindId, player.UserId);
         _mind.TransferTo(mindId, mob);

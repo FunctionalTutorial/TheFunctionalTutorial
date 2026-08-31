@@ -1,4 +1,5 @@
 using Content.Client.Movement.Systems;
+using Content.Shared._Functional.TutorialServer;
 using Content.Shared.Actions;
 using Content.Shared.Ghost;
 using Content.Shared.NightVision;
@@ -6,6 +7,7 @@ using Content.Shared.Overlays;
 using Robust.Client.Console;
 using Robust.Client.GameObjects;
 using Robust.Client.Player;
+using Robust.Shared.Configuration;
 using Robust.Shared.Player;
 
 namespace Content.Client.Ghost
@@ -18,6 +20,7 @@ namespace Content.Client.Ghost
         [Dependency] private ContentEyeSystem _contentEye = default!;
         [Dependency] private SpriteSystem _sprite = default!;
         [Dependency] private SharedNightVisionSystem _nv = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!; //Tutorial
 
         public int AvailableGhostRoleCount { get; private set; }
 
@@ -194,6 +197,10 @@ namespace Content.Client.Ghost
 
         public void OpenGhostRoles()
         {
+            //Tutorial - Begin
+            if (!_cfg.GetCVar(TutorialCVars.GhostRolesEnabled))
+                return;
+            //Tutorial - End
             _console.RemoteExecuteCommand(null, "ghostroles");
         }
 

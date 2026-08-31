@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-run id="0" name="Content.IntegrationTests.dll" fullname="G:\TheFunctionalTutorial\bin\Content.IntegrationTests\Content.IntegrationTests.dll" runstate="Runnable" testcasecount="5896" result="Passed" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="39" engine-version="3.18.1.0" clr-version="10.0.7" start-time="2026-08-30 21:51:53Z" end-time="2026-08-30 21:52:24Z" duration="31.419606">
+  <command-line><![CDATA[G:\TheFunctionalTutorial\bin\Content.IntegrationTests\testhost.dll --port 57145 --endpoint 127.0.0.1:057145 --role client --parentprocessid 26388 --telemetryoptedin false]]></command-line>
+  <filter>
+    <or>
+      <test>Content.IntegrationTests.Tests._Functional.TutorialServer.TutorialServerTests.TutorialJoinCommand_OpensRolePicker</test>
+      <test>Content.IntegrationTests.Tests._Functional.TutorialServer.TutorialServerTests.TutorialPicker_DismissStaysClosedAndChooseReopens</test>
+    </or>
+  </filter>
+  <test-suite type="Assembly" id="0-7189" name="Content.IntegrationTests.dll" fullname="G:\TheFunctionalTutorial\bin\Content.IntegrationTests\Content.IntegrationTests.dll" runstate="Runnable" testcasecount="5896" result="Passed" start-time="2026-08-30T21:51:53.4983433Z" end-time="2026-08-30T21:52:24.8987890Z" duration="31.400412" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="39">
+    <environment framework-version="4.4.0.0" clr-version="10.0.7" os-version="Microsoft Windows 10.0.19045" platform="Win32NT" cwd="G:\TheFunctionalTutorial\test_results" machine-name="NATHAN-PC" user="Nathan" user-domain="Nathan-PC" culture="en-US" uiculture="en-US" os-architecture="x64" />
+    <settings>
+      <setting name="SynchronousEvents" value="False" />
+      <setting name="InternalTraceLevel" value="Off" />
+      <setting name="RandomSeed" value="826961296" />
+      <setting name="SkipNonTestAssemblies" value="True" />
+      <setting name="ProcessModel" value="InProcess" />
+      <setting name="DomainUsage" value="Single" />
+      <setting name="DefaultTestNamePattern" value="{m}{a}" />
+      <setting name="WorkDirectory" value="G:\\TheFunctionalTutorial/test_results" />
+      <setting name="NumberOfTestWorkers" value="16" />
+    </settings>
+    <properties>
+      <property name="ParallelScope" value="Children" />
+      <property name="LevelOfParallelism" value="2" />
+      <property name="_PID" value="48360" />
+      <property name="_APPDOMAIN" value="testhost" />
+    </properties>
+    <test-suite type="TestSuite" id="0-7190" name="Content" fullname="Content" runstate="Runnable" testcasecount="5896" result="Passed" start-time="2026-08-30T21:51:53.5020115Z" end-time="2026-08-30T21:52:24.8987844Z" duration="31.396773" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="39">
+      <test-suite type="SetUpFixture" id="0-1000" name="IntegrationTests" fullname="Content.IntegrationTests.PoolManagerTestEventHandler" classname="Content.IntegrationTests.PoolManagerTestEventHandler" runstate="Runnable" testcasecount="5896" result="Passed" start-time="2026-08-30T21:51:53.5021874Z" end-time="2026-08-30T21:52:24.8987587Z" duration="31.396572" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="39">
+        <test-suite type="TestSuite" id="0-7192" name="Tests" fullname="Content.IntegrationTests.Tests" runstate="Runnable" testcasecount="5896" result="Passed" start-time="2026-08-30T21:51:53.8796604Z" end-time="2026-08-30T21:52:24.8923587Z" duration="31.012698" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="39">
+          <test-suite type="TestSuite" id="0-7193" name="_Functional" fullname="Content.IntegrationTests.Tests._Functional" runstate="Runnable" testcasecount="153" result="Passed" start-time="2026-08-30T21:51:53.8796885Z" end-time="2026-08-30T21:52:24.8923563Z" duration="31.012666" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="39">
+            <test-suite type="TestSuite" id="0-7194" name="TutorialServer" fullname="Content.IntegrationTests.Tests._Functional.TutorialServer" runstate="Runnable" testcasecount="153" result="Passed" start-time="2026-08-30T21:51:53.8796956Z" end-time="2026-08-30T21:52:24.8923495Z" duration="31.012654" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="39">
+              <test-suite type="TestFixture" id="0-1794" name="TutorialServerTests" fullname="Content.IntegrationTests.Tests._Functional.TutorialServer.TutorialServerTests" classname="Content.IntegrationTests.Tests._Functional.TutorialServer.TutorialServerTests" runstate="Runnable" testcasecount="98" result="Passed" start-time="2026-08-30T21:51:53.8797127Z" end-time="2026-08-30T21:52:24.8919882Z" duration="31.012276" total="2" passed="2" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="39">
+                <properties>
+                  <property name="TestOf" value="Content.Server._Functional.TutorialServer.TutorialServerRuleSystem" />
+                  <property name="TestFrameKind" value="GameTest" />
+                </properties>
+                <test-case id="0-1850" name="TutorialJoinCommand_OpensRolePicker" fullname="Content.IntegrationTests.Tests._Functional.TutorialServer.TutorialServerTests.TutorialJoinCommand_OpensRolePicker" methodname="TutorialJoinCommand_OpensRolePicker" classname="Content.IntegrationTests.Tests._Functional.TutorialServer.TutorialServerTests" runstate="Runnable" seed="155125249" result="Passed" start-time="2026-08-30T21:51:53.8798597Z" end-time="2026-08-30T21:52:24.8178784Z" duration="30.938092" asserts="15">
+                  <output><![CDATA[GetPair: Called by test _Functional.TutorialServer.TutorialServerTests.TutorialJoinCommand_OpensRolePicker
+GetPair: Looking in pool for a suitable pair
+GetPair: Creating a new pair, no suitable pair found in pool
+CLIENT: 0.128s [DEBG] root: OS: Microsoft Windows 10.0.19045 X64
+CLIENT: 0.129s [DEBG] root: .NET Runtime: .NET 10.0.7 win-x64
+CLIENT: 0.129s [DEBG] root: Server GC: False
+CLIENT: 0.129s [DEBG] root: Processor: 16x Intel(R) Core(TM) i7-10700K CPU @ 3.80GHz
+CLIENT: 0.129s [DEBG] root: Available Memory: 31.89 GiB
+CLIENT: 0.129s [DEBG] root: Architecture: X64
+CLIENT: 0.129s [DEBG] root: Robust Version: 284.0.2.0
+CLIENT: 0.129s [DEBG] root: Compile Options: DEVELOPMENT;TOOLS;DEBUG;CLIENT_SCRIPTING
+CLIENT: 0.129s [DEBG] root: Intrinsics: X86Aes;Avx;Avx2;Bmi1;Bmi2;Fma;Lzcnt;Pclmulqdq;Popcnt;Sse;Sse2;Sse3;Ssse3;Sse41;Sse42;X86Base
+CLIENT: 0.635s [DEBG] serialization: Skipping registering data definition for type Content.Shared.DeviceLinking.DevicePortPrototype since it is abstract or an interface
+CLIENT: 0.636s [DEBG] serialization: Skipping registering data definition for type Content.Shared.EntityConditions.EntityConditionEvent`1[T] since it is abstract or an interface
+CLIENT: 0.637s [DEBG] serialization: Skipping registering data definition for type Content.Shared.StatusIcon.StatusIconPrototype since it is abstract or an interface
+CLIENT: 1.112s [DEBG] res.preload: Skipping texture preloading due to CVar value.
+CLIENT: 1.263s [INFO] szr: Serializer Types Hash: C35CB6AD88427DB783DFD074AF479525E3D1BE8A744AF1DC32453606EB174126
+CLIENT: 1.370s [WARN] proto: Registering an ignored prototype Content.Shared.Maps.GameMapPrototype
+CLIENT: 13.157s [INFO] client: Tickrate changed to: 30 on tick 1
+CLIENT: 13.157s [INFO] client: Tickrate changed to: 1 on tick 1
+CLIENT: 13.159s [DEBG] client: Runlevel changed to: Initialize
+CLIENT: 13.429s [DEBG] style: Initializing Stylesheets...
+CLIENT: 13.761s [DEBG] style: Initialized 500 style rules in 00:00:00.3316396
+CLIENT: 13.800s [DEBG] root: Switching to state Content.Client.MainMenu.MainScreen
+CLIENT: 13.888s [DEBG] clyde: Tile atlas took 00:00:00.0778670 to build
+SERVER: 14.033s [INFO] srv: Timescale changed to: 1 on tick 1
+SERVER: 14.034s [INFO] srv: Name: MyServer
+SERVER: 14.034s [INFO] srv: TickRate: 30(33.33ms)
+SERVER: 14.034s [INFO] srv: Max players: 256
+SERVER: 14.180s [INFO] szr: Serializer Types Hash: C35CB6AD88427DB783DFD074AF479525E3D1BE8A744AF1DC32453606EB174126
+SERVER: 14.247s [INFO] configpreset: Loaded config preset: "/ConfigPresets/Build/debug.toml"
+SERVER: 14.248s [INFO] config: Local config: console.login_host_user="Terkala" from "G:\TheFunctionalTutorial\bin\Content.IntegrationTests\server_config.local.toml"
+SERVER: 16.049s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminLogs' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.175s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'Cleanup' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.232s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'ServerNameFts' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.323s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'MarkingsJsonb' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.476s [WARN] db.ef: An operation of type 'UpdateDataOperation' will be attempted while a rebuild of table 'admin_notes' is pending. The database may not be in an expected state. Review the SQL generated by this migration to help diagnose any failures. Consider moving these operations to a subsequent migration.
+SERVER: 16.483s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminNotesImprovement' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.549s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminNotesImprovementsForeignKeys' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.668s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'ConnectionLogServer' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.711s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminLogPk' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.808s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'ClothingRemoval' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.851s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminMessageDismiss' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 17.444s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'BanRefactor' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 25.753s [INFO] toolshed: Initialized new toolshed context in 00:00:00.1384186
+SERVER: 25.759s [INFO] discord.link: No Discord token specified, not connecting.
+SERVER: 25.783s [INFO] cvarcontrol: Registered 42 CVars.
+SERVER: 25.786s [WARN] cfg: Unknown CVar found (typo in config?): "ui.obey_update_limits"
+SERVER: 0.005s [WARN] cfg: Only clients can change the 'net.interp' cvar.
+SERVER: 0.431s [INFO] ticker: Restarting round!
+SERVER: 0.445s [INFO] system.mind: Wiping all minds
+SERVER: 0.449s [INFO] entity: Flushing entities. Entity count: 0
+SERVER: 1.043s [INFO] cfg: Robust.UnitTesting.RobustIntegrationTest+IntegrationNetManager+IntegrationNetChannel: Sending server info...
+CLIENT: 1.246s [INFO] clientplaytime: Current day: 30 Current Date: 2026-08-30
+CLIENT: 1.247s [INFO] cfg: Sending client info...
+CLIENT: 1.249s [DEBG] client: Synchronized time base: 1: 00:00:00
+CLIENT: 1.251s [INFO] client: Tickrate changed to: 30 on tick 1
+CLIENT: 1.251s [INFO] client: Tickrate changed to: 1 on tick 1
+CLIENT: 1.254s [INFO] player: Changing local session from null to integration_1.
+CLIENT: 1.849s [DEBG] admin: Have 25 commands available
+CLIENT: 1.849s [INFO] admin: Updated admin status: Not admin
+CLIENT: 1.859s [DEBG] client: Runlevel changed to: Connected
+CLIENT: 2.711s [DEBG] admin: Have 333 commands available
+CLIENT: 2.711s [INFO] admin: Updated admin status: True/Host/ADMIN|BAN|DEBUG|FUN|PERMISSIONS|SERVER|SPAWN|VAREDIT|MAPPING|LOGS|ROUND|QUERY|ADMINHELP|VIEWNOTES|EDITNOTES|MASSBAN|STEALTH|ADMINCHAT|PII|MODERATOR|ADMINWHO|NAMECOLOR|HOST
+CLIENT: 2.712s [DEBG] job_requirements: Received role ban info: 0 job ban entries and 0 antag ban entries.
+CLIENT: 2.724s [INFO] state: Received Full GameState: to=2, sz=45
+SERVER: 2.743s [WARN] net.ent: Got late MsgEntity! Diff: -1, msgT: 2, cT: 3, player: integration_1, msg: Content.Shared.Guidebook.RequestGuidebookDataEvent
+CLIENT: 2.760s [INFO] state: Resetting all entity states to tick 2.
+CLIENT: 2.766s [DEBG] client: Runlevel changed to: InGame
+CLIENT: 2.792s [DEBG] root: Switching to state Content.Client.Lobby.LobbyState
+GetPair: Retrieving pair 2 from pool took 29760.5011 ms
+GetPair: Returning pair 2 with client/server seeds: 946069504/320929269
+SERVER: 4.048s [INFO] ticker: Added game rule  (1/n1, TutorialServer)
+SERVER: 4.049s [INFO] system.game_ticker: Running event  (1/n1, TutorialServer)
+SERVER: 4.051s [INFO] ticker: Started game rule  (1/n1, TutorialServer)
+SERVER: 4.052s [INFO] SERVER: OOC chat has been disabled.
+SERVER: 4.052s [INFO] SERVER: LOOC chat has been disabled.
+SERVER: 4.052s [INFO] SERVER: Dead chat has been disabled.
+SERVER: 4.054s [INFO] ticker: Starting round!
+SERVER: 4.056s [INFO] ticker: Added game rule  (2/n2, TutorialServer)
+SERVER: 4.056s [INFO] system.game_ticker: Running event  (2/n2, TutorialServer)
+SERVER: 4.061s [INFO] ticker: Added game rule  (3/n3, MaxTimeRestartTutorial)
+SERVER: 4.061s [INFO] system.game_ticker: Running event  (3/n3, MaxTimeRestartTutorial)
+SERVER: 4.327s [INFO] station: Set up station Empty (8).
+SERVER: 4.335s [INFO] station: Adding grid 4 to station Empty (8)
+SERVER: 4.341s [INFO] ticker: Started game rule  (2/n2, TutorialServer)
+SERVER: 4.341s [INFO] ticker: Started game rule  (3/n3, MaxTimeRestartTutorial)
+SERVER: 4.344s [INFO] ticker: Attempting to start preset 'TutorialServer'
+SERVER: 4.752s [INFO] system.mind: Session integration_1 transferred to entity 13.
+SERVER: 4.770s [INFO] system.tutorial_server_rule: TUTORIAL_E2E: opened_role_picker for integration_1
+CLIENT: 4.939s [INFO] player: Attaching local player to Tsleeixth-Maxath (119/n13, MobObserver, integration_1).
+CLIENT: 4.958s [DEBG] root: Switching to state Content.Client.Gameplay.GameplayState
+CleanReturnAsync: Return of pair 2 started
+SERVER: 5.125s [INFO] test: Resetting cvar ooc.enabled to True
+SERVER: 5.126s [INFO] SERVER: OOC chat has been enabled.
+SERVER: 5.126s [INFO] test: Resetting cvar looc.enabled to True
+SERVER: 5.126s [INFO] SERVER: LOOC chat has been enabled.
+SERVER: 5.126s [INFO] test: Resetting cvar dead_chat.enabled to True
+SERVER: 5.126s [INFO] SERVER: Dead chat has been enabled.
+SERVER: 5.126s [INFO] test: Resetting cvar ooc.enable_during_round to False
+SERVER: 5.126s [INFO] test: Resetting cvar shuttle.auto_call_time to 90
+SERVER: 5.126s [INFO] test: Resetting cvar tutorial.ghost_roles_enabled to True
+CLIENT: 5.126s [INFO] test: Resetting cvar ooc.enabled to True
+CLIENT: 5.127s [INFO] test: Resetting cvar dead_chat.enabled to True
+CLIENT: 5.127s [INFO] test: Resetting cvar looc.enabled to True
+CleanReturnAsync: Test borrowed pair 2 for 1145.5545 ms
+CleanReturnAsync: PoolManager took 9.9919 ms to put pair 2 back into the pool
+]]></output>
+                </test-case>
+                <test-case id="0-1851" name="TutorialPicker_DismissStaysClosedAndChooseReopens" fullname="Content.IntegrationTests.Tests._Functional.TutorialServer.TutorialServerTests.TutorialPicker_DismissStaysClosedAndChooseReopens" methodname="TutorialPicker_DismissStaysClosedAndChooseReopens" classname="Content.IntegrationTests.Tests._Functional.TutorialServer.TutorialServerTests" runstate="Runnable" seed="94552307" result="Passed" start-time="2026-08-30T21:51:53.8798655Z" end-time="2026-08-30T21:52:24.8907666Z" duration="31.010901" asserts="24">
+                  <output><![CDATA[GetPair: Called by test _Functional.TutorialServer.TutorialServerTests.TutorialPicker_DismissStaysClosedAndChooseReopens
+GetPair: Looking in pool for a suitable pair
+GetPair: Creating a new pair, no suitable pair found in pool
+CLIENT: 0.128s [DEBG] root: OS: Microsoft Windows 10.0.19045 X64
+CLIENT: 0.129s [DEBG] root: .NET Runtime: .NET 10.0.7 win-x64
+CLIENT: 0.129s [DEBG] root: Server GC: False
+CLIENT: 0.129s [DEBG] root: Processor: 16x Intel(R) Core(TM) i7-10700K CPU @ 3.80GHz
+CLIENT: 0.129s [DEBG] root: Available Memory: 31.89 GiB
+CLIENT: 0.129s [DEBG] root: Architecture: X64
+CLIENT: 0.129s [DEBG] root: Robust Version: 284.0.2.0
+CLIENT: 0.129s [DEBG] root: Compile Options: DEVELOPMENT;TOOLS;DEBUG;CLIENT_SCRIPTING
+CLIENT: 0.129s [DEBG] root: Intrinsics: X86Aes;Avx;Avx2;Bmi1;Bmi2;Fma;Lzcnt;Pclmulqdq;Popcnt;Sse;Sse2;Sse3;Ssse3;Sse41;Sse42;X86Base
+CLIENT: 0.389s [DEBG] serialization: Skipping registering data definition for type Content.Shared.EntityConditions.EntityConditionEvent`1[T] since it is abstract or an interface
+CLIENT: 0.411s [DEBG] serialization: Skipping registering data definition for type Content.Shared.DeviceLinking.DevicePortPrototype since it is abstract or an interface
+CLIENT: 0.427s [DEBG] serialization: Skipping registering data definition for type Content.Shared.StatusIcon.StatusIconPrototype since it is abstract or an interface
+CLIENT: 1.112s [DEBG] res.preload: Skipping texture preloading due to CVar value.
+CLIENT: 1.263s [INFO] szr: Serializer Types Hash: C35CB6AD88427DB783DFD074AF479525E3D1BE8A744AF1DC32453606EB174126
+CLIENT: 1.370s [WARN] proto: Registering an ignored prototype Content.Shared.Maps.GameMapPrototype
+CLIENT: 13.157s [INFO] client: Tickrate changed to: 30 on tick 1
+CLIENT: 13.157s [INFO] client: Tickrate changed to: 1 on tick 1
+CLIENT: 13.159s [DEBG] client: Runlevel changed to: Initialize
+CLIENT: 13.429s [DEBG] style: Initializing Stylesheets...
+CLIENT: 13.761s [DEBG] style: Initialized 500 style rules in 00:00:00.3316448
+CLIENT: 13.800s [DEBG] root: Switching to state Content.Client.MainMenu.MainScreen
+CLIENT: 13.888s [DEBG] clyde: Tile atlas took 00:00:00.0778658 to build
+SERVER: 14.033s [INFO] srv: Timescale changed to: 1 on tick 1
+SERVER: 14.034s [INFO] srv: Name: MyServer
+SERVER: 14.034s [INFO] srv: TickRate: 30(33.33ms)
+SERVER: 14.034s [INFO] srv: Max players: 256
+SERVER: 14.181s [INFO] szr: Serializer Types Hash: C35CB6AD88427DB783DFD074AF479525E3D1BE8A744AF1DC32453606EB174126
+SERVER: 14.247s [INFO] configpreset: Loaded config preset: "/ConfigPresets/Build/debug.toml"
+SERVER: 14.248s [INFO] config: Local config: console.login_host_user="Terkala" from "G:\TheFunctionalTutorial\bin\Content.IntegrationTests\server_config.local.toml"
+SERVER: 16.049s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminLogs' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.175s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'Cleanup' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.232s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'ServerNameFts' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.323s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'MarkingsJsonb' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.476s [WARN] db.ef: An operation of type 'UpdateDataOperation' will be attempted while a rebuild of table 'admin_notes' is pending. The database may not be in an expected state. Review the SQL generated by this migration to help diagnose any failures. Consider moving these operations to a subsequent migration.
+SERVER: 16.483s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminNotesImprovement' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.548s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminNotesImprovementsForeignKeys' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.669s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'ConnectionLogServer' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.711s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminLogPk' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.809s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'ClothingRemoval' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 16.852s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'AdminMessageDismiss' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 17.382s [WARN] db.ef: The migration operation 'PRAGMA foreign_keys = 0;
+' from migration 'BanRefactor' cannot be executed in a transaction. If the app is terminated or an unrecoverable error occurs while this operation is being executed then the migration will be left in a partially applied state and would need to be reverted manually before it can be applied again. Create a separate migration that contains just this operation.
+SERVER: 25.753s [INFO] toolshed: Initialized new toolshed context in 00:00:00.1384180
+SERVER: 25.759s [INFO] discord.link: No Discord token specified, not connecting.
+SERVER: 25.784s [INFO] cvarcontrol: Registered 42 CVars.
+SERVER: 25.786s [WARN] cfg: Unknown CVar found (typo in config?): "ui.obey_update_limits"
+SERVER: 0.005s [WARN] cfg: Only clients can change the 'net.interp' cvar.
+SERVER: 0.433s [INFO] ticker: Restarting round!
+SERVER: 0.445s [INFO] system.mind: Wiping all minds
+SERVER: 0.449s [INFO] entity: Flushing entities. Entity count: 0
+SERVER: 1.043s [INFO] cfg: Robust.UnitTesting.RobustIntegrationTest+IntegrationNetManager+IntegrationNetChannel: Sending server info...
+CLIENT: 1.247s [INFO] clientplaytime: Current day: 30 Current Date: 2026-08-30
+CLIENT: 1.247s [INFO] cfg: Sending client info...
+CLIENT: 1.249s [DEBG] client: Synchronized time base: 1: 00:00:00
+CLIENT: 1.251s [INFO] client: Tickrate changed to: 30 on tick 1
+CLIENT: 1.252s [INFO] client: Tickrate changed to: 1 on tick 1
+CLIENT: 1.254s [INFO] player: Changing local session from null to integration_1.
+CLIENT: 1.849s [DEBG] admin: Have 25 commands available
+CLIENT: 1.849s [INFO] admin: Updated admin status: Not admin
+CLIENT: 1.860s [DEBG] client: Runlevel changed to: Connected
+CLIENT: 2.711s [DEBG] admin: Have 333 commands available
+CLIENT: 2.711s [INFO] admin: Updated admin status: True/Host/ADMIN|BAN|DEBUG|FUN|PERMISSIONS|SERVER|SPAWN|VAREDIT|MAPPING|LOGS|ROUND|QUERY|ADMINHELP|VIEWNOTES|EDITNOTES|MASSBAN|STEALTH|ADMINCHAT|PII|MODERATOR|ADMINWHO|NAMECOLOR|HOST
+CLIENT: 2.712s [DEBG] job_requirements: Received role ban info: 0 job ban entries and 0 antag ban entries.
+CLIENT: 2.724s [INFO] state: Received Full GameState: to=2, sz=45
+SERVER: 2.743s [WARN] net.ent: Got late MsgEntity! Diff: -1, msgT: 2, cT: 3, player: integration_1, msg: Content.Shared.Guidebook.RequestGuidebookDataEvent
+CLIENT: 2.760s [INFO] state: Resetting all entity states to tick 2.
+CLIENT: 2.766s [DEBG] client: Runlevel changed to: InGame
+CLIENT: 2.792s [DEBG] root: Switching to state Content.Client.Lobby.LobbyState
+GetPair: Retrieving pair 1 from pool took 29760.5032 ms
+GetPair: Returning pair 1 with client/server seeds: 1942536326/1721953974
+SERVER: 4.058s [INFO] ticker: Added game rule  (1/n1, TutorialServer)
+SERVER: 4.058s [INFO] system.game_ticker: Running event  (1/n1, TutorialServer)
+SERVER: 4.058s [INFO] ticker: Started game rule  (1/n1, TutorialServer)
+SERVER: 4.058s [INFO] SERVER: OOC chat has been disabled.
+SERVER: 4.058s [INFO] SERVER: LOOC chat has been disabled.
+SERVER: 4.058s [INFO] SERVER: Dead chat has been disabled.
+SERVER: 4.059s [INFO] ticker: Starting round!
+SERVER: 4.059s [INFO] ticker: Added game rule  (2/n2, TutorialServer)
+SERVER: 4.059s [INFO] system.game_ticker: Running event  (2/n2, TutorialServer)
+SERVER: 4.062s [INFO] ticker: Added game rule  (3/n3, MaxTimeRestartTutorial)
+SERVER: 4.062s [INFO] system.game_ticker: Running event  (3/n3, MaxTimeRestartTutorial)
+SERVER: 4.327s [INFO] station: Set up station Empty (8).
+SERVER: 4.335s [INFO] station: Adding grid 4 to station Empty (8)
+SERVER: 4.341s [INFO] ticker: Started game rule  (2/n2, TutorialServer)
+SERVER: 4.341s [INFO] ticker: Started game rule  (3/n3, MaxTimeRestartTutorial)
+SERVER: 4.344s [INFO] ticker: Attempting to start preset 'TutorialServer'
+SERVER: 4.752s [INFO] system.mind: Session integration_1 transferred to entity 13.
+SERVER: 4.770s [INFO] system.tutorial_server_rule: TUTORIAL_E2E: opened_role_picker for integration_1
+CLIENT: 4.939s [INFO] player: Attaching local player to Ranulf Birken (119/n13, MobObserver, integration_1).
+CLIENT: 4.958s [DEBG] root: Switching to state Content.Client.Gameplay.GameplayState
+SERVER: 5.135s [INFO] system.mind: Session integration_1 transferred to entity 21.
+CLIENT: 5.155s [INFO] player: Detaching local player from Ranulf Birken (119/n13, MobObserver, integration_1).
+CLIENT: 5.158s [INFO] player: Local player is no longer attached to any entity.
+CLIENT: 5.159s [INFO] player: Attaching local player to Ranulf Birken (127/n21, MobObserver, integration_1).
+CleanReturnAsync: Return of pair 1 started
+SERVER: 5.204s [INFO] test: Resetting cvar ooc.enabled to True
+SERVER: 5.204s [INFO] SERVER: OOC chat has been enabled.
+SERVER: 5.204s [INFO] test: Resetting cvar looc.enabled to True
+SERVER: 5.204s [INFO] SERVER: LOOC chat has been enabled.
+SERVER: 5.204s [INFO] test: Resetting cvar dead_chat.enabled to True
+SERVER: 5.204s [INFO] SERVER: Dead chat has been enabled.
+SERVER: 5.204s [INFO] test: Resetting cvar ooc.enable_during_round to False
+SERVER: 5.204s [INFO] test: Resetting cvar shuttle.auto_call_time to 90
+SERVER: 5.204s [INFO] test: Resetting cvar tutorial.ghost_roles_enabled to True
+CLIENT: 5.204s [INFO] test: Resetting cvar ooc.enabled to True
+CLIENT: 5.204s [INFO] test: Resetting cvar dead_chat.enabled to True
+CLIENT: 5.204s [INFO] test: Resetting cvar looc.enabled to True
+CleanReturnAsync: Test borrowed pair 1 for 1222.1031 ms
+CleanReturnAsync: PoolManager took 7.291 ms to put pair 1 back into the pool
+]]></output>
+                </test-case>
+              </test-suite>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

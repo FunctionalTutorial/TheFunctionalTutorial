@@ -2,6 +2,7 @@ tutorial-server-preset-title = The Functional Tutorial Server
 tutorial-server-preset-description = Solo job and antagonist tutorials on private maps. Press Join in the lobby to open the tutorial picker. No player chat. Use the Choose a tutorial action (dollar sign) to switch roles.
 tutorial-server-dead-chat-disabled = Dead chat is disabled on the tutorial server. Use the Choose a tutorial action (click the dollar sign on the left side of the game window, or right-click yourself) to open the role picker.
 tutorial-server-looc-disabled = LOOC is disabled on the tutorial server.
+tutorial-server-ghost-roles-disabled = Ghost roles are disabled on the tutorial server. Use the Choose a tutorial action (click the dollar sign on the left side of the game window, or right-click yourself) to open the role picker.
 tutorial-server-picker-title = Choose a tutorial
 tutorial-server-picker-subtitle = Pick any job or antagonist. Grey entries are incomplete stubs.
 tutorial-server-picker-quit = Quit
@@ -13,6 +14,7 @@ tutorial-server-join-round-already-in-game = You are already in the round.
 tutorial-server-join-round-not-tutorial = The tutorial server is not active.
 ent-ActionTutorialChooseRole = Choose a tutorial
     .desc = Open the Tutorial Server role picker. Click the dollar sign on the left side of the game window.
+tutorial-server-choose-action-off-hotbar = You removed [color=#FFD24A][bold]Choose a tutorial[/bold][/color] from your action bar. Press [color=#FFD24A][bold][keybind="OpenAbilitiesMenu"][/bold][/color] to open the actions menu, then drag [color=#FFD24A][bold]Choose a tutorial[/bold][/color] (dollar sign) back onto your action bar.
 tutorial-server-guide-tip = Urist McTutorial is in your off-hand (left). Activate it anytime to reopen the checklist. You can drop it with Q (default) if you need both hands free.
 tutorial-server-guide-highlight = Tutorial coach
 tutorial-server-mentor-default-name = Urist McMentor

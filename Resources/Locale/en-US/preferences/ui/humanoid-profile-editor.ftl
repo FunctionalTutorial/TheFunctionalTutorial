@@ -59,6 +59,8 @@ humanoid-profile-editor-job-priority-medium-button = Medium
 humanoid-profile-editor-job-priority-low-button = Low
 humanoid-profile-editor-job-priority-never-button = Never
 humanoid-profile-editor-naming-rules-warning = Warning: Offensive or LRP IC names and descriptions will lead to admin intervention on this server. Read our \[Rules\] for more.
+#Tutorial: shown under the name field in the character editor (replaces naming-rules display)
+humanoid-profile-editor-cross-server-save-warning = Your character is NOT saved across servers. If you want to use this character on another server, use the Export and Import buttons to save your character.
 humanoid-profile-editor-markings-tab = Markings
 humanoid-profile-editor-flavortext-tab = Description
 

@@ -1,3 +1,4 @@
+using Content.Server.Audio; //Tutorial
 using Content.Server.Chat.Systems;
 using Content.Server.NPC;
 using Content.Server.NPC.Systems;
@@ -6,10 +7,10 @@ using Content.Shared.Dragon;
 using Content.Shared.Examine;
 using Content.Shared.Sprite;
 using Robust.Shared.Map;
-using Robust.Shared.Player;
 using Robust.Shared.Serialization.Manager;
 using System.Numerics;
 using Content.Shared.Damage.Components;
+using Robust.Shared.Audio; //Tutorial
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameStates;
 using Robust.Shared.Utility;
@@ -27,6 +28,7 @@ public sealed partial class DragonRiftSystem : EntitySystem
     [Dependency] private NavMapSystem _navMap = default!;
     [Dependency] private NPCSystem _npc = default!;
     [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private readonly ServerGlobalSoundSystem _sound = default!; //Tutorial
 
     public override void Initialize()
     {
@@ -80,8 +82,10 @@ public sealed partial class DragonRiftSystem : EntitySystem
 
                 var msg = Loc.GetString("carp-rift-warning",
                     ("location", FormattedMessage.RemoveMarkupOrThrow(_navMap.GetNearestBeaconString((uid, xform)))));
-                _chat.DispatchGlobalAnnouncement(msg, playSound: false, colorOverride: Color.Red);
-                _audio.PlayGlobal("/Audio/Misc/notice1.ogg", Filter.Broadcast(), true);
+                //Tutorial - Begin: station-scoped so private tutorial maps are not blasted
+                _chat.DispatchStationAnnouncement(uid, msg, playDefaultSound: false, colorOverride: Color.Red);
+                _sound.PlayGlobalOnStation(uid, _audio.ResolveSound(new SoundPathSpecifier("/Audio/Misc/notice1.ogg")));
+                //Tutorial - End
                 _navMap.SetBeaconEnabled(uid, true);
             }
 

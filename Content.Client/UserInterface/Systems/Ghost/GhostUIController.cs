@@ -2,9 +2,11 @@
 using Content.Client.Ghost;
 using Content.Client.UserInterface.Systems.Gameplay;
 using Content.Client.UserInterface.Systems.Ghost.Widgets;
+using Content.Shared._Functional.TutorialServer; //Tutorial
 using Content.Shared.Ghost;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controllers;
+using Robust.Shared.Configuration; //Tutorial
 
 namespace Content.Client.UserInterface.Systems.Ghost;
 
@@ -12,6 +14,7 @@ namespace Content.Client.UserInterface.Systems.Ghost;
 public sealed partial class GhostUIController : UIController, IOnSystemChanged<GhostSystem>
 {
     [Dependency] private IEntityNetworkManager _net = default!;
+    [Dependency] private readonly IConfigurationManager _cfg = default!; //Tutorial
 
     [UISystemDependency] private readonly GhostSystem? _system = default;
 
@@ -24,6 +27,7 @@ public sealed partial class GhostUIController : UIController, IOnSystemChanged<G
         var gameplayStateLoad = UIManager.GetUIController<GameplayStateLoadController>();
         gameplayStateLoad.OnScreenLoad += OnScreenLoad;
         gameplayStateLoad.OnScreenUnload += OnScreenUnload;
+        _cfg.OnValueChanged(TutorialCVars.GhostRolesEnabled, _ => UpdateGui()); //Tutorial
     }
 
     private void OnScreenLoad()
@@ -64,7 +68,9 @@ public sealed partial class GhostUIController : UIController, IOnSystemChanged<G
         }
 
         Gui.Visible = _system?.IsGhost ?? false;
-        Gui.Update(_system?.AvailableGhostRoleCount, _system?.Player?.CanReturnToBody);
+        //Tutorial: hide Ghost Roles while tutorial.ghost_roles_enabled is false
+        Gui.Update(_system?.AvailableGhostRoleCount, _system?.Player?.CanReturnToBody,
+            _cfg.GetCVar(TutorialCVars.GhostRolesEnabled));
     }
 
     private void OnPlayerRemoved(GhostComponent component)

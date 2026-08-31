@@ -145,7 +145,8 @@ namespace Content.Client.Lobby.UI
             NameEdit.OnTextChanged += args => { SetName(args.Text); };
             NameEdit.IsValid = args => args.Length <= _maxNameLength;
             RandomizeUnlockedButton.OnPressed += args => { RandomizeProfile(); };
-            WarningLabel.SetMarkup($"[color=red]{Loc.GetString("humanoid-profile-editor-naming-rules-warning")}[/color]");
+            //Tutorial: cross-server save reminder (was naming-rules warning in red)
+            WarningLabel.SetMarkup($"[color=yellow]{Loc.GetString("humanoid-profile-editor-cross-server-save-warning")}[/color]");
 
             #endregion Name
 
