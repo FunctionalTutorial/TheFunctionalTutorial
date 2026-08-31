@@ -1,0 +1,16 @@
+tutorial-cybermed-window-title = CyberMed-Analysator
+tutorial-cybermed-patient-label = Patient: {$name}
+tutorial-cybermed-no-steps = Für diese Ebene sind keine Schritte verfügbar.
+tutorial-cybermed-step-locked = Gesperrt
+tutorial-cybermed-missing-tool = Fehlendes Werkzeug: {$tool}
+tutorial-cybermed-step-done = Abgeschlossen: {$step}
+tutorial-cybermed-surgery-verb = CyberMed-Scan
+tutorial-cybermed-surgery-verb-message = Öffnen Sie den CyberMed-Chirurgieanalysator für diesen Patienten.
+tutorial-cybermed-health-mode = Gesundheit
+tutorial-cybermed-surgery-mode = Chirurgie
+tutorial-cybermed-body-part = Körperteil:
+tutorial-cybermed-layer-header = Schicht:
+tutorial-cybermed-layer-skin = Haut
+tutorial-cybermed-layer-tissue = Gewebe
+tutorial-cybermed-layer-organ = Organ
+tutorial-cybermed-steps-header = Schritte:

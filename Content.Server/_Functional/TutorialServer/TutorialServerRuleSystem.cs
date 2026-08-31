@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -191,11 +191,11 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         SubscribeLocalEvent<PlayerBeforeSpawnEvent>(OnBeforeSpawn);
         SubscribeLocalEvent<MobStateChangedEvent>(OnMobStateChanged);
-        // Alive /ghost uses TransferTo → MindRemovedMessage on the body. MindUnvisitedMessage only
+        // Alive /ghost uses TransferTo ? MindRemovedMessage on the body. MindUnvisitedMessage only
         // fires when leaving a Visit, so it never sees living tutorial exits.
         SubscribeLocalEvent<TutorialParticipantComponent, MindRemovedMessage>(OnTutorialMindRemoved);
         SubscribeLocalEvent<TutorialPracticeMobComponent, MapInitEvent>(OnPracticeMobMapInit);
-        // Do not subscribe GhostComponent.MapInit — GhostSystem already owns that directed event.
+        // Do not subscribe GhostComponent.MapInit � GhostSystem already owns that directed event.
         SubscribeLocalEvent<GhostComponent, PlayerAttachedEvent>(OnGhostPlayerAttached);
         SubscribeLocalEvent<GhostComponent, GetVerbsEvent<AlternativeVerb>>(OnGhostGetVerbs);
         SubscribeLocalEvent<TutorialChooseRoleActionEvent>(OnTutorialChooseRoleAction);
@@ -206,7 +206,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// Practice dummies are mindless — strip SSD ZZZ / forced sleep so they stay awake and can speak.
+    /// Practice dummies are mindless � strip SSD ZZZ / forced sleep so they stay awake and can speak.
     /// </summary>
     private void OnPracticeMobMapInit(Entity<TutorialPracticeMobComponent> ent, ref MapInitEvent args)
     {
@@ -269,7 +269,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     {
         base.Started(uid, component, gameRule, args);
         ApplyTutorialCVars();
-        // Lobby must never pull CentComm — strip any leftover StationCentcomm from stations.
+        // Lobby must never pull CentComm � strip any leftover StationCentcomm from stations.
         StripStationCentcomm();
     }
 
@@ -327,7 +327,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _cfg.SetCVar(CCVars.GameDisallowLateJoins, false);
         _cfg.SetCVar(CCVars.GameRoleTimers, false);
         _cfg.SetCVar(CCVars.GameRoleWhitelist, false);
-        // Lobby has no StationEmergencyShuttle — auto-call docks an empty set and crashes (.Max).
+        // Lobby has no StationEmergencyShuttle � auto-call docks an empty set and crashes (.Max).
         _cfg.SetCVar(CCVars.EmergencyShuttleAutoCallTime, 0);
         _cfg.SetCVar(TutorialCVars.GhostRolesEnabled, false);
         _cfg.SetCVar(CCVars.VoteEnabled, false);
@@ -396,7 +396,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             }
         }
 
-        // Late-join with a station job → matching crew tutorial (round start keeps the picker).
+        // Late-join with a station job ? matching crew tutorial (round start keeps the picker).
         if (ev.LateJoin &&
             !string.IsNullOrEmpty(ev.JobId) &&
             TryResolveTutorialRoleForJob(ev.JobId, out var jobRole) &&
@@ -458,7 +458,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             if (proto.Job?.Id != jobId)
                 continue;
             if (match != null)
-                return false; // Ambiguous job → keep picker.
+                return false; // Ambiguous job ? keep picker.
             match = proto;
         }
 
@@ -482,13 +482,13 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
         if (IsRoleBlockedForPlayer(player, roleProto))
         {
-            _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-role-species-blocked"));
+            SendTipChat(player, "tutorial-server-role-species-blocked");
             return;
         }
 
         if (roleProto.Stub && !confirmedStub)
         {
-            _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-stub-confirm-needed"));
+            SendTipChat(player, "tutorial-server-stub-confirm-needed");
             return;
         }
 
@@ -541,7 +541,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     {
         _openPickers.Remove(player.UserId);
 
-        // Round restart closes EUIs while the old rule is still briefly active — do not re-open.
+        // Round restart closes EUIs while the old rule is still briefly active � do not re-open.
         if (_restartCleanup)
             return;
 
@@ -555,7 +555,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (session.State == TutorialSessionState.InTutorial)
             return;
 
-        // Dismiss (window X) must not force-reopen — that locked living players / observers into
+        // Dismiss (window X) must not force-reopen � that locked living players / observers into
         // the picker. They already have Choose a tutorial on spawn and as ghosts.
         if (session.PickerQuit || session.State != TutorialSessionState.PendingSelect)
             return;
@@ -570,7 +570,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (player.AttachedEntity is not { } body || !HasComp<GhostComponent>(body))
             GameTicker.JoinAsObserver(player);
 
-        _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-picker-quit-tip"));
+        SendTipChat(player, "tutorial-server-picker-quit-tip");
     }
 
     public void OnPickerQuit(ICommonSession player)
@@ -581,7 +581,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (!rule.Sessions.TryGetValue(player.UserId, out var session))
             session = new TutorialSessionData();
 
-        // Quit while mid-tutorial: close only — do not ghost or clear the session.
+        // Quit while mid-tutorial: close only � do not ghost or clear the session.
         if (session.State == TutorialSessionState.InTutorial)
         {
             if (_openPickers.Remove(player.UserId, out var inTutorialEui))
@@ -598,7 +598,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             eui.Close();
 
         GameTicker.JoinAsObserver(player);
-        _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-picker-quit-tip"));
+        SendTipChat(player, "tutorial-server-picker-quit-tip");
     }
 
     /// <summary>
@@ -826,19 +826,20 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// Picker label: explicit <see cref="TutorialRolePrototype.Name"/>, else antag, else job, else id.
+    /// Picker label LocId: explicit <see cref="TutorialRolePrototype.Name"/>, else antag, else job, else id.
     /// Antag is preferred over job so packages that outfit as Passenger still show the antag name.
+    /// Resolved on the client against the player's culture.
     /// </summary>
     public string GetRoleDisplayName(TutorialRolePrototype proto)
     {
         if (!string.IsNullOrEmpty(proto.Name))
-            return Loc.GetString(proto.Name);
+            return proto.Name;
 
         if (proto.Antag != null && ProtoMan.TryIndex(proto.Antag.Value, out AntagPrototype? antag))
-            return Loc.GetString(antag.Name);
+            return antag.Name;
 
         if (proto.Job != null && ProtoMan.TryIndex(proto.Job.Value, out JobPrototype? job))
-            return job.LocalizedName;
+            return job.Name;
 
         return proto.ID;
     }
@@ -853,7 +854,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     {
         if (!_tutorialMaps.TryLoadTutorialMap(roleProto, out var mapUid, out var gridUid, out var spawnCoords))
         {
-            _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-map-load-failed"));
+            SendTipChat(player, "tutorial-server-map-load-failed");
             return false;
         }
 
@@ -883,7 +884,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _mind.SetUserId(mindId, player.UserId);
         _mind.TransferTo(mindId, mob);
 
-        // Antag tutorials use StartingGear — do not attach Passenger job clothes/roles.
+        // Antag tutorials use StartingGear � do not attach Passenger job clothes/roles.
         // SpawnEntity + Job is allowed (e.g. TutorialBorg uses a constrained chassis body).
         if (roleProto.StartingGear == null && roleProto.Job != null)
             _jobs.MindAddJob(mindId, roleProto.Job.Value);
@@ -913,7 +914,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (roleProto.Antag is { } antagId && antagId.Id == "Thief")
             _antagBootstrap.PrepareThiefPracticeMobs(gridUid);
 
-        // Starting-gear belt/pocket tools are not practiceSpawns — tag them too so
+        // Starting-gear belt/pocket tools are not practiceSpawns � tag them too so
         // UseInHand (and any future item sensors) accept belt or floor sources.
         EnsureInventorySensorTargets(mob);
 
@@ -1006,7 +1007,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         GiveTutorialGuideToOffHand(mob, guide);
 
         // One-shot discoverability: chat tip + highlight popup on the tablet.
-        _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-guide-tip"));
+        SendTipChat(player, "tutorial-server-guide-tip");
         _popup.PopupEntity(Loc.GetString("tutorial-server-guide-highlight"), guide, player, PopupType.Medium);
 
         if (roleProto.AutoOpenGuide)
@@ -1070,7 +1071,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         // Holopad coaches introduce themselves in character; no "follow the mentor" chatter.
         if (roleProto.MentorMode != TutorialMentorMode.Holopad)
         {
-            _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-mentor-tip"));
+            SendTipChat(player, "tutorial-server-mentor-tip");
             _popup.PopupEntity(Loc.GetString("tutorial-server-mentor-highlight"), mentor, player, PopupType.Medium);
         }
     }
@@ -1124,7 +1125,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
     /// <summary>
     /// Opens the deferred guide Bound UI once. Must not run synchronously from a UseInHand /
-    /// drink completion — that steals focus mid-interaction (Passenger water bottle).
+    /// drink completion � that steals focus mid-interaction (Passenger water bottle).
     /// </summary>
     private void TryOpenDeferredGuide(ICommonSession player, EntityUid mob, ref TutorialSessionData session)
     {
@@ -1438,7 +1439,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             return explicitRoom;
 
         // Mixed curricula (e.g. Technical Assistant: hack stays in room 0, spacing uses
-        // enterRoom 1) must not infer room==goalIndex for goals without EnterRoom — that
+        // enterRoom 1) must not infer room==goalIndex for goals without EnterRoom � that
         // incorrectly inserts a chamber-pad step and blocks sensors like hold-screwdriver.
         if (role.Goals.Any(g => g.EnterRoom != null))
             return null;
@@ -1618,31 +1619,33 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
     }
 
     /// <summary>
-    /// Sends a tip to the player's chat. Markup may include <c>[keybind]</c> tags resolved client-side.
+    /// Sends a tip LocId to the player's chat. Resolved on the client; Fluent may include <c>[keybind]</c>.
     /// </summary>
-    public void SendTipChat(EntityUid mob, string markup)
+    public void SendTipChat(EntityUid mob, string locId, string? textArgLocId = null)
     {
         if (!TryComp<ActorComponent>(mob, out var actor))
             return;
 
-        SendTipChat(actor.PlayerSession, markup);
+        SendTipChat(actor.PlayerSession, locId, textArgLocId);
     }
 
     /// <summary>
-    /// Sends a tip to the player's chat. Markup may include <c>[keybind]</c> tags resolved client-side.
+    /// Sends a tip LocId to the player's chat. Resolved on the client; Fluent may include <c>[keybind]</c>.
     /// </summary>
-    public void SendTipChat(ICommonSession player, string markup)
+    public void SendTipChat(ICommonSession player, string locId, string? textArgLocId = null)
     {
-        if (string.IsNullOrWhiteSpace(markup))
+        if (string.IsNullOrWhiteSpace(locId))
             return;
 
-        RaiseNetworkEvent(new TutorialTipChatEvent { Markup = markup }, player.Channel);
+        RaiseNetworkEvent(
+            new TutorialTipChatEvent { LocId = locId, TextArgLocId = textArgLocId },
+            player.Channel);
     }
 
     /// <summary>
     /// Pushes the on-screen control hint for the current sub-goal, or hides the banner when the
-    /// step teaches no control. <paramref name="locId"/> markup may include <c>[keybind]</c> tags,
-    /// which the client resolves against the player's own bindings.
+    /// step teaches no control. <paramref name="locId"/> is resolved on the client; Fluent may
+    /// include <c>[keybind]</c> tags against the player's bindings.
     /// </summary>
     /// <summary>
     /// Shown in the control-hint banner when the curriculum runs out.
@@ -1671,7 +1674,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         RaiseNetworkEvent(
             new TutorialControlHintEvent
             {
-                Markup = show ? Loc.GetString(locId!) : string.Empty,
+                LocId = show ? locId! : string.Empty,
                 Show = show,
             },
             actor.PlayerSession.Channel);
@@ -1731,7 +1734,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         }
 
         session.LastChattedHint = hint;
-        SendTipChat(mob, Loc.GetString(hint));
+        SendTipChat(mob, hint);
     }
 
     public bool TryGetSession(EntityUid mob, out TutorialSessionData session)
@@ -1849,7 +1852,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             if (session.GoalIndex >= 0 && session.GoalIndex < role.Goals.Count)
             {
                 var goal = role.Goals[session.GoalIndex];
-                part.GoalTitle = Loc.GetString(goal.Title);
+                part.GoalTitle = goal.Title;
 
                 var needsPad = ShouldAwaitChamberEntryPad(session, role);
                 var padActive = session.AwaitingChamberEntryPad;
@@ -1861,7 +1864,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 {
                     part.SubGoalStates.Add(new TutorialHudSubGoalState
                     {
-                        Text = Loc.GetString("tutorial-server-chamber-pad"),
+                        Text = "tutorial-server-chamber-pad",
                         Completed = !padActive,
                     });
                 }
@@ -1870,7 +1873,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                 {
                     part.SubGoalStates.Add(new TutorialHudSubGoalState
                     {
-                        Text = Loc.GetString(goal.SubGoals[i].Text),
+                        Text = goal.SubGoals[i].Text,
                         Completed = !padActive && i < session.SubGoalIndex,
                     });
                 }
@@ -1880,10 +1883,10 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                     var padRoom = ResolveGoalEnterRoom(role, session.GoalIndex) ?? session.GoalIndex;
                     var pad = CreateChamberEntryPadSubGoal(padRoom);
                     controlHint = pad.Text;
-                    part.StepText = Loc.GetString(pad.Text);
+                    part.StepText = pad.Text;
                     part.StepComplete = pad.Complete;
-                    part.HintText = Loc.GetString(pad.Hint!);
-                    part.StuckHintText = Loc.GetString(pad.StuckHint!);
+                    part.HintText = pad.Hint ?? string.Empty;
+                    part.StuckHintText = pad.StuckHint ?? string.Empty;
                 }
                 else if (session.SubGoalIndex >= 0 && session.SubGoalIndex < goal.SubGoals.Count)
                 {
@@ -1898,17 +1901,15 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
                         controlHint = sub.Text;
                     else if (sub.SuppressControlHint)
                         controlHint = null;
-                    part.StepText = Loc.GetString(sub.Text);
+                    part.StepText = sub.Text;
                     part.StepComplete = sub.Complete;
-                    part.HintText = string.IsNullOrEmpty(sub.Hint) ? string.Empty : Loc.GetString(sub.Hint);
-                    part.StuckHintText = string.IsNullOrEmpty(sub.StuckHint)
-                        ? string.Empty
-                        : Loc.GetString(sub.StuckHint);
+                    part.HintText = sub.Hint ?? string.Empty;
+                    part.StuckHintText = sub.StuckHint ?? string.Empty;
                 }
                 else
                 {
                     controlHint = CompleteText;
-                    part.StepText = Loc.GetString(CompleteText);
+                    part.StepText = CompleteText;
                     part.StepComplete = TutorialStepComplete.Acknowledge;
                     part.HintText = string.Empty;
                     part.StuckHintText = string.Empty;
@@ -1916,8 +1917,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             }
             else
             {
-                part.GoalTitle = Loc.GetString("tutorial-server-complete");
-                part.StepText = Loc.GetString("tutorial-server-complete");
+                part.GoalTitle = CompleteText;
+                part.StepText = CompleteText;
                 part.StepComplete = TutorialStepComplete.Acknowledge;
                 part.HintText = string.Empty;
                 part.StuckHintText = string.Empty;
@@ -1938,16 +1939,14 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
             if (session.StepIndex >= 0 && session.StepIndex < role.Steps.Count)
             {
                 var step = role.Steps[session.StepIndex];
-                part.StepText = Loc.GetString(step.Text);
+                part.StepText = step.Text;
                 part.StepComplete = step.Complete;
-                part.HintText = string.IsNullOrEmpty(step.Hint) ? string.Empty : Loc.GetString(step.Hint);
-                part.StuckHintText = string.IsNullOrEmpty(step.StuckHint)
-                    ? string.Empty
-                    : Loc.GetString(step.StuckHint);
+                part.HintText = step.Hint ?? string.Empty;
+                part.StuckHintText = step.StuckHint ?? string.Empty;
             }
             else
             {
-                part.StepText = Loc.GetString("tutorial-server-complete");
+                part.StepText = CompleteText;
                 part.StepComplete = TutorialStepComplete.Acknowledge;
                 part.HintText = string.Empty;
                 part.StuckHintText = string.Empty;
@@ -1960,7 +1959,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (session.GridUid != EntityUid.Invalid && role.Goals.Count > 0)
             _tutorialRooms.RefreshSubGoalGates(session.GridUid, id => HasReachedSubGoal(role, session, id));
 
-        // Held back until the coach stops talking — see TutorialGoalSensorSystem.TryReleaseControlHint.
+        // Held back until the coach stops talking � see TutorialGoalSensorSystem.TryReleaseControlHint.
         // Two things competing for the player's eye at once is how they end up reading neither.
         session.PendingControlHint = controlHint;
         session.ControlHintShown = false;
@@ -1978,7 +1977,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         _holoMentor.RefreshProjection(mob, role, session);
         _leadMentor.RefreshLead(mob, role, session);
 
-        // Chamber transitions can leave the mentor behind a sealed gate — give them time to walk
+        // Chamber transitions can leave the mentor behind a sealed gate � give them time to walk
         // before TutorialMentorFollowSystem path-checks and (only if stuck) snaps.
         if (role.MentorFollows &&
             session.MentorUid != EntityUid.Invalid &&
@@ -2131,8 +2130,8 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
 
     private void CompleteTutorial(ICommonSession player, TutorialSessionData session)
     {
-        // Stay on the practice map with Choose a tutorial — do not force-respawn to the picker.
-        _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-tutorial-finished"));
+        // Stay on the practice map with Choose a tutorial � do not force-respawn to the picker.
+        SendTipChat(player, "tutorial-server-tutorial-finished");
 
         var mob = session.BodyUid;
         if (mob == EntityUid.Invalid || TerminatingOrDeleted(mob))
@@ -2186,7 +2185,7 @@ public sealed class TutorialServerRuleSystem : GameRuleSystem<TutorialServerRule
         if (userId == null)
             return;
 
-        // Death keeps the RespawnDeadRule delay → MakeJoinGame → picker. Alive /ghost needs
+        // Death keeps the RespawnDeadRule delay ? MakeJoinGame ? picker. Alive /ghost needs
         // an immediate picker, and must leave the private map before unload deletes the ghost.
         var bodyDead = TryComp<MobStateComponent>(ent, out var mobState) &&
                        mobState.CurrentState == MobState.Dead;

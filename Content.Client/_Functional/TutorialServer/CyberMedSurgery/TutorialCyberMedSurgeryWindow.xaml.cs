@@ -20,6 +20,13 @@ public sealed partial class TutorialCyberMedSurgeryWindow : DefaultWindow
         RobustXamlLoader.Load(this);
         Title = Loc.GetString("tutorial-cybermed-window-title");
 
+        HealthModeButton.Text = Loc.GetString("tutorial-cybermed-health-mode");
+        SurgeryModeButton.Text = Loc.GetString("tutorial-cybermed-surgery-mode");
+        SkinLayerButton.Text = Loc.GetString("tutorial-cybermed-layer-skin");
+        TissueLayerButton.Text = Loc.GetString("tutorial-cybermed-layer-tissue");
+        OrganLayerButton.Text = Loc.GetString("tutorial-cybermed-layer-organ");
+        LayerLabel.Text = Loc.GetString("tutorial-cybermed-layer-header");
+
         SkinLayerButton.OnPressed += _ => OnLayerSelected?.Invoke(TutorialCyberMedLayer.Skin);
         TissueLayerButton.OnPressed += _ => OnLayerSelected?.Invoke(TutorialCyberMedLayer.Tissue);
         OrganLayerButton.OnPressed += _ => OnLayerSelected?.Invoke(TutorialCyberMedLayer.Organ);

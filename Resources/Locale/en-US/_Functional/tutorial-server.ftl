@@ -4,7 +4,25 @@ tutorial-server-dead-chat-disabled = Dead chat is disabled on the tutorial serve
 tutorial-server-looc-disabled = LOOC is disabled on the tutorial server.
 tutorial-server-ghost-roles-disabled = Ghost roles are disabled on the tutorial server. Use the Choose a tutorial action (click the dollar sign on the left side of the game window, or right-click yourself) to open the role picker.
 tutorial-server-picker-title = Choose a tutorial
-tutorial-server-picker-subtitle = Pick any job or antagonist. Grey entries are incomplete stubs.
+tutorial-server-picker-subtitle = Pick any job or antagonist. Grey entries are incomplete stubs. Language is under Options → Misc.
+
+tutorial-picker-category-start-here = Start Here
+tutorial-picker-category-station-jobs = Station Jobs
+tutorial-picker-category-civilian = Civilian
+tutorial-picker-category-service = Service
+tutorial-picker-category-cargo = Cargo
+tutorial-picker-category-engineering = Engineering
+tutorial-picker-category-medical = Medical
+tutorial-picker-category-science = Science
+tutorial-picker-category-security = Security
+tutorial-picker-category-command = Command
+tutorial-picker-category-antagonist = Antagonist
+tutorial-picker-category-wizden-antagonists = Wizden antagonists
+tutorial-picker-category-server-specific = Server specific
+tutorial-picker-category-starlight = Starlight
+tutorial-picker-category-bpl14 = BPL14
+
+tutorial-server-rules-body = Please do not intentionally try to crash the server.\n\nThe intent of this server is to provide a way for people to learn to play the game.\n\nWhen joining other servers please read their rules carefully, as each server has different expectations of their players.
 tutorial-server-picker-quit = Quit
 tutorial-server-picker-quit-tip = You left the role picker. Use the Choose a tutorial action (click the dollar sign on the left side of the game window, or right-click yourself as a ghost) to open it again.
 tutorial-server-ghost-choose = Choose a tutorial

@@ -8,3 +8,6 @@ tutorial-starlight-surgery-wrong-step = That is not the next surgery step.
 tutorial-starlight-surgery-step-done = Completed: {$step}
 tutorial-starlight-surgery-verb = Perform surgery
 tutorial-starlight-surgery-verb-message = Open the Starlight surgery interface on this patient.
+tutorial-starlight-surgery-back-parts = < Parts
+tutorial-starlight-surgery-back-surgeries = < Surgeries
+tutorial-starlight-surgery-back-steps = < Steps

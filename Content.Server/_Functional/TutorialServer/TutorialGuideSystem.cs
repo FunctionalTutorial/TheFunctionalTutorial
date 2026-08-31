@@ -178,8 +178,7 @@ public sealed class TutorialGuideSystem : EntitySystem
         if (!_tutorial.TryConsumeProgressPopup(actor.PlayerSession))
             return;
 
-        var toast = Loc.GetString("tutorial-server-progress-toast", ("text", part.StepText));
-        _tutorial.SendTipChat(actor.PlayerSession, toast);
+        _tutorial.SendTipChat(actor.PlayerSession, "tutorial-server-progress-toast", part.StepText);
     }
 
     private void SnapViewToProgress(Entity<TutorialGuideComponent> ent, EntityUid user)

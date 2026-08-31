@@ -249,7 +249,7 @@ public sealed class TutorialCueSystem : EntitySystem
             return;
 
         var listener = cue.Comp.ArmedBy ?? speaker;
-        _trainer.SpeakAsCoach(speaker, listener, cue.Comp.SubGoalId, Loc.GetString(line), null);
+        _trainer.SpeakAsCoach(speaker, listener, cue.Comp.SubGoalId, line, null);
     }
 
     /// <summary>

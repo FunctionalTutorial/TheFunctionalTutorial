@@ -1,0 +1,13 @@
+tutorial-starlight-surgery-window-title = Хирургия
+tutorial-starlight-surgery-window-title-part = Хирургия — {$part}
+tutorial-starlight-surgery-window-title-detail = Хирургия — {$part}, {$surgery}
+tutorial-starlight-surgery-self = Нельзя оперировать самого себя!
+tutorial-starlight-surgery-need-lying = Пациент должен лежать!
+tutorial-starlight-surgery-missing-tool = Необходим инструмент: {$tool}
+tutorial-starlight-surgery-wrong-step = Это не следующий этап операции.
+tutorial-starlight-surgery-step-done = Завершено: {$step}
+tutorial-starlight-surgery-verb = Провести операцию
+tutorial-starlight-surgery-verb-message = Открыть интерфейс хирургии Starlight для этого пациента.
+tutorial-starlight-surgery-back-parts = < Части тела
+tutorial-starlight-surgery-back-surgeries = < Операции
+tutorial-starlight-surgery-back-steps = < Этапы

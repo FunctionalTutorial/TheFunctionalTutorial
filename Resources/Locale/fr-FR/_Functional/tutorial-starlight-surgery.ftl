@@ -1,0 +1,13 @@
+tutorial-starlight-surgery-window-title = Chirurgie
+tutorial-starlight-surgery-window-title-part = Chirurgie - {$part}
+tutorial-starlight-surgery-window-title-detail = Chirurgie - {$part}, {$surgery}
+tutorial-starlight-surgery-self = Vous ne pouvez pas vous opérer vous-même !
+tutorial-starlight-surgery-need-lying = Le patient doit être allongé !
+tutorial-starlight-surgery-missing-tool = Outil manquant : {$tool}
+tutorial-starlight-surgery-wrong-step = Ce n'est pas la prochaine étape de l'intervention.
+tutorial-starlight-surgery-step-done = Terminé : {$step}
+tutorial-starlight-surgery-verb = Opérer
+tutorial-starlight-surgery-verb-message = Ouvrez l'interface chirurgicale Starlight sur ce patient.
+tutorial-starlight-surgery-back-parts = < Parties
+tutorial-starlight-surgery-back-surgeries = < Chirurgies
+tutorial-starlight-surgery-back-steps = < Étapes

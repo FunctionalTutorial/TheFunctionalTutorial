@@ -1,0 +1,16 @@
+tutorial-cybermed-window-title = Аналізатор CyberMed
+tutorial-cybermed-patient-label = Пацієнт: {$name}
+tutorial-cybermed-no-steps = Для цього шару немає доступних кроків.
+tutorial-cybermed-step-locked = заблоковано
+tutorial-cybermed-missing-tool = Немає інструмента: {$tool}
+tutorial-cybermed-step-done = Виконано: {$step}
+tutorial-cybermed-surgery-verb = Сканування CyberMed
+tutorial-cybermed-surgery-verb-message = Відкрити хірургічний аналізатор CyberMed для цього пацієнта.
+tutorial-cybermed-health-mode = Здоров'я
+tutorial-cybermed-surgery-mode = Хірургія
+tutorial-cybermed-body-part = Частина тіла:
+tutorial-cybermed-layer-header = шар:
+tutorial-cybermed-layer-skin = Шкіра
+tutorial-cybermed-layer-tissue = Тканина
+tutorial-cybermed-layer-organ = Орган
+tutorial-cybermed-steps-header = Кроки:

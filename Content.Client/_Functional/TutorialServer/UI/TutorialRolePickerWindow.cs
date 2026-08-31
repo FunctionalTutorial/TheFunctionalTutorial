@@ -102,7 +102,7 @@ public sealed class TutorialRolePickerWindow : DefaultWindow
                 lastSubCategory = null;
                 _list.AddChild(new Label
                 {
-                    Text = role.Category,
+                    Text = TutorialLoc.GetCategory(role.Category),
                     StyleClasses = { "LabelHeading" },
                 });
             }
@@ -112,18 +112,19 @@ public sealed class TutorialRolePickerWindow : DefaultWindow
                 lastSubCategory = role.SubCategory;
                 _list.AddChild(new Label
                 {
-                    Text = role.SubCategory,
+                    Text = TutorialLoc.GetCategory(role.SubCategory),
                     StyleClasses = { "LabelHeading" },
                     Margin = new Thickness(16, 4, 0, 0),
                 });
             }
 
             // Blocked wins the label; "unfinished" would send them off to wait for a fix.
+            var displayName = TutorialLoc.Get(role.DisplayName);
             var label = role.BlockedForSpecies
-                ? Loc.GetString("tutorial-server-picker-species-entry", ("name", role.DisplayName))
+                ? Loc.GetString("tutorial-server-picker-species-entry", ("name", displayName))
                 : role.Stub
-                    ? Loc.GetString("tutorial-server-picker-stub-entry", ("name", role.DisplayName))
-                    : role.DisplayName;
+                    ? Loc.GetString("tutorial-server-picker-stub-entry", ("name", displayName))
+                    : displayName;
 
             var button = new Button
             {

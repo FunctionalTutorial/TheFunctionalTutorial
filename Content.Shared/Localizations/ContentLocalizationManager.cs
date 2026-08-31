@@ -1,33 +1,130 @@
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Robust.Shared.Configuration;
 using Robust.Shared.Utility;
+using static Robust.Shared.CVars;
 
 namespace Content.Shared.Localizations
 {
     public sealed partial class ContentLocalizationManager
     {
         [Dependency] private ILocalizationManager _loc = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
 
-        // If you want to change your codebase's language, do it here.
-        private const string Culture = "en-US";
+        /// <summary>Always-loaded fallback culture (English source strings).</summary>
+        public const string FallbackCultureName = "en-US";
+
+        /// <summary>
+        /// Cultures offered in Options for the Functional Tutorial (launcher-filter languages).
+        /// </summary>
+        public static readonly string[] SupportedCultureNames =
+        [
+            "en-US",
+            "de-DE",
+            "es-ES",
+            "fr-FR",
+            "pt-BR",
+            "ru-RU",
+            "uk-UA",
+        ];
 
         /// <summary>
         /// Custom format strings used for parsing and displaying minutes:seconds timespans.
         /// </summary>
-        public static readonly string[] TimeSpanMinutesFormats = new[]
-        {
+        public static readonly string[] TimeSpanMinutesFormats =
+        [
             @"m\:ss",
             @"mm\:ss",
             @"%m",
             @"mm"
-        };
+        ];
 
-        public void Initialize()
+        private bool _clientCultureHooked;
+
+        /// <param name="preferClientCulture">
+        /// When true (game client), load <see cref="CVars.LocCultureName"/> as the active culture
+        /// with English fallback. Server keeps English only.
+        /// </param>
+        public void Initialize(bool preferClientCulture = false)
         {
-            var culture = new CultureInfo(Culture);
+            var en = new CultureInfo(FallbackCultureName);
+            _loc.LoadCulture(en);
+            RegisterContentFunctions(en);
 
-            _loc.LoadCulture(culture);
+            // English-only Fluent helpers for pluralization fallbacks.
+            _loc.AddFunction(en, "MAKEPLURAL", FormatMakePlural);
+            _loc.AddFunction(en, "MANY", FormatMany);
+
+            if (!preferClientCulture)
+            {
+                _loc.DefaultCulture = en;
+                return;
+            }
+
+            ApplyClientCulture(_cfg.GetCVar(LocCultureName), force: true);
+            if (!_clientCultureHooked)
+            {
+                _cfg.OnValueChanged(LocCultureName, OnClientCultureCVarChanged);
+                _clientCultureHooked = true;
+            }
+        }
+
+        private void OnClientCultureCVarChanged(string cultureName)
+        {
+            ApplyClientCulture(cultureName, force: false);
+        }
+
+        /// <summary>
+        /// Loads and activates a client culture when present under /Locale; falls back to en-US.
+        /// </summary>
+        public void ApplyClientCulture(string cultureName, bool force)
+        {
+            if (string.IsNullOrWhiteSpace(cultureName))
+                cultureName = FallbackCultureName;
+
+            CultureInfo preferred;
+            try
+            {
+                preferred = CultureInfo.GetCultureInfo(cultureName, predefinedOnly: false);
+            }
+            catch (CultureNotFoundException)
+            {
+                preferred = new CultureInfo(FallbackCultureName);
+            }
+
+            var en = new CultureInfo(FallbackCultureName);
+
+            if (!string.Equals(preferred.Name, FallbackCultureName, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!_loc.HasCulture(preferred))
+                {
+                    try
+                    {
+                        _loc.LoadCulture(preferred);
+                        RegisterContentFunctions(preferred);
+                    }
+                    catch
+                    {
+                        // Missing Locale folder — stay on English.
+                        preferred = en;
+                    }
+                }
+            }
+
+            if (!force && _loc.DefaultCulture != null &&
+                string.Equals(_loc.DefaultCulture.Name, preferred.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _loc.SetCulture(preferred);
+            if (!string.Equals(preferred.Name, FallbackCultureName, StringComparison.OrdinalIgnoreCase))
+                _loc.SetFallbackCluture(en);
+        }
+
+        private void RegisterContentFunctions(CultureInfo culture)
+        {
             _loc.AddFunction(culture, "PRESSURE", FormatPressure);
             _loc.AddFunction(culture, "POWERWATTS", FormatPowerWatts);
             _loc.AddFunction(culture, "POWERJOULES", FormatPowerJoules);
@@ -39,17 +136,6 @@ namespace Content.Shared.Localizations
             _loc.AddFunction(culture, "NATURALFIXED", FormatNaturalFixed);
             _loc.AddFunction(culture, "NATURALPERCENT", FormatNaturalPercent);
             _loc.AddFunction(culture, "PLAYTIME", FormatPlaytime);
-
-
-            /*
-             * The following language functions are specific to the english localization. When working on your own
-             * localization you should NOT modify these, instead add new functions specific to your language/culture.
-             * This ensures the english translations continue to work as expected when fallbacks are needed.
-             */
-            var cultureEn = new CultureInfo("en-US");
-
-            _loc.AddFunction(cultureEn, "MAKEPLURAL", FormatMakePlural);
-            _loc.AddFunction(cultureEn, "MANY", FormatMany);
         }
 
         private ILocValue FormatMany(LocArgs args)
@@ -60,28 +146,30 @@ namespace Content.Shared.Localizations
             {
                 return (LocValueString) args.Args[0];
             }
-            else
-            {
-                return (LocValueString) FormatMakePlural(args);
-            }
+
+            return (LocValueString) FormatMakePlural(args);
         }
 
         private ILocValue FormatNaturalPercent(LocArgs args)
         {
             var number = ((LocValueNumber) args.Args[0]).Value * 100;
-            var maxDecimals = (int)Math.Floor(((LocValueNumber) args.Args[1]).Value);
-            var formatter = (NumberFormatInfo)NumberFormatInfo.GetInstance(CultureInfo.GetCultureInfo(Culture)).Clone();
+            var maxDecimals = (int) Math.Floor(((LocValueNumber) args.Args[1]).Value);
+            var culture = _loc.DefaultCulture ?? CultureInfo.GetCultureInfo(FallbackCultureName);
+            var formatter = (NumberFormatInfo) NumberFormatInfo.GetInstance(culture).Clone();
             formatter.NumberDecimalDigits = maxDecimals;
-            return new LocValueString(string.Format(formatter, "{0:N}", number).TrimEnd('0').TrimEnd(char.Parse(formatter.NumberDecimalSeparator)) + "%");
+            return new LocValueString(string.Format(formatter, "{0:N}", number).TrimEnd('0')
+                .TrimEnd(char.Parse(formatter.NumberDecimalSeparator)) + "%");
         }
 
         private ILocValue FormatNaturalFixed(LocArgs args)
         {
             var number = ((LocValueNumber) args.Args[0]).Value;
-            var maxDecimals = (int)Math.Floor(((LocValueNumber) args.Args[1]).Value);
-            var formatter = (NumberFormatInfo)NumberFormatInfo.GetInstance(CultureInfo.GetCultureInfo(Culture)).Clone();
+            var maxDecimals = (int) Math.Floor(((LocValueNumber) args.Args[1]).Value);
+            var culture = _loc.DefaultCulture ?? CultureInfo.GetCultureInfo(FallbackCultureName);
+            var formatter = (NumberFormatInfo) NumberFormatInfo.GetInstance(culture).Clone();
             formatter.NumberDecimalDigits = maxDecimals;
-            return new LocValueString(string.Format(formatter, "{0:N}", number).TrimEnd('0').TrimEnd(char.Parse(formatter.NumberDecimalSeparator)));
+            return new LocValueString(string.Format(formatter, "{0:N}", number).TrimEnd('0')
+                .TrimEnd(char.Parse(formatter.NumberDecimalSeparator)));
         }
 
         private static readonly Regex PluralEsRule = new("^.*(s|sh|ch|x|z)$");
@@ -98,13 +186,11 @@ namespace Content.Shared.Localizations
                 else
                     return new LocValueString($"{firstWord}es {split[1]}");
             }
+
+            if (split.Length == 1)
+                return new LocValueString($"{firstWord}s");
             else
-            {
-                if (split.Length == 1)
-                    return new LocValueString($"{firstWord}s");
-                else
-                    return new LocValueString($"{firstWord}s {split[1]}");
-            }
+                return new LocValueString($"{firstWord}s {split[1]}");
         }
 
         // TODO: allow fluent to take in lists of strings so this can be a format function like it should be.
@@ -150,7 +236,7 @@ namespace Content.Shared.Localizations
         public static string FormatPlaytime(TimeSpan time)
         {
             time = TimeSpan.FromMinutes(Math.Ceiling(time.TotalMinutes));
-            var hours = (int)time.TotalHours;
+            var hours = (int) time.TotalHours;
             var minutes = time.Minutes;
             return Loc.GetString($"zzzz-fmt-playtime", ("hours", hours), ("minutes", minutes));
         }
@@ -264,6 +350,7 @@ namespace Content.Shared.Localizations
             {
                 time = timeArg;
             }
+
             return new LocValueString(FormatPlaytime(time));
         }
     }

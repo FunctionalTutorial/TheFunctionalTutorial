@@ -1,4 +1,3 @@
-using Content.Server.Chat.Managers;
 using Content.Server.Chat.Systems;
 using Content.Server.GameTicking;
 using Content.Server.Radio;
@@ -16,7 +15,6 @@ namespace Content.Server._Functional.TutorialServer;
 /// </summary>
 public sealed class TutorialChatIsolationSystem : EntitySystem
 {
-    [Dependency] private readonly IChatManager _chat = default!;
     [Dependency] private readonly IConfigurationManager _cfg = default!;
 
     public override void Initialize()
@@ -57,7 +55,7 @@ public sealed class TutorialChatIsolationSystem : EntitySystem
         var loc = args.Type == InGameOOCChatType.Dead
             ? "tutorial-server-dead-chat-disabled"
             : "tutorial-server-looc-disabled";
-        _chat.DispatchServerMessage(args.Session, Loc.GetString(loc), suppressLog: true);
+        RaiseNetworkEvent(new TutorialTipChatEvent { LocId = loc }, args.Session.Channel);
     }
 
     private void OnRunLevelChanged(GameRunLevelChangedEvent ev)

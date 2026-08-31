@@ -19,6 +19,14 @@ ui-options-value-percent = { TOSTRING($value, "P0") }
 
 ui-options-discordrich = Enable Discord Rich Presence
 ui-options-general-ui-style = UI Style
+ui-options-language = Language: #Tutorial
+ui-options-language-en-us = English #Tutorial
+ui-options-language-de-de = Deutsch #Tutorial
+ui-options-language-es-es = Español #Tutorial
+ui-options-language-fr-fr = Français #Tutorial
+ui-options-language-pt-br = Português (Brasil) #Tutorial
+ui-options-language-ru-ru = Русский #Tutorial
+ui-options-language-uk-ua = Українська #Tutorial
 ui-options-general-discord = Discord
 ui-options-general-cursor = Cursor
 ui-options-general-speech = Speech

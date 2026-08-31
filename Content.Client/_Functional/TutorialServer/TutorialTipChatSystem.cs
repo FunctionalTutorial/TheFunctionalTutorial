@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 namespace Content.Client._Functional.TutorialServer;
 
 /// <summary>
-/// Receives tutorial tip markup from the server, resolves keybind tags, and posts to chat.
+/// Receives tutorial tip LocIds from the server, resolves against the client culture, and posts to chat.
 /// </summary>
 public sealed class TutorialTipChatSystem : EntitySystem
 {
@@ -21,12 +21,19 @@ public sealed class TutorialTipChatSystem : EntitySystem
 
     private void OnTipChat(TutorialTipChatEvent ev)
     {
-        if (string.IsNullOrWhiteSpace(ev.Markup))
+        if (string.IsNullOrWhiteSpace(ev.LocId))
+            return;
+
+        var markup = string.IsNullOrEmpty(ev.TextArgLocId)
+            ? Loc.GetString(ev.LocId)
+            : Loc.GetString(ev.LocId, ("text", TutorialLoc.Get(ev.TextArgLocId)));
+
+        if (string.IsNullOrWhiteSpace(markup))
             return;
 
         // Reparsed rather than passed through, so a malformed tag reaches the chat box as text
         // instead of throwing inside its markup parser.
-        var parsed = FormattedMessage.FromMarkupPermissive(ev.Markup);
+        var parsed = FormattedMessage.FromMarkupPermissive(markup);
 
         // Plain text for filters and highlights; markup for the line that gets drawn, because a
         // stripped [keybind] leaves a hole where the key should be.

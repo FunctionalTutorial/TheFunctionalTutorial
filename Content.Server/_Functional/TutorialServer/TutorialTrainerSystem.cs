@@ -1,13 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
-using Content.Server.Chat.Systems;
 using Content.Shared.Chat.TypingIndicator;
 using Content.Shared._Functional.TutorialServer;
-using Content.Shared.Chat;
 using Content.Shared.Interaction;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Content.Server._Functional.TutorialServer;
 
@@ -19,7 +17,6 @@ namespace Content.Server._Functional.TutorialServer;
 public sealed class TutorialTrainerSystem : EntitySystem
 {
     [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly ChatSystem _chat = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly TutorialServerRuleSystem _tutorial = default!;
@@ -359,7 +356,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
         if (trainer.NextInterjectionAt is { } ready && now < ready)
             return;
 
-        var text = Loc.GetString(line);
+        var text = line;
         if (string.IsNullOrWhiteSpace(text))
             return;
 
@@ -460,7 +457,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
     }
 
     /// <summary>
-    /// Guide / mentor shared speak helper. Always speaks IC (speech bubble).
+    /// Guide / mentor shared speak helper. Delivers a client-local coach line in the player's language.
     /// Keybind markup is stripped for the spoken line; resolved binds stay available via
     /// stuck-hint tip chat / the guide UI, not a duplicate grey progress toast.
     /// </summary>
@@ -468,22 +465,24 @@ public sealed class TutorialTrainerSystem : EntitySystem
         EntityUid speakerUid,
         EntityUid playerUid,
         string subGoalId,
-        string dialogue,
+        string dialogueLocId,
         Action<string>? markSpoken)
     {
-        // playerUid reserved for future per-player coach delivery (e.g. whisper range).
-        _ = playerUid;
-
-        var spoken = FormattedMessage.RemoveMarkupPermissive(dialogue);
-        if (!string.IsNullOrWhiteSpace(spoken))
+        if (!TryComp<ActorComponent>(playerUid, out var actor))
         {
-            _chat.TrySendInGameICMessage(
-                speakerUid,
-                spoken,
-                InGameICChatType.Speak,
-                hideChat: false,
-                hideLog: true,
-                ignoreActionBlocker: true);
+            markSpoken?.Invoke(subGoalId);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(dialogueLocId))
+        {
+            RaiseNetworkEvent(
+                new TutorialCoachSpeechEvent
+                {
+                    Speaker = GetNetEntity(speakerUid),
+                    LocId = dialogueLocId,
+                },
+                actor.PlayerSession.Channel);
         }
 
         markSpoken?.Invoke(subGoalId);
@@ -512,7 +511,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
             if (!string.Equals(line.SubGoalId, subGoalId, StringComparison.Ordinal))
                 continue;
 
-            var text = Loc.GetString(line.Dialogue);
+            var text = line.Dialogue;
             if (!string.IsNullOrWhiteSpace(text))
                 lines.Add(new TutorialPendingLine(text, line.ShowControlHint, line.AfterComplete));
         }

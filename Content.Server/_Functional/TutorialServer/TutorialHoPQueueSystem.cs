@@ -1,8 +1,7 @@
-using Content.Server.Chat.Systems;
 using Content.Shared._Functional.TutorialServer;
-using Content.Shared.Chat;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
+using Robust.Shared.Player;
 
 namespace Content.Server._Functional.TutorialServer;
 
@@ -11,7 +10,6 @@ namespace Content.Server._Functional.TutorialServer;
 /// </summary>
 public sealed class TutorialHoPQueueSystem : EntitySystem
 {
-    [Dependency] private readonly ChatSystem _chat = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly TutorialServerRuleSystem _tutorial = default!;
 
@@ -45,19 +43,28 @@ public sealed class TutorialHoPQueueSystem : EntitySystem
                 if (!string.Equals(sub.Id, visitor.ActivateOnSubGoal, StringComparison.Ordinal))
                     continue;
 
-                ActivateVisitor(visitorUid, visitor);
+                ActivateVisitor(visitorUid, visitor, playerUid);
                 break;
             }
         }
     }
 
-    private void ActivateVisitor(EntityUid visitorUid, TutorialHoPVisitorComponent visitor)
+    private void ActivateVisitor(EntityUid visitorUid, TutorialHoPVisitorComponent visitor, EntityUid playerUid)
     {
         visitor.Activated = true;
         Dirty(visitorUid, visitor);
 
-        var message = Loc.GetString(visitor.Dialogue);
-        _chat.TrySendInGameICMessage(visitorUid, message, InGameICChatType.Speak, hideChat: false, hideLog: true);
+        if (!string.IsNullOrWhiteSpace(visitor.Dialogue) &&
+            TryComp<ActorComponent>(playerUid, out var actor))
+        {
+            RaiseNetworkEvent(
+                new TutorialCoachSpeechEvent
+                {
+                    Speaker = GetNetEntity(visitorUid),
+                    LocId = visitor.Dialogue,
+                },
+                actor.PlayerSession.Channel);
+        }
 
         var dropCoords = _transform.GetMoverCoordinates(visitorUid).Offset(visitor.DeskDropOffset);
         Spawn(visitor.IdCardProto, dropCoords);

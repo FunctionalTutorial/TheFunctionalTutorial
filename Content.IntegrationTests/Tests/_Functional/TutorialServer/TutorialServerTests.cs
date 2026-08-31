@@ -1184,8 +1184,8 @@ public sealed class TutorialServerTests : GameTest
             var serverSpecific = entries.Where(e => e.Category == "Server specific").ToList();
             Assert.That(serverSpecific, Is.Not.Empty);
             Assert.That(serverSpecific.Select(e => e.SubCategory), Is.EquivalentTo(new[] { "BPL14", "Starlight", "Starlight", "Starlight" }));
-            Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialSurgeryCyberMed").DisplayName, Is.EqualTo("Surgery"));
-            Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialSurgeryStarlight").DisplayName, Is.EqualTo("Surgery"));
+            Assert.That(Loc.GetString(serverSpecific.Single(e => e.RoleId == "TutorialSurgeryCyberMed").DisplayName), Is.EqualTo("Surgery"));
+            Assert.That(Loc.GetString(serverSpecific.Single(e => e.RoleId == "TutorialSurgeryStarlight").DisplayName), Is.EqualTo("Surgery"));
             Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialAntagVampire").SubCategory, Is.EqualTo("Starlight"));
             Assert.That(serverSpecific.Single(e => e.RoleId == "TutorialAntagChangeling").SubCategory, Is.EqualTo("Starlight"));
         });
@@ -1287,19 +1287,19 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(traitor.Antag, Is.EqualTo(new ProtoId<AntagPrototype>("Traitor")));
             Assert.That(string.IsNullOrEmpty(traitor.Name), Is.True);
 
-            var antagName = Loc.GetString(proto.Index(traitor.Antag.Value).Name);
-            var jobName = proto.Index(traitor.Job.Value).LocalizedName;
-            Assert.That(antagName, Is.Not.EqualTo(jobName));
+            var antagLocId = proto.Index(traitor.Antag.Value).Name;
+            var jobLocId = proto.Index(traitor.Job.Value).Name;
+            Assert.That(Loc.GetString(antagLocId), Is.Not.EqualTo(Loc.GetString(jobLocId)));
 
-            Assert.That(tutorial.GetRoleDisplayName(traitor), Is.EqualTo(antagName));
-            Assert.That(tutorial.GetRoleDisplayName(traitor), Is.Not.EqualTo(jobName));
+            Assert.That(tutorial.GetRoleDisplayName(traitor), Is.EqualTo(antagLocId));
+            Assert.That(tutorial.GetRoleDisplayName(traitor), Is.Not.EqualTo(jobLocId));
 
             var passenger = proto.Index<TutorialRolePrototype>("TutorialPassenger");
-            Assert.That(tutorial.GetRoleDisplayName(passenger), Is.EqualTo(Loc.GetString(passenger.Name)));
+            Assert.That(tutorial.GetRoleDisplayName(passenger), Is.EqualTo(passenger.Name));
 
             var bartender = proto.Index<TutorialRolePrototype>("TutorialBartender");
             Assert.That(tutorial.GetRoleDisplayName(bartender),
-                Is.EqualTo(proto.Index(bartender.Job!.Value).LocalizedName));
+                Is.EqualTo(proto.Index(bartender.Job!.Value).Name));
         });
     }
 
@@ -6006,7 +6006,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(live.AwaitingChamberEntryPad, Is.True, "Spacing should require the purple chamber pad");
             Assert.That(entMan.TryGetComponent<TutorialParticipantComponent>(mob, out var part));
             Assert.That(part!.StepComplete, Is.EqualTo(TutorialStepComplete.ReachMarker));
-            Assert.That(part.StepText, Does.Contain("purple").IgnoreCase);
+            Assert.That(Loc.GetString(part.StepText), Does.Contain("purple").IgnoreCase);
 
             var mobMap = entMan.GetComponent<TransformComponent>(mob).MapUid;
             var foundPad = false;

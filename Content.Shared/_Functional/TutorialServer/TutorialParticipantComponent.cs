@@ -18,6 +18,9 @@ public sealed partial class TutorialParticipantComponent : Component
     [DataField, AutoNetworkedField]
     public int GoalCount;
 
+    /// <summary>
+    /// Locale id for the current goal title (resolved on the client).
+    /// </summary>
     [DataField, AutoNetworkedField]
     public string GoalTitle = string.Empty;
 
@@ -28,7 +31,7 @@ public sealed partial class TutorialParticipantComponent : Component
     public int SubGoalCount;
 
     /// <summary>
-    /// Current sub-goal prompt (localized).
+    /// Locale id for the current sub-goal prompt (resolved on the client).
     /// </summary>
     [DataField, AutoNetworkedField]
     public string StepText = string.Empty;
@@ -37,13 +40,13 @@ public sealed partial class TutorialParticipantComponent : Component
     public TutorialStepComplete StepComplete = TutorialStepComplete.Acknowledge;
 
     /// <summary>
-    /// Resolved hint for the live tip (empty when unset).
+    /// Locale id for the live tip hint (empty when unset; resolved on the client).
     /// </summary>
     [DataField, AutoNetworkedField]
     public string HintText = string.Empty;
 
     /// <summary>
-    /// Resolved stuck hint for the live tip (empty when unset).
+    /// Locale id for the stuck hint (empty when unset; resolved on the client).
     /// </summary>
     [DataField, AutoNetworkedField]
     public string StuckHintText = string.Empty;
@@ -67,6 +70,7 @@ public sealed partial class TutorialParticipantComponent : Component
 [DataDefinition, Serializable, NetSerializable]
 public sealed partial class TutorialHudSubGoalState
 {
+    /// <summary>Locale id for checklist line text (resolved on the client).</summary>
     [DataField]
     public string Text = string.Empty;
 

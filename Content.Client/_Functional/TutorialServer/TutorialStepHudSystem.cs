@@ -8,8 +8,7 @@ namespace Content.Client._Functional.TutorialServer;
 
 /// <summary>
 /// Owns the on-screen control-hint banner — the tutorial's only popup surface.
-/// The server pushes one short markup line per sub-goal; keybind tags in it resolve here against
-/// the local player's bindings, so the hint always names the key they actually have bound.
+/// The server pushes one LocId per sub-goal; the client resolves culture and keybind tags.
 /// </summary>
 public sealed class TutorialStepHudSystem : EntitySystem
 {
@@ -44,7 +43,7 @@ public sealed class TutorialStepHudSystem : EntitySystem
             return;
         }
 
-        EnsureHint().SetHint(ev.Markup);
+        EnsureHint().SetHint(TutorialLoc.Get(ev.LocId));
     }
 
     private void OnLocalPlayerDetached(EntityUid uid)

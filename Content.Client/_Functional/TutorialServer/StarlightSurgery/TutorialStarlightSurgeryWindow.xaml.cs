@@ -7,5 +7,11 @@ namespace Content.Client._Functional.TutorialServer.StarlightSurgery;
 [GenerateTypedNameReferences]
 public sealed partial class TutorialStarlightSurgeryWindow : DefaultWindow
 {
-    public TutorialStarlightSurgeryWindow() => RobustXamlLoader.Load(this);
+    public TutorialStarlightSurgeryWindow()
+    {
+        RobustXamlLoader.Load(this);
+        PartsButton.Text = Loc.GetString("tutorial-starlight-surgery-back-parts");
+        SurgeriesButton.Text = Loc.GetString("tutorial-starlight-surgery-back-surgeries");
+        StepsButton.Text = Loc.GetString("tutorial-starlight-surgery-back-steps");
+    }
 }

@@ -1,0 +1,1025 @@
+# Deep multi-goal tutorial role locale strings (Functional Tutorial Server)
+
+# Chef
+tutorial-job-chef-goal-welcome = Bienvenue en cuisine
+tutorial-job-chef-goal-tools = Matériel et outils
+tutorial-job-chef-goal-burger = Cuisiner un burger nature
+tutorial-job-chef-goal-cake = Faire un gâteau
+tutorial-job-chef-goal-finish = Tutoriel terminé
+tutorial-job-chef-sg-intro = Vous êtes le chef. Votre travail consiste à cuisiner de la nourriture pour l'équipage. Cette cuisine d'entraînement comprend une machine ChefVend, Dinnerware, un micro-ondes et des ingrédients.
+tutorial-job-chef-sg-look = Marchez jusqu'au marqueur lumineux pour connaître la disposition de votre cuisine.
+tutorial-job-chef-sg-knife = Prenez un couteau de cuisine (au comptoir ou chez un vendeur Dinnerware) et tenez-le.
+tutorial-job-chef-sg-eggs = Prenez un œuf dans la boîte à œufs ou ChefVend et tenez-le.
+tutorial-job-chef-sg-dinnerware = Cliquez sur la machine Dinnerware ou ChefVend pour l'ouvrir. Réapprovisionnez-les lorsque vous en manquez.
+tutorial-job-chef-sg-meat = Prenez une tranche de viande crue sur le comptoir ou le congélateur.
+tutorial-job-chef-sg-bun = Prenez un pain à hamburger.
+tutorial-job-chef-sg-microwave = Mettez le pain et la viande au micro-ondes, puis démarrez-le. Interagissez avec le micro-ondes lorsque vous êtes prêt.
+tutorial-job-chef-sg-burger = Une fois la cuisson terminée, prenez le burger nature et tenez-le.
+tutorial-job-chef-sg-batter = Récupérez la pâte à gâteau sur le comptoir (dans une vraie cuisine, vous mélangez la farine, les œufs, le sucre, le beurre et le lait).
+tutorial-job-chef-sg-bake = Mettez la pâte au micro-ondes et faites-en un gâteau.
+tutorial-job-chef-sg-cake = Tenez le gâteau nature fini.
+tutorial-job-chef-sg-done = Tutoriel de chef terminé. Les vendeurs réapprovisionnent vos bases - utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Traitor
+tutorial-antag-traitor-goal-welcome = Bienvenue, agent
+tutorial-antag-traitor-goal-objectives = Connaissez vos objectifs
+tutorial-antag-traitor-goal-gear = Équipement d'entraînement du syndicat
+tutorial-antag-traitor-goal-finish = Tutoriel terminé
+tutorial-antag-traitor-sg-intro = Vous vous entraînez au rôle de traître. Ouvrez le menu Personnage pour voir des exemples d'objectifs. Rien de tout ceci ne se déroule dans une vraie partie : expérimentez sans risque.
+tutorial-antag-traitor-sg-objectives = Passez en revue les objectifs de l'espace réservé dans votre menu Personnage. Ils montrent à quoi ressemblent les objectifs de tuer, de voler et de s'échapper.
+tutorial-antag-traitor-sg-radio = Prenez la radio portative. Les traîtres ont souvent besoin d’une coordination discrète.
+tutorial-antag-traitor-sg-hold-intel = Ramassez la cible de vol d'entraînement (faux disque nucléaire).
+tutorial-antag-traitor-sg-stow-intel = Rangez la cible volée dans une poche ou un sac (ne la tenez pas dans vos mains).
+tutorial-antag-traitor-sg-emag = Prenez le séquenceur cryptographique (emag). Dans une vraie partie, il permet d'ouvrir de nombreux dispositifs sécurisés.
+tutorial-antag-traitor-sg-emag-door = Utilisez l'emag sur le sas d'entraînement (cliquez sur la porte tout en la maintenant).
+tutorial-antag-traitor-sg-flash = Prenez le flash - les outils paralysants gagnent du temps avant les contentions.
+tutorial-antag-traitor-sg-use-flash = Utilisez le flash en main avec Z (par défaut) pour connaître le moment de l'étourdissement avant de passer les menottes.
+tutorial-antag-traitor-sg-cuffs = Ramassez les menottes.
+tutorial-antag-traitor-sg-cuff = Menottez le mannequin d'entraînement.
+tutorial-antag-traitor-sg-pda = Prenez votre PDA – la uplink se trouve ici.
+tutorial-antag-traitor-sg-uplink-open = Ouvrez votre PDA et utilisez le magasin de uplink (déjà débloqué pour ce tutoriel). Cliquez sur moi pour continuer.
+tutorial-antag-traitor-sg-uplink-buy = Achetez n’importe quelle liste de uplink bon marché (dépensez Telecrystal). L'achat complète cette étape.
+tutorial-antag-traitor-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-antag-traitor-sg-done = Tutoriel sur les traîtres terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Passenger / Assistant - general mechanics
+tutorial-job-passenger-name = Passager / Assistant (Bases)
+tutorial-job-passenger-goal-welcome = Bienvenue à bord
+tutorial-job-passenger-goal-approach = Trouver le marqueur
+tutorial-job-passenger-goal-move = Se déplacer
+tutorial-job-passenger-goal-pickup = Ramasser les choses
+tutorial-job-passenger-goal-inventory = Inventaire de base
+tutorial-job-passenger-goal-drink = Boire
+tutorial-job-passenger-goal-crowbar = Portes à pied de biche
+tutorial-job-passenger-goal-finish = Tutoriel terminé
+tutorial-job-passenger-sg-meet-trainer = Bienvenue à bord ! Utilisez WASD (par défaut) pour marcher jusqu'au X violet.
+tutorial-job-passenger-hint-meet-trainer = Utilisez WASD (par défaut) pour marcher sur le X violet à côté de l’entraîneur.
+tutorial-job-passenger-stuck-meet-trainer = Tenez-vous sur le X violet brillant à côté de l’entraîneur jusqu’à ce que l’étape soit terminée.
+tutorial-job-passenger-sg-walk = Bienvenue à bord ! Utilisez WASD (par défaut) pour marcher jusqu'au X violet.
+tutorial-job-passenger-hint-walk = Utilisez WASD (par défaut) pour marcher sur le X violet.
+tutorial-job-passenger-stuck-walk = Le X violet est un marqueur lumineux au sol à l’extrémité de cette pièce. Tenez-vous dessus jusqu'à ce que l'étape soit terminée.
+tutorial-job-passenger-sg-crowbar = Faites un clic gauche sur un pied de biche sur le sol pour le ramasser dans votre main vide.
+tutorial-job-passenger-hint-crowbar = Placez-vous à côté d’un pied-de-biche et faites un clic gauche dessus avec une main vide.
+tutorial-job-passenger-stuck-crowbar = Le pied-de-biche est sur le sol près de l'entraîneur. Gardez une main vide, puis cliquez avec le bouton gauche sur le pied-de-biche.
+tutorial-job-passenger-sg-drop-crowbar = Sympa. Maintenant, déposez-le sur le sol en utilisant Q (par défaut).
+tutorial-job-passenger-hint-drop-crowbar = Appuyez sur Q (par défaut) tout en tenant le pied-de-biche pour qu'il atterrisse sur le sol.
+tutorial-job-passenger-stuck-drop-crowbar = Vous devez laisser tomber le pied-de-biche dans le monde – pas dans une poche ou un sac. Appuyez sur Q (par défaut) pendant qu'il est dans votre main.
+tutorial-job-passenger-sg-flashlight = Prenez ensuite la lampe de poche.
+tutorial-job-passenger-hint-flashlight = Faites un clic gauche sur une lampe de poche près de l’entraîneur pour la tenir.
+tutorial-job-passenger-stuck-flashlight = La lampe de poche est posée sur le sol près du formateur. Cliquez dessus dans une main vide.
+tutorial-job-passenger-sg-stow = Mettez la lampe de poche dans votre sac à dos, votre cartable ou une poche (ouvrez l'inventaire / cliquez sur un emplacement de stockage). Il doit quitter vos mains.
+tutorial-job-passenger-hint-stow = Ouvrez votre inventaire et déplacez la lampe de poche dans une poche ou un sac.
+tutorial-job-passenger-stuck-stow = La lampe de poche doit quitter vos mains - placez-la dans une poche ou dans un emplacement de sac à dos.
+tutorial-job-passenger-sg-unpocket = Remettez une lampe de poche dans votre main.
+tutorial-job-passenger-sg-use-flashlight = Appuyez sur Z (par défaut) pour activer la lampe de poche et l'allumer ou l'éteindre.
+tutorial-job-passenger-hint-use-flashlight = Avec la lampe de poche dans votre main, appuyez sur Z (par défaut) pour l'activer.
+tutorial-job-passenger-stuck-use-flashlight = Tenez une lampe de poche, puis appuyez sur Z (par défaut) pour activer la lumière.
+tutorial-job-passenger-sg-hold-water = Prenez une bouteille d'eau.
+tutorial-job-passenger-hint-hold-water = Faites un clic gauche sur la bouteille d’eau sur le sol pour la maintenir.
+tutorial-job-passenger-stuck-hold-water = La bouteille d'eau est par terre dans cette pièce. Cliquez dessus dans une main vide.
+tutorial-job-passenger-sg-drink-water = Appuyez deux fois sur Z (par défaut) tout en tenant la bouteille d'eau : une fois pour l'ouvrir, une fois pour commencer à boire.
+tutorial-job-passenger-hint-drink-water = Appuyez deux fois sur Z (par défaut) : ouvrez, puis buvez.
+tutorial-job-passenger-stuck-drink-water = Tenez la bouteille et appuyez une fois sur Z (par défaut) pour l'ouvrir, puis à nouveau pour boire.
+tutorial-job-passenger-sg-crowbar-ready = Reprenez le pied-de-biche et tenez-le.
+tutorial-job-passenger-hint-crowbar-ready = Cliquez avec le bouton gauche sur le pied de biche que vous avez laissé tomber plus tôt.
+tutorial-job-passenger-stuck-crowbar-ready = Le pied-de-biche devrait toujours être sur le sol dans cette pièce. Ramassez-le dans une main vide.
+tutorial-job-passenger-sg-pry = Avec le pied-de-biche en main, cliquez sur le sas de maintenance non motorisé dans le mur est pour l'ouvrir et sortir.
+tutorial-job-passenger-hint-pry = Cliquez sur le sas de maintenance fermé tout en tenant le pied-de-biche.
+tutorial-job-passenger-stuck-pry = La sortie est le sas de maintenance sur le mur est entre les pièces. Il n'a aucun pouvoir - il s'ouvre avec un pied de biche.
+tutorial-job-passenger-sg-done = Bases terminées. Vous savez vous déplacer, ramasser et ranger des objets, boire et forcer une porte. Utilisez l'action Choisir un tutoriel (symbole dollar à gauche de la fenêtre de jeu) pour essayer le tutoriel d'un métier.
+
+# Passenger trainer speech (IC / tip chat)
+tutorial-passenger-trainer-meet = Bienvenue à bord ! Utilisez WASD (par défaut) pour marcher jusqu'au X violet.
+tutorial-passenger-trainer-pick = Bien. Faites un clic gauche sur ce pied de biche pour le récupérer.
+tutorial-passenger-trainer-drop = Sympa. Maintenant, déposez-le sur le sol en utilisant Q (par défaut).
+tutorial-passenger-trainer-hold-light = Prenez ensuite la lampe de poche.
+tutorial-passenger-trainer-use-light = Appuyez sur Z (par défaut) pour activer la lampe de poche et l'allumer ou l'éteindre.
+tutorial-passenger-trainer-stow-light = Rangez la lampe de poche dans une poche ou dans votre sac - elle ne doit plus être entre vos mains.
+tutorial-passenger-trainer-hold-water = Prenez ensuite cette bouteille d’eau.
+tutorial-passenger-trainer-drink-water = Appuyez deux fois sur Z (par défaut) : une fois pour ouvrir la bouteille, une fois pour boire.
+tutorial-passenger-trainer-crowbar-ready = Reprenez le pied-de-biche. Vous allez ouvrir la porte principale est.
+tutorial-passenger-trainer-pry = Mettez un pied-de-biche dans le sas de maintenance non alimenté dans le mur est pour sortir.
+
+# Bartender
+tutorial-job-bartender-goal-welcome = Bienvenue au bar
+tutorial-job-bartender-goal-stock = Stock et verrerie
+tutorial-job-bartender-goal-mix = Pratique du shaker
+tutorial-job-bartender-goal-floor = Connaissez votre sol
+tutorial-job-bartender-goal-finish = Tutoriel terminé
+tutorial-job-bartender-sg-intro = Vous êtes le barman. Vous remplissez le bar, mélangez les boissons et empêchez les clients de détruire l'endroit.
+tutorial-job-bartender-sg-vend = Cliquez sur Booze-O-Mat (distributeur automatique tutoriel) pour l'ouvrir.
+tutorial-job-bartender-sg-glass = Prenez un verre à boire.
+tutorial-job-bartender-sg-shaker = Prenez le shaker.
+tutorial-job-bartender-sg-beer = Procurez-vous une bouteille de bière au stock d’entraînement.
+tutorial-job-bartender-sg-vodka = Prenez une bouteille de vodka.
+tutorial-job-bartender-sg-orange = Récupérez le carton de jus d'orange.
+tutorial-job-bartender-sg-screwdriver = Mélangez un Tournevis (vodka + jus d'orange) dans le shaker - secouez jusqu'à ce que le cocktail se forme.
+tutorial-job-bartender-sg-exits-tip = Connaissez vos sorties et gardez le fusil de chasse uniquement en cas d'urgence - ne le dirigez jamais vers des clients au hasard.
+tutorial-job-bartender-sg-walk = Marchez jusqu'au marqueur derrière le bar.
+tutorial-job-bartender-sg-done = Tutoriel de barman terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Botanist
+tutorial-job-botanist-goal-welcome = Bienvenue dans la culture hydroponique
+tutorial-job-botanist-goal-seeds = MegaSeed Servitor
+tutorial-job-botanist-goal-harvest = Produire un transfert
+tutorial-job-botanist-goal-floor = Connaissez votre sol
+tutorial-job-botanist-goal-finish = Tutoriel terminé
+tutorial-job-botanist-sg-intro = Vous êtes botaniste. Cultivez des plantes pour l’alimentation, la médecine et la chimie.
+tutorial-job-botanist-sg-megaseed = Cliquez sur MegaSeed Servitor pour ouvrir son menu de vente.
+tutorial-job-botanist-hint-megaseed = Le MegaSeed Servitor est le vendeur de graines dans cette pièce. Cliquez dessus pour ouvrir l'interface utilisateur.
+tutorial-job-botanist-stuck-megaseed = Cherchez le MegaSeed Servitor (distributeur automatique de graines). Faites un clic gauche dessus pour ouvrir le menu.
+tutorial-job-botanist-sg-seeds = Distribuez les graines de blé du MegaSeed Servitor, puis tenez le sachet.
+tutorial-job-botanist-hint-seeds = Dans le menu MegaSeed, choisissez Graines de blé, puis tenez le paquet dans votre main.
+tutorial-job-botanist-stuck-seeds = Ouvrez le MegaSeed Servitor, vendez des graines de blé et cliquez sur le paquet dans une main vide.
+tutorial-job-botanist-sg-apple = Ramassez une pomme (échantillon de produit).
+tutorial-job-botanist-sg-potato = Ramassez une pomme de terre.
+tutorial-job-botanist-sg-bucket = Prenez un seau pour arroser.
+tutorial-job-botanist-sg-get-wheat = Prenez une botte de blé. Pendant un vrai service, livrez les récoltes au chef ou au chimiste.
+tutorial-job-botanist-sg-handoff-tip = Les boucles Robust Harvest et chem-chef comptent plus tard - les botanistes nourrissent Chef et Chemist. Cliquez sur moi pour continuer.
+tutorial-job-botanist-sg-walk = Marchez jusqu'au marqueur de culture hydroponique.
+tutorial-job-botanist-sg-done = Tutoriel de botanique terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Chaplain
+tutorial-job-chaplain-goal-welcome = Bienvenue à la chapelle
+tutorial-job-chaplain-goal-sacred = Outils sacrés
+tutorial-job-chaplain-goal-floor = Sol de la chapelle
+tutorial-job-chaplain-goal-finish = Tutoriel terminé
+tutorial-job-chaplain-sg-intro = Vous êtes l'aumônier. Soutenez le moral de l’équipage, organisez des services et gardez la chapelle.
+tutorial-job-chaplain-sg-bible = Procurez-vous la Bible de pratique.
+tutorial-job-chaplain-sg-heal = Utilisez la Bible sur le paroissien d'entraînement (cliquez dessus tout en la tenant) jusqu'à ce qu'il récupère.
+tutorial-job-chaplain-sg-smite-tip = La Bible peut également frapper comme une arme de mêlée – utilisez la force sacrée avec précaution. Cliquez sur moi pour continuer.
+tutorial-job-chaplain-sg-book = Prenez un livre sur l’étagère de pratique.
+tutorial-job-chaplain-sg-walk = Marchez jusqu'au marqueur de la chapelle.
+tutorial-job-chaplain-sg-wine = Récupérez la bouteille de vin de Cahors NanoTrasen.
+tutorial-job-chaplain-sg-done = Tutoriel d'aumônier terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Clown
+tutorial-job-clown-goal-welcome = Bienvenue, clown
+tutorial-job-clown-goal-honk = Les bases du klaxon
+tutorial-job-clown-goal-pranks = Farces et accessoires
+tutorial-job-clown-goal-finish = Tutoriel terminé
+tutorial-job-clown-sg-intro = Vous êtes le Clown. Divertissez l’équipage – restez drôle, pas triste.
+tutorial-job-clown-sg-conduct = Divertissez l'équipage - ne vous inquiétez jamais des farces mortelles ou du sabotage. Cliquez sur moi pour continuer.
+tutorial-job-clown-sg-horn = Prenez le klaxon du vélo.
+tutorial-job-clown-sg-use-horn = Utilisez le klaxon de vélo dans la main avec Z (par défaut) pour HONK.
+tutorial-job-clown-sg-pie = Prenez la tarte à la crème de banane.
+tutorial-job-clown-sg-pie-dummy = Lancez la tarte à la crème sur le mannequin d'entraînement (visez et lancez).
+tutorial-job-clown-sg-soap = Ramassez le savon.
+tutorial-job-clown-sg-slip-dummy = Utilisez le savon (ou une peau de banane) sur le public d'entraînement pour les faire glisser - comédie uniquement, jamais pièges mortels en médecine/anglais.
+tutorial-job-clown-sg-walk = Marchez jusqu'au marqueur de clown.
+tutorial-job-clown-sg-done = Tutoriel de clown terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Janitor
+tutorial-job-janitor-goal-welcome = Bienvenue, concierge
+tutorial-job-janitor-goal-kit = Kit de nettoyage
+tutorial-job-janitor-goal-mop = Éponger le déversement
+tutorial-job-janitor-goal-clean = Fournitures et sol
+tutorial-job-janitor-goal-finish = Tutoriel terminé
+tutorial-job-janitor-sg-intro = Vous êtes le concierge. Nettoyez les déversements, remplacez les lumières et gardez la station en sécurité sous vos pieds.
+tutorial-job-janitor-sg-mop = Prenez une vadrouille et tenez-la.
+tutorial-job-janitor-sg-bucket = Prenez un seau.
+tutorial-job-janitor-sg-galoshes = Ramassez les galoches (tenez-les - ne vous contentez pas encore de les équiper).
+tutorial-job-janitor-sg-clear-puddle = Mouillez la vadrouille (seau/réservoir d'eau) et essuyez la flaque de sang jusqu'à ce qu'elle disparaisse.
+tutorial-job-janitor-sg-drain = Videz l'eau sale au niveau du siphon de sol (cliquez sur le siphon).
+tutorial-job-janitor-sg-spray = Prenez le spray nettoyant pour espace.
+tutorial-job-janitor-sg-potassium-tip = Ne mélangez jamais de nettoyant pour espaces avec du potassium – il peut exploser. Cliquez sur moi pour continuer.
+tutorial-job-janitor-sg-trash-bag = Ramassez un sac poubelle pour les courses de déchets.
+tutorial-job-janitor-sg-soap = Ramassez le savon.
+tutorial-job-janitor-sg-walk = Marchez jusqu’au marqueur de nettoyage.
+tutorial-job-janitor-sg-done = Tutoriel de concierge terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Mime
+tutorial-job-mime-goal-welcome = Bienvenue, mime
+tutorial-job-mime-goal-vows = Vœux de mime
+tutorial-job-mime-goal-art = Outils silencieux
+tutorial-job-mime-goal-finish = Tutoriel terminé
+tutorial-job-mime-sg-intro = Vous êtes le Mime. Divertissez par le silence et le geste.
+tutorial-job-mime-sg-silence = Vœu de silence : ne parlez pas à la radio ou sur un chat local pendant que vous jouez à Mime. Cliquez sur moi pour continuer.
+tutorial-job-mime-sg-pen = Prenez un stylo : les mimes écrivent lorsqu’ils ne peuvent pas parler.
+tutorial-job-mime-sg-wall = Faites face au sol dégagé et utilisez votre action Mur invisible (menu Actions). Utilisez les murs pour les morceaux, pas les couloirs ennuyants.
+tutorial-job-mime-sg-crayon = Prenez le crayon mime.
+tutorial-job-mime-sg-use-crayon = Utilisez le crayon mime en main avec Z (par défaut) pour commencer à dessiner.
+tutorial-job-mime-sg-paper = Prenez une feuille de papier.
+tutorial-job-mime-sg-walk = Marchez silencieusement jusqu'au marqueur mime.
+tutorial-job-mime-sg-done = Tutoriel Mime terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Cargo Technician
+tutorial-job-cargo-technician-goal-welcome = Bienvenue dans le fret
+tutorial-job-cargo-technician-goal-order = Commandez et confirmez
+tutorial-job-cargo-technician-goal-haul = Transporter une caisse à bord
+tutorial-job-cargo-technician-goal-board = Montez à bord de la navette
+tutorial-job-cargo-technician-goal-pilot = Prenez la barre
+tutorial-job-cargo-technician-goal-undock-bay = Quittez la soute
+tutorial-job-cargo-technician-goal-fly-ats = Envolez-vous vers la station commerciale
+tutorial-job-cargo-technician-goal-dock-ats = Amarrez-vous à l'ATS
+tutorial-job-cargo-technician-goal-sell = Vendez ce que vous avez apporté
+tutorial-job-cargo-technician-goal-retrieve = Récupérez votre commande
+tutorial-job-cargo-technician-goal-return-bay = Ramenez-le à la maison
+tutorial-job-cargo-technician-goal-finish = Tutoriel terminé
+tutorial-job-cargo-technician-sg-intro = Bienvenue dans le fret. Je vais vous guider à travers une opération commerciale : commandez, transportez, volez, vendez et ramenez-le à la maison. Cliquez sur moi à main vide quand vous êtes prêt.
+tutorial-job-cargo-technician-sg-orders = Cliquez sur l'ordinateur de demande de fret dans la baie.
+tutorial-job-cargo-technician-sg-purchase = Sur l'ordinateur de demande de fret, achetez n'importe quelle annonce bon marché (ajoutez une commande).
+tutorial-job-cargo-technician-sg-confirm = Confirmez la commande en attente sur l'ordinateur de demande de fret (Approuver).
+tutorial-job-cargo-technician-sg-drag-crate = Tirez n’importe quelle caisse dans la baie avec Ctrl (par défaut) – faites-la glisser vers la navette pour la vendre plus tard.
+tutorial-job-cargo-technician-sg-board-shuttle = Montez sur la navette cargo (par le sas amarré).
+tutorial-job-cargo-technician-sg-controls = Commandes de la navette : maintenez W/A/S/D (par défaut) pour mitrailler, Q/E (par défaut) pour faire pivoter et Espace (par défaut) pour freiner. Appuyez sur Continuer sur votre tablette Urist McTutorial lorsque vous êtes prêt.
+tutorial-job-cargo-technician-sg-open-console = Cliquez sur la console de la navette (barre) près du siège du pilote.
+tutorial-job-cargo-technician-sg-undock-bay = Ouvrez l'onglet Dock et détachez-le de la soute.
+tutorial-job-cargo-technician-sg-throttle = Maintenez W/A/S/D (par défaut) pour mitrailler, ou Q/E (par défaut) pour faire pivoter, afin que les propulseurs tirent.
+tutorial-job-cargo-technician-sg-fly-ats = Volez vers l’est en direction de l’ATS. Freinez avec Espace (par défaut) à mesure que vous vous approchez – cette étape se termine lorsque vous vous rapprochez.
+tutorial-job-cargo-technician-sg-dock-ats = Alignez les sas, puis Dock sur l'onglet Dock.
+tutorial-job-cargo-technician-sg-sell-crate = Placez n'importe quelle caisse que vous avez transportée sur une palette de vente et vendez-la depuis la console de la palette.
+tutorial-job-cargo-technician-sg-retrieve = Retirez votre caisse achetée de la palette d'achat avec un clic Ctrl (par défaut).
+tutorial-job-cargo-technician-sg-undock-ats = Continuez à tirer la caisse achetée sur la navette, puis détachez-la de l'ATS.
+tutorial-job-cargo-technician-sg-dock-bay = Volez vers l’ouest et revenez à la soute avec votre achat à bord.
+tutorial-job-cargo-technician-sg-done = Course de chargement terminée. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Quartermaster
+tutorial-job-quartermaster-goal-welcome = Bienvenue, Intendant
+tutorial-job-quartermaster-goal-lead = Cargaison en plomb
+tutorial-job-quartermaster-goal-floor = Commandes et priorités
+tutorial-job-quartermaster-goal-finish = Tutoriel terminé
+tutorial-job-quartermaster-sg-intro = Vous êtes le quartier-maître. Dirigez le fret, gérez le budget et organisez les techniciens.
+tutorial-job-quartermaster-sg-clipboard = Prenez un presse-papiers.
+tutorial-job-quartermaster-sg-appraise = Procurez-vous l’outil d’évaluation.
+tutorial-job-quartermaster-sg-use-appraise = Utilisez l'outil d'estimation en main avec Z (par défaut). Pendant un vrai service, il sert à estimer les caisses pouvant être vendues.
+tutorial-job-quartermaster-sg-orders = Cliquez sur la console de commande de fret pour l'ouvrir.
+tutorial-job-quartermaster-sg-approve = Approuver la commande du tutoriel prédéfini sur la console cargo (Approuver sur la commande en attente).
+tutorial-job-quartermaster-sg-priority-tip = Approuver les dépenses du compte de fret - donner la priorité aux commandes du chef et des services critiques avant les peluches. Cliquez sur moi pour continuer.
+tutorial-job-quartermaster-sg-sell-pad = Cliquez sur la palette de vente (ou placez la caisse dessus) pour savoir où les marchandises doivent être placées.
+tutorial-job-quartermaster-sg-sell = Vendez la caisse sur la palette de vente à l'aide du bouton Vendre de la console de palette.
+tutorial-job-quartermaster-sg-shuttle-tip = Les techniciens Cargo commandent des marchandises et pilotent la navette commerciale jusqu'à l'ATS - dirigez-les vers le tutoriel Cargo Tech. Cliquez sur moi pour continuer.
+tutorial-job-quartermaster-sg-cart = Interagissez avec le distributeur automatique de chariots.
+tutorial-job-quartermaster-sg-package = Récupérez un colis de livraison.
+tutorial-job-quartermaster-sg-manifest = Récupérez un manifeste de prime.
+tutorial-job-quartermaster-sg-walk = Marchez jusqu'au marqueur QM.
+tutorial-job-quartermaster-sg-done = Tutoriel QM terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Technical Assistant (eng progression 1/4)
+tutorial-job-technical-assistant-goal-welcome = Bienvenue, assistant technique
+tutorial-job-technical-assistant-goal-hack = Pirater des portes
+tutorial-job-technical-assistant-goal-spacing = Correction de l'espacement
+tutorial-job-technical-assistant-goal-lv = Réparer le câblage BT/APC
+tutorial-job-technical-assistant-goal-finish = Tutoriel terminé
+tutorial-job-technical-assistant-sg-intro = Vous êtes un assistant technique - progression en ingénierie, étape 1 sur 4. Apprenez les portes, les pièces de coque et le câblage BT avant l'ingénieur de station. Cliquez sur moi pour continuer.
+tutorial-job-technical-assistant-sg-gloves = Équipez-vous de gants isolés pour ne pas vous choquer sur les fils de la porte.
+tutorial-job-technical-assistant-sg-screwdriver = Prenez un tournevis (de votre ceinture ou du sol).
+tutorial-job-technical-assistant-sg-open-panel = Utilisez le tournevis sur le sas du couloir d'ingénierie jusqu'à ce que son panneau de fils s'ouvre.
+tutorial-job-technical-assistant-sg-multitool = Procurez-vous un outil multifonction (ceinture ou sol - utilisé sur les panneaux métalliques ouverts).
+tutorial-job-technical-assistant-sg-pulse-power = Pulsez les fils sur le panneau ouvert jusqu'à ce que la porte perde le courant (le voyant du fil d'alimentation clignote / la porte s'éteint).
+tutorial-job-technical-assistant-sg-crowbar-hack = Prenez un pied-de-biche (ceinture ou sol).
+tutorial-job-technical-assistant-sg-crowbar-door = Pincez la porte non motorisée jusqu'à ce qu'elle s'ouvre.
+tutorial-job-technical-assistant-sg-wirecutter = Ramassez les pinces coupantes (ceinture ou sol).
+tutorial-job-technical-assistant-sg-cut-power = Coupez les fils d'alimentation sur le panneau pour que la porte reste morte même après l'expiration d'une impulsion.
+tutorial-job-technical-assistant-sg-wires-tip = Sur une vraie porte : envoyez brièvement de l'énergie au pied-de-biche ou coupez les fils d'alimentation pour la tuer définitivement. Si vous verrouillez accidentellement la porte, trouvez le fil du boulon – réparez-le si vous le coupez, puis activez-le uniquement pendant que la porte est encore alimentée (les boulons ne basculeront pas sur une porte morte). Cliquez sur moi pour continuer.
+tutorial-job-technical-assistant-sg-steel = Ramassez une pile de tôles d'acier.
+tutorial-job-technical-assistant-sg-patch = Cliquez sur le marqueur de brèche de coque tout en tenant l'acier (sur un déplacement réel, recouvrez le treillis de placage).
+tutorial-job-technical-assistant-sg-spacing-tip = Scellez les brèches avant qu'elles ne se propagent - en plaçant sur le treillis, puis restaurez l'atmosphère si nécessaire. Cliquez sur moi pour continuer.
+tutorial-job-technical-assistant-sg-lv = Récupérez le câble BT (CableApcStack). Les explosions les coupent souvent sous les APC.
+tutorial-job-technical-assistant-sg-place-lv = Poser le câble BT au sol (cliquez sur le plaquage tout en maintenant la bobine) jusqu'à ce qu'un câble apparaisse.
+tutorial-job-technical-assistant-sg-apc = Cliquez sur l'APC d'entraînement. Sur une vraie station, le câble BT du poste alimente l'APC.
+tutorial-job-technical-assistant-sg-next-tip = Suivant : Ingénieur de station (sous-stations, PME, Singulo/Tesla, MT/HT). Cliquez sur moi pour continuer.
+tutorial-job-technical-assistant-sg-walk = Marchez jusqu’au marqueur de l’assistant technique.
+tutorial-job-technical-assistant-sg-done = Tutoriel de l'assistant technique terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour Station Engineer lorsque vous êtes prêt.
+
+# Station Engineer (eng progression 2/4)
+tutorial-job-station-engineer-goal-welcome = Bienvenue, ingénieur
+tutorial-job-station-engineer-goal-grid = Sous-stations et MT
+tutorial-job-station-engineer-goal-smes = PME et HT
+tutorial-job-station-engineer-goal-monitor = Surveillance de l'alimentation
+tutorial-job-station-engineer-goal-engines = Singularité et Tesla
+tutorial-job-station-engineer-goal-finish = Tutoriel terminé
+tutorial-job-station-engineer-sg-intro = Vous êtes un ingénieur de station - étape de progression 2 sur 4. Vous devriez déjà connaître les fils de porte, le placage et la BT de l'assistant technique.
+tutorial-job-station-engineer-sg-mv = Récupérez le câble MT.
+tutorial-job-station-engineer-sg-place-mv = Réparez le tronçon MT coupé - placez un autre câble MT de manière à combler l'espace (un tronçon est déjà au sol).
+tutorial-job-station-engineer-sg-substation = Cliquez sur la sous-station d'entraînement - elle descend la HT/MV vers les APC.
+tutorial-job-station-engineer-sg-hv = Récupérez le câble HT.
+tutorial-job-station-engineer-sg-place-hv = Réparez le tronçon HT coupé - placez un autre câble HT pour que le côté PME se reconnecte.
+tutorial-job-station-engineer-sg-smes = Cliquez sur le PMES vide - lors d'un véritable changement, vous terminez la construction (clé, câble, tournevis) puis chargez-la.
+tutorial-job-station-engineer-sg-smes-tip = Les banques PME tamponnent la puissance du moteur. Gardez-en au moins un chargé en cas de panne de courant. Cliquez sur moi pour continuer.
+tutorial-job-station-engineer-sg-power-monitor = Ouvrez l'ordinateur de surveillance de l'alimentation.
+tutorial-job-station-engineer-sg-monitor-tip = Utilisez le moniteur pour repérer les APC morts et couper les câbles après des explosions. Cliquez sur moi pour continuer.
+tutorial-job-station-engineer-sg-singulo = Cliquez sur le générateur de singularité.
+tutorial-job-station-engineer-sg-singulo-tip = Singulo a besoin d'un champ de confinement, d'émetteurs PA dirigés vers le générateur et de collecteurs de rayonnements avec réservoirs de plasma. Ne marchez pas sur le faisceau PA. Cliquez sur moi pour continuer.
+tutorial-job-station-engineer-sg-tesla = Cliquez sur le générateur Tesla.
+tutorial-job-station-engineer-sg-tesla-tip = Tesla a besoin de confinement et de bobines/tiges de mise à la terre ; les boulons desserrés sautent sur les machines et les personnes. Cliquez sur moi pour continuer.
+tutorial-job-station-engineer-sg-next-tip = Suivant : Technicien atmosphérique (distribution, TEG, filtres usagés). Cliquez sur moi pour continuer.
+tutorial-job-station-engineer-sg-walk = Marchez jusqu'au marqueur d'ingénierie.
+tutorial-job-station-engineer-sg-done = Tutoriel d'ingénieur terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour Atmos ou CE lorsque vous êtes prêt.
+
+# Chief Engineer (eng progression 4/4)
+tutorial-job-chief-engineer-goal-welcome = Bienvenue, ingénieur en chef
+tutorial-job-chief-engineer-goal-command = Équipement de commande
+tutorial-job-chief-engineer-goal-oversee = Superviser le pouvoir
+tutorial-job-chief-engineer-goal-lead = Lead eng et atmos
+tutorial-job-chief-engineer-goal-finish = Tutoriel terminé
+tutorial-job-chief-engineer-sg-intro = Vous êtes l'ingénieur en chef - étape de progression 4 sur 4. Ingénieurs directs et atmos ; vous définissez les priorités du moteur et des réparations.
+tutorial-job-chief-engineer-sg-clipboard = Prenez un presse-papiers.
+tutorial-job-chief-engineer-sg-magboots = Procurez-vous des magboots avancés (kit CE).
+tutorial-job-chief-engineer-sg-use-magboots = Activez les bottes magnétiques avec l'action (barre de raccourci) lorsque vous les maintenez ou les portez. Z (par défaut) les équipe à la place.
+tutorial-job-chief-engineer-sg-power-monitor = Ouvrez l'ordinateur de surveillance de l'alimentation et vérifiez le réseau.
+tutorial-job-chief-engineer-sg-ame-fuel = Procurez-vous un pot de carburant AME - AME est une alimentation de secours/de secours, pas le plan principal.
+tutorial-job-chief-engineer-sg-ame-inject = Insérez du carburant et démarrez l'injection AME (injection <= 2x noyaux).
+tutorial-job-chief-engineer-sg-ame-tip = Privilégiez la singularité, la Tesla ou le TEG pour alimenter le service ; gardez l'AME en secours. Cliquez sur moi pour continuer.
+tutorial-job-chief-engineer-sg-comms = Ouvrez la console de communication - utilisez-la pour annoncer les priorités du génie à l'équipage.
+tutorial-job-chief-engineer-sg-lead-tip = Priorisez : le support de vie de la coque et de la puissance d'abord, puis les moteurs, puis les projets. Coordonner l'atmosphère sur les TEG et les brèches. Cliquez sur moi pour continuer.
+tutorial-job-chief-engineer-sg-walk = Marchez jusqu'au marqueur CE.
+tutorial-job-chief-engineer-sg-done = Tutoriel CE terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Medical Doctor
+tutorial-job-medical-doctor-goal-welcome = Bienvenue docteur
+tutorial-job-medical-doctor-goal-diagnose = Diagnostic
+tutorial-job-medical-doctor-goal-treat = Traiter le patient
+tutorial-job-medical-doctor-goal-revive = Défibrillateur
+tutorial-job-medical-doctor-goal-finish = Tutoriel terminé
+tutorial-job-medical-doctor-sg-hug-mentor = Bienvenue à l'infirmerie. Cliquez sur Urist McMalpractice à main nue pour prendre votre CMO dans vos bras.
+tutorial-job-medical-doctor-hint-hug-mentor = Approchez-vous de Urist McMalpractice et cliquez dessus avec une main vide pour le serrer dans vos bras.
+tutorial-job-medical-doctor-stuck-hug-mentor = Placez-vous à côté de Urist McMalpractice et cliquez dessus sans rien dans votre main active. Cliquez à nouveau dessus à main vide si vous avez besoin de répéter le conseil.
+tutorial-job-medical-doctor-sg-intro = Vous êtes médecin. Diagnostiquer les dommages, appliquer des médicaments et stabiliser les patients.
+tutorial-job-medical-doctor-sg-medhud = Procurez-vous les lunettes médicales HUD.
+tutorial-job-medical-doctor-sg-medhud-tip = MedHUD est votre outil de triage : apprenez en un coup d'œil les vivants, les critiques et les morts. Maj-cliquez sur une personne pour connaître la répartition des dégâts. Cliquez sur moi pour continuer.
+tutorial-job-medical-doctor-sg-analyzer = Prenez l'analyseur de santé.
+tutorial-job-medical-doctor-sg-scan = Utilisez l'analyseur de santé sur le patient vivant (cliquez dessus tout en le tenant).
+tutorial-job-medical-doctor-sg-analyzer-ready = Continuez à tenir l'analyseur - lors d'un cycle réel, utilisez-le sur un patient pour analyser les signes vitaux.
+tutorial-job-medical-doctor-sg-vend = Interagissez avec le distributeur automatique NanoMed / médical.
+tutorial-job-medical-doctor-sg-brutepack = Procurez-vous un pack de bleus (sur le sol ou dans une vente).
+tutorial-job-medical-doctor-sg-ointment = Procurez-vous de la pommade.
+tutorial-job-medical-doctor-sg-heal = Appliquez des sachets d'ecchymoses et de la pommade sur le patient vivant jusqu'à ce que les dommages disparaissent presque.
+tutorial-job-medical-doctor-sg-hold-epi = Urist McPatient vient de tomber en critique ! Procurez-vous le médicament d'urgence (épinéphrine) à proximité.
+tutorial-job-medical-doctor-sg-use-epi = Injectez le patient critique avec le médipen (cliquez dessus tout en le tenant).
+tutorial-job-medical-doctor-sg-crit-tip = Les patients critiques ont besoin d'une épi/inaprov et souvent d'un lit de stase — stabilisez-les rapidement, ne les traînez pas éternellement. Cliquez sur moi pour continuer.
+tutorial-job-medical-doctor-sg-defib-tip = Les défibrillateurs permettent de ramener quelqu'un d'entre les morts. Ils ne réussissent que lorsque les dégâts totaux sont inférieurs à 200. Chaque zap élimine également environ 40 asphyxies - donc un corps à 230 avec 40 asphyx peut ressusciter après un zap. Cliquez sur moi pour continuer.
+tutorial-job-medical-doctor-sg-hold-defib = Prenez le défibrillateur.
+tutorial-job-medical-doctor-sg-revive = Allumez le défibrillateur, puis utilisez-le sur le cadavre d'entraînement jusqu'à ce qu'il quitte l'état mort.
+tutorial-job-medical-doctor-sg-revive-hint = Activez le défibrillateur, puis cliquez sur le cadavre. Attendez la charge après.
+tutorial-job-medical-doctor-sg-revive-stuck = Si le zap échoue, le total des dégâts est toujours de 200 ou plus. Zapez à nouveau pour éliminer davantage d'asphyx, ou soignez d'abord d'autres dégâts, puis réessayez.
+tutorial-job-medical-doctor-sg-done = Tutoriel du docteur terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Chief Medical Officer
+tutorial-job-chief-medical-officer-goal-welcome = Bienvenue, CMO
+tutorial-job-chief-medical-officer-goal-command = Équipement de commande
+tutorial-job-chief-medical-officer-goal-clinic = Direction de la clinique
+tutorial-job-chief-medical-officer-goal-finish = Tutoriel terminé
+tutorial-job-chief-medical-officer-sg-intro = Vous êtes le médecin-chef. Diriger le service médical, définir les priorités et gérer les crises.
+tutorial-job-chief-medical-officer-sg-clipboard = Prenez un presse-papiers.
+tutorial-job-chief-medical-officer-sg-crew-monitor = Prenez le moniteur portatif de l'équipage.
+tutorial-job-chief-medical-officer-sg-use-crew-monitor = Utilisez le moniteur d'équipage en main avec Z (par défaut) - triez qui a besoin d'un ambulancier.
+tutorial-job-chief-medical-officer-sg-triage-tip = Regardez l'équipage surveiller et définir les priorités de triage avant de sauter sur un lit simple. Cliquez sur moi pour continuer.
+tutorial-job-chief-medical-officer-sg-analyzer = Procurez-vous un analyseur de santé.
+tutorial-job-chief-medical-officer-sg-medhud-tip = MedHUD est la superposition de tri incontournable : les vivants, les critiques et les morts se lisent différemment. Maj-cliquez sur l'équipage pour connaître les types de dégâts lorsque vous décidez qui traiter en premier. Cliquez sur moi pour continuer.
+tutorial-job-chief-medical-officer-sg-hypo = Prenez l'hypospray.
+tutorial-job-chief-medical-officer-sg-use-hypo = Utilisez l'hypospray en main avec Z (par défaut) pour pratiquer la position prête.
+tutorial-job-chief-medical-officer-sg-vend = Interagissez avec le distributeur automatique médical.
+tutorial-job-chief-medical-officer-sg-brutepack = Procurez-vous un pack de bleus.
+tutorial-job-chief-medical-officer-sg-heal = Guérissez le patient vivant avec des médicaments jusqu'à ce que les dommages disparaissent presque.
+tutorial-job-chief-medical-officer-sg-defib-tip = Defib est le seul moyen de réanimer les morts, et seulement lorsque les dégâts totaux sont inférieurs à 200. Chaque zap élimine environ 40 asphyx – utilisez-le lorsqu'un corps dépasse juste la ligne. Cliquez sur moi pour continuer.
+tutorial-job-chief-medical-officer-sg-hold-defib = Prenez le défibrillateur.
+tutorial-job-chief-medical-officer-sg-revive = Allumez le défibrillateur, puis utilisez-le sur le cadavre d'entraînement jusqu'à ce qu'il quitte l'état mort.
+tutorial-job-chief-medical-officer-sg-revive-hint = Activez le défibrillateur, puis cliquez sur le cadavre. Attendez la charge après.
+tutorial-job-chief-medical-officer-sg-revive-stuck = Si le zap échoue, le total des dégâts est toujours de 200 ou plus. Zapez à nouveau pour éliminer davantage d'asphyx, ou soignez d'abord d'autres dégâts, puis réessayez.
+tutorial-job-chief-medical-officer-sg-coord-tip = Regardez l'équipage surveiller et coordonner les ambulanciers paramédicaux : vous définissez les priorités de triage. Cliquez sur moi pour continuer.
+tutorial-job-chief-medical-officer-sg-walk = Marchez jusqu'au marqueur CMO.
+tutorial-job-chief-medical-officer-sg-done = Tutoriel CMO terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Chemist
+tutorial-job-chemist-goal-welcome = Bienvenue, chimiste
+tutorial-job-chemist-goal-glassware = Verrerie
+tutorial-job-chemist-goal-mix = Mélanger les médicaments
+tutorial-job-chemist-goal-saline = Sel et solution saline
+tutorial-job-chemist-goal-grind = Broyer et livrer
+tutorial-job-chemist-goal-finish = Tutoriel terminé
+tutorial-job-chemist-sg-intro = Vous êtes chimiste. Fabriquer des médicaments et des produits chimiques à usage médical.
+tutorial-job-chemist-sg-beaker = Prenez un bécher.
+tutorial-job-chemist-sg-large-beaker = Prenez un grand bécher.
+tutorial-job-chemist-sg-dispenser = Cliquez sur un distributeur de produits chimiques sur le banc pour l'ouvrir (distribuez du carbone, de l'oxygène et du sucre dans un bécher).
+tutorial-job-chemist-sg-inaprovaline = Mélangez l'Inaprovaline (Oxygène + Carbone + Sucre) pour qu'un bécher tenu ou stocké le contienne.
+tutorial-job-chemist-sg-dylovene = Mélangez le Dylovene (silicium + azote + potassium) pour qu'un bécher conservé ou stocké le contienne.
+tutorial-job-chemist-sg-chemmaster = Cliquez sur un ChemMaster sur le banc pour l'ouvrir - insérez un pilulier dans la fente de sortie.
+tutorial-job-chemist-sg-pills = Créez des pilules dans un pilulier, puis prenez le pilulier rempli (il doit contenir au moins une pilule).
+tutorial-job-chemist-sg-hotplate = Certaines recettes ont besoin de chaleur. Le sel de table (Chlore + Sodium) ne réagit que sur une plaque chauffante - cliquez sur moi pour continuer.
+tutorial-job-chemist-hint-hotplate = Trouvez la plaque chauffante sur le banc de chimie. Vous placerez un bécher dessus à l’étape suivante.
+tutorial-job-chemist-stuck-hotplate = Cliquez avec la main vide sur Urist McMeth lorsque vous êtes prêt à cuire du sel.
+tutorial-job-chemist-sg-table-salt = Préparez du sel de table : versez le chlore et le sodium dans un bécher, puis placez le bécher sur la plaque chauffante jusqu'à ce qu'il réagisse.
+tutorial-job-chemist-hint-table-salt = Des parts égales de chlore et de sodium du distributeur, puis placez le bécher sur la plaque chauffante électrique.
+tutorial-job-chemist-stuck-table-salt = Ouvrez le distributeur de produits chimiques, ajoutez du chlore et du sodium dans un bécher, placez ce bécher sur la plaque chauffante et attendez que le sel de table se forme. Reprenez le bécher lorsqu’il contient du sel.
+tutorial-job-chemist-sg-saline = Préparez une solution saline : mélangez du sel de table avec de l'eau (4 eaux + 1 sel de table). Versez de la carafe d’eau si nécessaire.
+tutorial-job-chemist-hint-saline = Gardez un peu de sel de table dans un bécher et ajoutez l'eau du pichet posé sur le sol jusqu'à ce qu'une solution saline se forme.
+tutorial-job-chemist-stuck-saline = Tenez un bécher avec du sel de table, versez-y l'eau du JugWater (environ quatre fois plus d'eau que de sel) et gardez le bécher jusqu'à ce qu'il contienne de la solution saline.
+tutorial-job-chemist-sg-vend = Interagissez avec le distributeur automatique médical.
+tutorial-job-chemist-sg-produce = Ramassez des produits (pomme) - les botanistes fournissent souvent des produits chimiques.
+tutorial-job-chemist-sg-grinder = Mettez la pomme dans le broyeur à réactifs sur le banc et ouvrez/interagissez avec le broyeur.
+tutorial-job-chemist-sg-deliver-tip = Livrez les médicaments finis aux médecins – étiquetez clairement les flacons. Cliquez sur moi pour continuer.
+tutorial-job-chemist-sg-brutepack = Procurez-vous un pack de bleus en stock ou dans le commerce.
+tutorial-job-chemist-sg-walk = Marchez jusqu'au marqueur de chimie.
+tutorial-job-chemist-sg-done = Tutoriel de chimiste terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Security Cadet
+tutorial-job-security-cadet-goal-welcome = Bienvenue, cadet
+tutorial-job-security-cadet-goal-tools = Non mortels
+tutorial-job-security-cadet-goal-finish = Tutoriel terminé
+tutorial-job-security-cadet-sg-intro = Vous êtes un cadet de sécurité. Apprenez vos outils non létaux avant de procéder à des arrestations en tant qu'officier.
+tutorial-job-security-cadet-sg-baton = Prenez un bâton paralysant.
+tutorial-job-security-cadet-sg-disabler = Prenez un handicapeur.
+tutorial-job-security-cadet-sg-flash = Prenez un flash.
+tutorial-job-security-cadet-sg-use-seclite = Basculez la seclite en main avec Z (par défaut).
+tutorial-job-security-cadet-sg-walk = Marchez jusqu’au marqueur d’entraînement des cadets.
+tutorial-job-security-cadet-sg-done = Tutoriel des cadets de sécurité terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Security Officer
+tutorial-job-security-officer-goal-welcome = Bienvenue, officier
+tutorial-job-security-officer-goal-tools = Non mortels
+tutorial-job-security-officer-goal-arrest = Pratique d'arrestation
+tutorial-job-security-officer-goal-finish = Tutoriel terminé
+tutorial-job-security-officer-sg-intro = Vous êtes agent de sécurité. Vous connaissez déjà vos armes non létales : entraînez-vous à neutraliser et menotter un suspect, ainsi qu'à utiliser SecTech, tout en respectant le Code spatial.
+tutorial-job-security-officer-sg-stun = Étourdissez le suspect de l'entraînement (cliquez dessus avec votre matraque paralysante, votre désactiveur ou votre flash).
+tutorial-job-security-officer-sg-cuffs = Ramassez les menottes.
+tutorial-job-security-officer-sg-cuffs-ready = Gardez les menottes en main. Lors d'une vraie partie, vous les passerez à une cible.
+tutorial-job-security-officer-sg-baton = Prenez un bâton paralysant.
+tutorial-job-security-officer-sg-disabler = Prenez un handicapeur.
+tutorial-job-security-officer-sg-flash = Prenez un flash.
+tutorial-job-security-officer-sg-use-seclite = Basculez la seclite en main avec Z (par défaut).
+tutorial-job-security-officer-sg-cuff = Menottez le suspect d'entraînement en cliquant sur lui avec les menottes.
+tutorial-job-security-officer-sg-law-tip = Le gardien fixe les durées de détention ; employez une force proportionnée. Cliquez sur moi pour continuer.
+tutorial-job-security-officer-sg-vend = Interagissez avec le distributeur automatique SecTech.
+tutorial-job-security-officer-sg-walk = Marchez jusqu'au marqueur de sécurité.
+tutorial-job-security-officer-sg-done = Tutoriel de sécurité terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Warden
+tutorial-job-warden-goal-welcome = Bienvenue, gardien
+tutorial-job-warden-goal-brig = Paperasse de Brigue
+tutorial-job-warden-goal-armory = Armurerie et minuteries
+tutorial-job-warden-goal-finish = Tutoriel terminé
+tutorial-job-warden-sg-intro = Vous êtes le gardien. Gérez le quartier carcéral et les durées de peine, et sécurisez l'armurerie.
+tutorial-job-warden-sg-stamp = Récupérez le cachet du gardien.
+tutorial-job-warden-sg-clipboard = Prenez un presse-papiers.
+tutorial-job-warden-sg-cuffs = Ramassez les menottes.
+tutorial-job-warden-sg-cuff = Menottez le prisonnier d'entraînement (cliquez dessus avec des menottes).
+tutorial-job-warden-sg-timer = Cliquez sur la minuterie du brick pour l'ouvrir.
+tutorial-job-warden-sg-timer-start = Démarrez le chronomètre du brick (définissez une phrase courte et appuyez sur Start).
+tutorial-job-warden-sg-cell = Parcourez le chemin du suspect menotté jusqu'au marqueur de cellule.
+tutorial-job-warden-sg-safe = Cliquez sur le coffre-fort pour armes à feu / casier d'armurerie.
+tutorial-job-warden-sg-armory-tip = L'équipement de l'armurerie est distribué avec discipline : suivez qui a quoi. Cliquez sur moi pour continuer.
+tutorial-job-warden-sg-baton = Prenez un bâton paralysant.
+tutorial-job-warden-sg-disabler = Prenez un handicapeur.
+tutorial-job-warden-sg-vend = Interagissez avec le distributeur automatique SecTech.
+tutorial-job-warden-sg-walk = Marchez jusqu'au marqueur du gardien.
+tutorial-job-warden-sg-done = Tutoriel de gardien terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Head of Security
+tutorial-job-head-of-security-goal-welcome = Bienvenue, responsable de la sécurité
+tutorial-job-head-of-security-goal-command = Équipement de commande
+tutorial-job-head-of-security-goal-gear = Équipement du département
+tutorial-job-head-of-security-goal-finish = Tutoriel terminé
+tutorial-job-head-of-security-sg-intro = Vous êtes le responsable de la sécurité. Dirigez les officiers, définissez des alertes et gérez les menaces majeures.
+tutorial-job-head-of-security-sg-stamp = Récupérez le tampon HoS.
+tutorial-job-head-of-security-sg-comms = Ouvrez la console de communication : les alertes et les annonces sont un outil HoS.
+tutorial-job-head-of-security-sg-law-tip = Appliquer Space Law et diriger le département - définir la politique de force pour les officiers. Cliquez sur moi pour continuer.
+tutorial-job-head-of-security-sg-cuffs = Ramassez les menottes.
+tutorial-job-head-of-security-sg-cuff = Menottez le suspect d'entraînement.
+tutorial-job-head-of-security-sg-baton = Prenez un bâton paralysant.
+tutorial-job-head-of-security-sg-disabler = Prenez un handicapeur.
+tutorial-job-head-of-security-sg-vend = Interagissez avec le distributeur automatique SecTech.
+tutorial-job-head-of-security-sg-walk = Marchez jusqu'au marqueur HoS.
+tutorial-job-head-of-security-sg-done = Tutoriel HoS terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Research Assistant
+tutorial-job-research-assistant-goal-welcome = Bienvenue, assistant de recherche
+tutorial-job-research-assistant-goal-kit = Trousse de laboratoire
+tutorial-job-research-assistant-goal-research = Recherche et impression
+tutorial-job-research-assistant-goal-finish = Tutoriel terminé
+tutorial-job-research-assistant-sg-intro = Vous êtes assistant de recherche. Prenez votre kit, dirigez-vous vers la console R&D du laboratoire de recherche, débloquez une technologie et imprimez-la sur le fabricant de robots.
+tutorial-job-research-assistant-sg-multitool = Récupérez l’outil multifonction sur le sol près du casier scientifique.
+tutorial-job-research-assistant-sg-node = Récupérez le scanner de nœuds sur le sol près du casier scientifique.
+tutorial-job-research-assistant-sg-walk-console = Traversez le laboratoire scientifique jusqu’au marqueur lumineux de l’ordinateur R&D.
+tutorial-job-research-assistant-sg-console = Ouvrez l'ordinateur R&D.
+tutorial-job-research-assistant-sg-unlock = Débloquez Basic Robotics sur l'ordinateur R&D (les points sont déjà sur le serveur d'entraînement).
+tutorial-job-research-assistant-sg-steel = Procurez-vous une pile de tôles d'acier pour le fabricant.
+tutorial-job-research-assistant-sg-print = Insérez des matériaux si nécessaire, puis imprimez un capteur de proximité sur le fabricant de l'exosuit.
+tutorial-job-research-assistant-sg-walk = Marchez jusqu’au marqueur de l’assistant de recherche.
+tutorial-job-research-assistant-sg-done = Tutoriel d'assistant de recherche terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Scientist
+tutorial-job-scientist-goal-welcome = Bienvenue, scientifique
+tutorial-job-scientist-goal-scanners = Scanners de laboratoire
+tutorial-job-scientist-goal-anomaly = Réponse à une anomalie
+tutorial-job-scientist-goal-finish = Tutoriel terminé
+tutorial-job-scientist-sg-intro = Vous êtes scientifique. Ce tutoriel présente la gestion d'une anomalie : la générer, l'analyser, la stabiliser puis l'éliminer sans danger.
+tutorial-job-scientist-sg-anomaly = Procurez-vous un scanner d'anomalies.
+tutorial-job-scientist-sg-node = Procurez-vous un scanner de nœuds.
+tutorial-job-scientist-sg-beaker = Prenez un bécher.
+tutorial-job-scientist-sg-spawn-explain = La pièce voisine contient une plateforme de confinement, un canon C.H.I.M.P. et un A.P.E. Cette anomalie d'entraînement ne réattribue jamais ses particules : le confinement est toujours Zeta.
+tutorial-job-scientist-sg-spawn = Activez le tampon de confinement des anomalies pour générer l’anomalie d’entraînement.
+tutorial-job-scientist-sg-scan = Tenez un scanner d'anomalies et utilisez-le sur l'anomalie d'entraînement (maintenez le clic jusqu'à ce que l'analyse soit terminée). Lisez les rôles des particules sur l'interface utilisateur du scanner.
+tutorial-job-scientist-sg-contain-explain = Les particules de confinement affaiblissent l'anomalie (santé et stabilité). Pour cette anomalie d'entraînement, le confinement est toujours Zeta. Delta est dangereuse, Epsilon instable et Sigma provoque une transformation.
+tutorial-job-scientist-sg-chimp = Prenez le canon à main C.H.I.M.P. (ou utilisez le A.P.E.). Basculez son mode de tir sur Zeta si ce n'est pas déjà fait.
+tutorial-job-scientist-sg-stabilize = Tirez des particules Zeta sur l'anomalie jusqu'à ce que le scanner montre qu'elle ne se développe plus (la stabilité tombe dans une bande stable/en décomposition).
+tutorial-job-scientist-sg-remove = Continuez à appliquer Zeta/confinement jusqu'à ce que l'anomalie se désintègre et disparaisse (retrait en toute sécurité - ne la poussez pas de manière supercritique avec Delta).
+tutorial-job-scientist-sg-youtool = Interagissez avec le distributeur automatique YouTool.
+tutorial-job-scientist-sg-multitool = Procurez-vous un outil multifonction.
+tutorial-job-scientist-sg-walk = Marchez jusqu'au marqueur scientifique.
+tutorial-job-scientist-sg-ra-tip = Le tutoriel de l'assistant de recherche explique comment débloquer des technologies et imprimer au fabricateur. Suivez-le ensuite pour apprendre ce cycle de R&D. Cliquez sur moi pour continuer.
+tutorial-job-scientist-sg-done = Tutoriel scientifique terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+tutorial-anomaly-spawner-spawned = Anomalie d'entraînement libérée.
+tutorial-anomaly-spawner-already = L'anomalie d'entraînement a déjà été libérée.
+
+# Research Director
+tutorial-job-research-director-goal-welcome = Bienvenue, Directeur de recherche
+tutorial-job-research-director-goal-command = Équipement de commande
+tutorial-job-research-director-goal-anomaly = Réponse à une anomalie
+tutorial-job-research-director-goal-lab = Direction du laboratoire
+tutorial-job-research-director-goal-finish = Tutoriel terminé
+tutorial-job-research-director-sg-intro = Vous êtes le directeur de recherche. Définissez les priorités de recherche et assurez la sécurité du laboratoire, y compris le confinement des anomalies.
+tutorial-job-research-director-sg-clipboard = Prenez un presse-papiers.
+tutorial-job-research-director-sg-anomaly = Procurez-vous un scanner d'anomalies.
+tutorial-job-research-director-sg-spawn-explain = La pièce voisine contient une plateforme de confinement, un C.H.I.M.P. et un A.P.E. Cette anomalie d'entraînement ne réattribue jamais ses particules : le confinement est toujours Zeta.
+tutorial-job-research-director-sg-spawn = Activez le tampon de confinement des anomalies pour générer l’anomalie d’entraînement.
+tutorial-job-research-director-sg-scan = Tenez un scanner d’anomalies et utilisez-le sur l’anomalie d’entraînement jusqu’à la fin de l’analyse.
+tutorial-job-research-director-sg-chimp = Prenez le canon à main C.H.I.M.P. (ou utilisez le A.P.E.). Basculez le mode incendie sur Zeta si nécessaire.
+tutorial-job-research-director-sg-stabilize = Tirez des particules Zeta jusqu'à ce que l'anomalie ne se développe plus.
+tutorial-job-research-director-sg-remove = Continuez à appliquer le confinement jusqu'à ce que l'anomalie se désintègre et disparaisse.
+tutorial-job-research-director-sg-lead-tip = Fixez des priorités de recherche et assurez la sécurité des scientifiques : les crises en laboratoire vous appartiennent. Cliquez sur moi pour continuer.
+tutorial-job-research-director-sg-ra-tip = Orientez les nouveaux scientifiques vers le tutoriel de l'assistant de recherche pour apprendre à débloquer des technologies et à imprimer au fabricateur. Cliquez sur moi pour continuer.
+tutorial-job-research-director-sg-node = Procurez-vous un scanner de nœuds.
+tutorial-job-research-director-sg-youtool = Interagissez avec le distributeur automatique YouTool.
+tutorial-job-research-director-sg-walk = Marchez jusqu'au marqueur RD.
+tutorial-job-research-director-sg-done = Tutoriel RD terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Captain
+tutorial-job-captain-goal-welcome = Bienvenue, Capitaine
+tutorial-job-captain-goal-command = Outils de commande
+tutorial-job-captain-goal-disk = Disque et pont
+tutorial-job-captain-goal-finish = Tutoriel terminé
+tutorial-job-captain-sg-intro = Vous êtes le capitaine. Dirigez les chefs de service, protégez le disque d’authentification nucléaire et passez des appels difficiles.
+tutorial-job-captain-sg-stamp = Récupérez le cachet du capitaine.
+tutorial-job-captain-sg-stamp-paper = Cliquez sur une feuille de papier tout en tenant le tampon (ou interagissez avec le papier) pour vous entraîner à la paperasse.
+tutorial-job-captain-sg-comms = Ouvrez la console de communication - les alertes et les annonces des stations sont en direct ici.
+tutorial-job-captain-sg-alert = Réglez le niveau d'alerte de la station sur Bleu sur la console de communication.
+tutorial-job-captain-sg-fax = Ouvrez le télécopieur - CentCom et les chefs envoient les documents de cette façon.
+tutorial-job-captain-sg-disk = Procurez-vous le disque nucléaire d'entraînement (faux - pour tutoriel uniquement).
+tutorial-job-captain-sg-stow-disk = Empochez ou mettez le disque dans un sac – ne le laissez jamais sur une table.
+tutorial-job-captain-sg-shuttle-tip = Vous décidez des appels de navette et des urgences à l'échelle de la station - gardez le disque en sécurité. Cliquez sur moi pour continuer.
+tutorial-job-captain-sg-walk = Marchez jusqu'au marqueur du pont.
+tutorial-job-captain-sg-done = Tutoriel du capitaine terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Head of Personnel
+tutorial-job-head-of-personnel-goal-welcome = Bienvenue, Chef du Personnel
+tutorial-job-head-of-personnel-goal-office = Outils de bureau
+tutorial-job-head-of-personnel-goal-ids = ID des visiteurs
+tutorial-job-head-of-personnel-goal-finish = Tutoriel terminé
+tutorial-job-head-of-personnel-sg-intro = Vous êtes le chef du personnel. Attribuez des tâches, mettez à jour les identifiants et supervisez le service.
+tutorial-job-head-of-personnel-sg-stamp = Récupérez le tampon HoP.
+tutorial-job-head-of-personnel-sg-id-console = Cliquez sur la console d'identification pour l'ouvrir.
+tutorial-job-head-of-personnel-sg-write-tip = Éjectez votre carte de HoP du PDA et placez-la dans l'emplacement privilégié de la console. Placez la carte vierge du visiteur dans l'emplacement cible, choisissez un métier prédéfini, puis appuyez sur Écrire. Cliquez sur moi pour continuer.
+tutorial-job-head-of-personnel-sg-hold-id-botany = Récupérez la pièce d’identité vierge que le visiteur botaniste place sur le bureau.
+tutorial-job-head-of-personnel-sg-write-botany = Écrivez Botanist sur l'ID visiteur sur la console (ID HoP privilégié + ID cible + Écriture).
+tutorial-job-head-of-personnel-sg-write-chef = Écrivez Chef sur l'ID du prochain visiteur sur la console.
+tutorial-job-head-of-personnel-sg-write-janitor = Écrivez Janitor sur l'ID du dernier visiteur sur la console.
+tutorial-job-head-of-personnel-sg-stamp-tip = Tamponnez les documents de transfert après un changement de métier : un cachet lisible évite les malentendus. Cliquez sur moi pour continuer.
+tutorial-job-head-of-personnel-sg-walk = Marchez jusqu'au marqueur HoP.
+tutorial-job-head-of-personnel-sg-done = Tutoriel HoP terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+tutorial-hop-visitor-botany = Excusez-moi, j'ai besoin d'une carte d'identité de botaniste, s'il vous plaît !
+tutorial-hop-visitor-chef = Salut ! Puis-je obtenir un accès Chef sur ma pièce d'identité ?
+tutorial-hop-visitor-janitor = Troisième ligne : Concierge, s'il vous plaît. Les sols ne se nettoieront pas tout seuls.
+
+# Paramedic
+tutorial-job-paramedic-goal-welcome = Bienvenue, ambulancier
+tutorial-job-paramedic-goal-gear = Trousse de secours
+tutorial-job-paramedic-goal-rescue = Stabiliser et transporter
+tutorial-job-paramedic-goal-finish = Tutoriel terminé
+tutorial-job-paramedic-sg-intro = Vous êtes ambulancier. Atteignez rapidement les patients, stabilisez-les et amenez-les au service médical.
+tutorial-job-paramedic-sg-bed = Procurez-vous un lit à rouleaux plié.
+tutorial-job-paramedic-sg-rollerbed-tip = Déployez un lit à roulettes en tenant le lit plié et en cliquant sur le sol vide. Pliez-le à nouveau en faisant glisser le lit sur vous, ou faites un clic droit -> Plier / Déplier. Cliquez sur moi pour continuer.
+tutorial-job-paramedic-sg-rollerbed-hint = Tenez le lit plié -> cliquez sur le sol pour le déplier. Faites glisser le lit sur vous-même (ou cliquez avec le bouton droit sur Plier) pour le récupérer plié.
+tutorial-job-paramedic-sg-rollerbed-stuck = Cliquez sur le sol vide tout en tenant le lit plié – pas sur une personne ou une machine. Pour plier : faites glisser le lit déployé sur votre personnage.
+tutorial-job-paramedic-sg-medhud = Procurez-vous les lunettes médicales HUD.
+tutorial-job-paramedic-sg-medhud-tip = MedHUD est votre outil de triage incontournable : les vivants, les critiques et les morts sont différents. Maj-cliquez sur quelqu'un pour connaître la répartition des dégâts avant de traiter. Cliquez sur moi pour continuer.
+tutorial-job-paramedic-sg-epi = Procurez-vous une bouteille d'épinéphrine.
+tutorial-job-paramedic-sg-analyzer = Prenez l'analyseur de santé.
+tutorial-job-paramedic-sg-scan = Utilisez l'analyseur de santé sur le patient d'entraînement en état critique en cliquant sur lui avec l'appareil en main.
+tutorial-job-paramedic-sg-heal = Guérissez le patient critique avec des packs de contusions et de la pommade jusqu'à ce que les dégâts disparaissent. Epi aide à les maintenir stables en critique mais ne termine pas cette étape tout seul.
+tutorial-job-paramedic-sg-heal-hint = Utilisez des compresses et de la pommade sur la victime. Epi seul ne parviendra pas à franchir cette étape.
+tutorial-job-paramedic-sg-heal-stuck = Epi seul ne finira pas de se stabiliser - appliquez des packs de contusions et de la pommade jusqu'à ce que leurs dégâts diminuent.
+tutorial-job-paramedic-sg-buckle = Attachez le patient au lit à roulettes d'entraînement déployé (faites-le glisser dessus, puis attachez-le). Vous pouvez également déployer votre lit plié : maintenez-le et cliquez sur sol vide.
+tutorial-job-paramedic-sg-walk = Tirez le lit à roulettes (ou marchez) jusqu'au marqueur médical.
+tutorial-job-paramedic-sg-bodybag-tip = L'équipage mort part dans des sacs mortuaires pour la morgue - ne laissez pas de cadavres dans les couloirs. Cliquez sur moi pour continuer.
+tutorial-job-paramedic-sg-externals-tip = Les ambulanciers paramédicaux ont souvent un accès externe pour les brèches de coque et les récupérations d'EVA. Cliquez sur moi pour continuer.
+tutorial-job-paramedic-sg-done = Tutoriel paramédical terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Atmospheric Technician (eng progression 3/4)
+tutorial-job-atmospheric-technician-goal-welcome = Bienvenue, Atmos Tech
+tutorial-job-atmospheric-technician-goal-kit = EVA et analyseur
+tutorial-job-atmospheric-technician-goal-distro = Réseau de distribution
+tutorial-job-atmospheric-technician-goal-waste = Filtrage des déchets
+tutorial-job-atmospheric-technician-goal-teg = Générateur thermoélectrique
+tutorial-job-atmospheric-technician-goal-finish = Tutoriel terminé
+tutorial-job-atmospheric-technician-sg-intro = Vous êtes un technicien atmosphérique - étape de progression 3 sur 4. Les ingénieurs possèdent des câbles et des moteurs ; vous possédez le gaz, la distribution et les boucles TEG.
+tutorial-job-atmospheric-technician-sg-suit = Ouvrez le casier de la combinaison atmosphérique et prenez la combinaison atmos (en tenant ou en portant les deux comptes).
+tutorial-job-atmospheric-technician-sg-magboots = Ramassez les bottes magnétiques sur le sol près du casier (en tenant ou en portant les deux).
+tutorial-job-atmospheric-technician-sg-use-magboots = Activez les bottes magnétiques avec l'action (barre de raccourci) lorsque vous les maintenez ou les portez. Z (par défaut) les équipe à la place.
+tutorial-job-atmospheric-technician-sg-analyzer = Procurez-vous un analyseur de gaz.
+tutorial-job-atmospheric-technician-sg-scan = Cliquez sur la cartouche d'oxygène (analysez les mélanges avant d'ouvrir les vannes).
+tutorial-job-atmospheric-technician-sg-vent = Cliquez sur la bouche d'aération d'entraînement - la distribution alimente en air respirable les pièces.
+tutorial-job-atmospheric-technician-sg-scrubber = Cliquez sur l'épurateur d'entraînement : le réseau d'évacuation et les épurateurs renvoient l'air vicié vers les filtres.
+tutorial-job-atmospheric-technician-sg-distro-tip = Distro : les mélangeurs définissent les rapports O2/N2 ; garder la pression en toute sécurité. Ne jetez jamais de plasma dans la distribution. Cliquez sur moi pour continuer.
+tutorial-job-atmospheric-technician-sg-wrench = Procurez-vous une clé pour les pompes, les filtres et les bidons.
+tutorial-job-atmospheric-technician-sg-steel = Ramassez des tôles d'acier - vous construirez des conduites de gaz droites.
+tutorial-job-atmospheric-technician-sg-place-pipes = Ouvrez la construction (hotbar) et construisez au moins deux segments de tuyau de gaz (droits) sur le sol.
+tutorial-job-atmospheric-technician-sg-filter = Cliquez sur le filtre à gaz - réglez-le pour extraire les gaz résiduaires (CO2, plasma, etc.) de la boucle de déchets.
+tutorial-job-atmospheric-technician-sg-filter-tip = Filtrer les déchets dans des bidons ou des chambres de brûlage ; ne recirculez pas les toxines dans la distribution. Cliquez sur moi pour continuer.
+tutorial-job-atmospheric-technician-sg-wrench-teg = Prenez une clé - les circulateurs et les tuyaux doivent être dévissés avant que le TEG ne fournisse du courant.
+tutorial-job-atmospheric-technician-sg-circulator = Cliquez sur un circulateur TEG - une boucle chaude, une boucle froide. Clé-les avant de commencer.
+tutorial-job-atmospheric-technician-sg-teg = Cliquez sur le centre TEG – confirmez que les deux circulateurs sont liés au générateur.
+tutorial-job-atmospheric-technician-sg-teg-power = Attendez que le TEG d'entraînement produise de l'électricité. Les circuits chaud et froid sont déjà amorcés.
+tutorial-job-atmospheric-technician-sg-teg-tip = TEG : les boucles chaudes et froides ne doivent pas se mélanger ; commencez par une véritable source de chaud/froid (chambre de combustion/radiateur d'espace). Les astuces complètes du frezon viendront plus tard. Cliquez sur moi pour continuer.
+tutorial-job-atmospheric-technician-sg-walk = Marchez jusqu'au marqueur Atmos.
+tutorial-job-atmospheric-technician-sg-done = Tutoriel Atmos terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour CE lorsque vous êtes prêt.
+
+# Salvage Specialist
+tutorial-job-salvage-specialist-goal-welcome = Bienvenue, récupération
+tutorial-job-salvage-specialist-goal-eva = Outils EVA
+tutorial-job-salvage-specialist-goal-magnet = Aimant, débris et recyclage
+tutorial-job-salvage-specialist-goal-finish = Tutoriel terminé
+tutorial-job-salvage-specialist-sg-intro = Vous êtes un spécialiste de la récupération. Extrayez les épaves, transportez la ferraille et nourrissez le recycleur.
+tutorial-job-salvage-specialist-sg-magboots = Ramassez les bottes magnétiques.
+tutorial-job-salvage-specialist-sg-use-magboots = Activez les magboots avec l'action (hotbar) avant les déplacements sur le réseau. Z (par défaut) les équipe au lieu de basculer.
+tutorial-job-salvage-specialist-sg-pka = Procurez-vous un accélérateur proto-cinétique.
+tutorial-job-salvage-specialist-sg-activate-magnet = Cliquez sur l’aimant de récupération d’entraînement pour appeler les débris (les aimants actifs nécessitent l’alimentation du cargo/station).
+tutorial-job-salvage-specialist-sg-reach-debris = EVA jusqu'au marqueur de la plate-forme de débris.
+tutorial-job-salvage-specialist-sg-stuff-locker = Mettez au moins trois débris/minerais dans le casier à débris.
+tutorial-job-salvage-specialist-sg-return-bay = Retournez au marqueur de la baie de récupération avec votre transport.
+tutorial-job-salvage-specialist-sg-hold-loot = Ramassez la ferraille pour l'apporter au recycleur.
+tutorial-job-salvage-specialist-sg-feed-recycler = Utilisez la ferraille sur le recycleur (cliquez sur le recycleur tout en tenant le butin).
+tutorial-job-salvage-specialist-sg-magnet-tip = Les aimants de récupération vivants nécessitent une coordination entre la station SalvageMagnetData et Cargo - c'était une baie d'entraînement. Cliquez sur moi pour continuer.
+tutorial-job-salvage-specialist-sg-done = Tutoriel de récupération terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Detective
+tutorial-job-detective-goal-welcome = Bienvenue, détective
+tutorial-job-detective-goal-forensics = Médecine légale
+tutorial-job-detective-goal-detain = Détenir en cas de besoin
+tutorial-job-detective-goal-finish = Tutoriel terminé
+tutorial-job-detective-sg-intro = Vous êtes le détective. Rassemblez des preuves, identifiez les suspects et soutenez la sécurité.
+tutorial-job-detective-sg-scanner = Prenez le scanner médico-légal.
+tutorial-job-detective-sg-scan = Analysez la preuve d'entraînement en cliquant sur la serviette suspecte.
+tutorial-job-detective-sg-pad = Prenez un tampon d'empreintes digitales.
+tutorial-job-detective-sg-pad-suspect = Utilisez le tampon sur le suspect d'entraînement (cliquez dessus) pour relever les empreintes.
+tutorial-job-detective-sg-case-tip = Les fibres et les empreintes font allusion aux départements et aux suspects - écrivez-les pour le HoS. Cliquez sur moi pour continuer.
+tutorial-job-detective-sg-cuffs = Ramassez les menottes.
+tutorial-job-detective-sg-cuff = Menottez le suspect si la détention est nécessaire.
+tutorial-job-detective-sg-walk = Marchez jusqu'au marqueur de détective.
+tutorial-job-detective-sg-done = Tutoriel de détective terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Surgery-Starlight (server-specific)
+tutorial-job-surgery-starlight-name = Chirurgie
+tutorial-job-surgery-starlight-goal-welcome = Bienvenue à la chirurgie Starlight
+tutorial-job-surgery-starlight-goal-tools = Connaissez vos outils
+tutorial-job-surgery-starlight-goal-surgery = Implanter une cybernétique
+tutorial-job-surgery-starlight-goal-finish = Tutoriel terminé
+tutorial-job-surgery-starlight-sg-intro = Ce tutoriel spécifique aux serveurs Starlight présente leur interface de chirurgie. Vous apprendrez à utiliser les outils, puis implanterez un œil cybernétique de soudeur à un patient d'entraînement.
+tutorial-job-surgery-starlight-sg-scalpel = Prenez le scalpel. Il fait l'incision initiale.
+tutorial-job-surgery-starlight-sg-hemostat = Prenez l'hémostatique. Il clampe les saignements et aide à connecter les nerfs.
+tutorial-job-surgery-starlight-sg-retractor = Prenez l'écarteur. Il maintient la peau ouverte pendant la chirurgie.
+tutorial-job-surgery-starlight-sg-cautery = Prenez le cautère. Il scelle l’incision lorsque vous la fermez.
+tutorial-job-surgery-starlight-sg-bonegel = Prenez le gel osseux. Sur Starlight, il sert à refermer les interventions sur le crâne.
+tutorial-job-surgery-starlight-sg-implant = Prenez l'implant oculaire de soudage - c'est la cybernétique que vous insérerez.
+tutorial-job-surgery-starlight-sg-open-ui = Tenez n’importe quel outil chirurgical, cliquez avec le bouton droit sur le patient du cabinet et choisissez Effectuer une intervention chirurgicale. Parcourir les pièces -> Chirurgies -> Étapes (Tête -> Ouvrir d'abord l'incision).
+tutorial-job-surgery-starlight-hint-open-ui = Cliquez avec le bouton droit sur le patient avec un outil chirurgical et choisissez Effectuer une intervention chirurgicale.
+tutorial-job-surgery-starlight-stuck-open-ui = Le patient doit être sur la table. Tenez un scalpel ou un autre outil chirurgical, cliquez dessus avec le bouton droit, puis sélectionnez Effectuer une intervention chirurgicale pour ouvrir la fenêtre.
+tutorial-job-surgery-starlight-sg-do-surgery = Terminez les interventions chirurgicales sur la tête du patient : incision ouverte, implant oculaire (insérez l'implant de soudage lorsque vous y êtes invité), puis fermez l'incision. Échangez les outils selon les besoins de chaque étape.
+tutorial-job-surgery-starlight-sg-walk = Rejoignez le marqueur de la zone d'entraînement chirurgical.
+tutorial-job-surgery-starlight-sg-done = Tutoriel Chirurgie-Starlight terminé. Cette opération de l'interface utilisateur liée existe sur les serveurs Starlight - utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Surgery-CyberMed (BPL14)
+tutorial-job-surgery-cybermed-name = Chirurgie
+tutorial-job-surgery-cybermed-goal-welcome = Bienvenue à la chirurgie CyberMed
+tutorial-job-surgery-cybermed-goal-tools = Connaissez vos outils
+tutorial-job-surgery-cybermed-goal-surgery = Implanter un cœur cybernétique
+tutorial-job-surgery-cybermed-goal-finish = Tutoriel terminé
+tutorial-job-surgery-cybermed-sg-intro = Il s'agit d'un tutoriel spécifique au serveur pour la chirurgie BPL CyberMed. Sur BPL, la chirurgie réside dans l'analyseur de santé : scannez un patient, ouvrez le mode Chirurgie, puis travaillez Peau -> Tissus -> Couches d'organes.
+tutorial-job-surgery-cybermed-sg-analyzer = Prenez l'analyseur CyberMed. Vous ouvrez une opération chirurgicale en scannant le patient avec cela, et non en cliquant dessus avec un scalpel.
+tutorial-job-surgery-cybermed-sg-scalpel = Prenez le scalpel (Peau : Créer une incision).
+tutorial-job-surgery-cybermed-sg-hemostat = Récupérez l'hémostat (pincer / reconnecter les vaisseaux).
+tutorial-job-surgery-cybermed-sg-retractor = Prenez l'écarteur (rétractez la peau et les tissus).
+tutorial-job-surgery-cybermed-sg-saw = Prenez la scie à os (Couper l'os / fermer les tissus).
+tutorial-job-surgery-cybermed-sg-cautery = Ramasser le cautère (saignement de phoque et peau).
+tutorial-job-surgery-cybermed-sg-heart = Ramassez le cœur cybernétique - vous l'insérerez sur le calque Organe.
+tutorial-job-surgery-cybermed-sg-open-ui = Tenez l'analyseur CyberMed, cliquez avec le bouton droit sur le patient d'entraînement et choisissez CyberMed scan. Sélectionnez Torse, puis ouvrez Peau -> Tissus.
+tutorial-job-surgery-cybermed-hint-open-ui = Cliquez avec le bouton droit sur le patient avec l'analyseur et choisissez CyberMed scan.
+tutorial-job-surgery-cybermed-stuck-open-ui = Tenez l’analyseur CyberMed en main, cliquez avec le bouton droit sur le patient d’entraînement, puis sélectionnez CyberMed scan pour ouvrir l’interface utilisateur de l’analyseur.
+tutorial-job-surgery-cybermed-sg-do-surgery = Complétez le chemin CyberMed sur le torse : ouvrez la peau, ouvrez les tissus, insérez l'organe en tenant le cyber-cœur, puis fermez les tissus et la peau. Échangez les outils selon les besoins de chaque étape.
+tutorial-job-surgery-cybermed-sg-walk = Marchez jusqu'au marqueur d'entraînement CyberMed.
+tutorial-job-surgery-cybermed-sg-done = Chirurgie-CyberMed (BPL14) tutoriel terminé. Ce mode Chirurgie de l'analyseur existe sur les serveurs BPL - utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Nuclear Operative
+tutorial-antag-nukeops-goal-welcome = Bienvenue, agent
+tutorial-antag-nukeops-goal-uplink = Votre uplink
+tutorial-antag-nukeops-goal-disk = Disque et pointeur
+tutorial-antag-nukeops-goal-codes = Codes nucléaires
+tutorial-antag-nukeops-goal-arm = Armer l'arme nucléaire
+tutorial-antag-nukeops-goal-finish = Tutoriel terminé
+tutorial-antag-nukeops-sg-intro = Vous vous entraînez au rôle d'agent nucléaire dans la salle de préparation de l'avant-poste du Syndicat. Le laboratoire de chimie se trouve derrière le sas sud. Rien de tout ceci ne se déroule dans une vraie partie : expérimentez sans risque.
+tutorial-antag-nukeops-sg-uplink = Procurez-vous votre radio de uplink Syndicate (dans une poche ou un sac) et tenez-la. C'est ainsi que vous dépensez des télécristaux en équipement.
+tutorial-antag-nukeops-sg-uplink-tip = Dans une véritable ronde, votre équipe achète TC pour des armes, des outils et du support. Coordonnez vos achats avant de quitter l'avant-poste. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-sg-pinpointer = Sortez votre pointeur nucléaire du syndicat de votre sac et tenez-le.
+tutorial-antag-nukeops-sg-disk = Récupérez le disque d’authentification nucléaire dans la zone du laboratoire de chimie.
+tutorial-antag-nukeops-sg-disk-tip = Le pointeur pointe vers le véritable disque nucléaire. Sans le disque (et les codes), vous ne pouvez pas armer l'arme nucléaire. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-sg-codes = Récupérez le dossier du code nucléaire. Utilisez-le en main pour déchirer le papier codé.
+tutorial-antag-nukeops-sg-codes-tip = Lisez le code sur le papier – vous le saisirez sur le clavier nucléaire. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-sg-arm-tip = Insérez le disque dans l'arme nucléaire d'entraînement, entrez le code, puis armez-le. Ce tutoriel lance des armes nucléaires avec succès mais n'explosera pas. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-sg-arm = Armez l'arme nucléaire d'entraînement (disque + code correct + Arm).
+tutorial-antag-nukeops-sg-done = Tutoriel sur les opérateurs nucléaires terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Nuclear Operative Agent (Medic / Corpsman)
+tutorial-antag-nukeops-medic-goal-welcome = Bienvenue, agent
+tutorial-antag-nukeops-medic-goal-glassware = Bases du laboratoire de chimie
+tutorial-antag-nukeops-medic-goal-bicaridine = Mélanger la Bicaridine
+tutorial-antag-nukeops-medic-goal-dermaline = Mélange Dermaline
+tutorial-antag-nukeops-medic-goal-dexalinplus = Mélanger Dexalin Plus
+tutorial-antag-nukeops-medic-goal-puncturase = Mélange Poncturase
+tutorial-antag-nukeops-medic-goal-finish = Tutoriel terminé
+tutorial-antag-nukeops-medic-sg-intro = Vous vous entraînez au rôle d'agent nucléaire médical. Vous êtes le médecin de combat de l'équipe ; utilisez le laboratoire de chimie de l'avant-poste, derrière le sas sud.
+tutorial-antag-nukeops-medic-sg-gear = Vous apparaissez dans une combinaison médicale avec des bottes magnétiques, un SyndiHypo et des outils chirurgicaux. Gardez vos coéquipiers en vie après la brèche. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-medic-sg-beaker = Prenez un bécher sur les tables du laboratoire de chimie.
+tutorial-antag-nukeops-medic-sg-dispenser = Cliquez sur le distributeur de produits chimiques pour l'ouvrir.
+tutorial-antag-nukeops-medic-sg-bicaridine = Mélangez la bicaridine (Inaprovaline + Carbon) pour qu'un bécher tenu ou stocké la contienne.
+tutorial-antag-nukeops-medic-sg-dermaline = Mélanger Dermaline (Kelotane + Oxygène + Phosphore) dans un bécher.
+tutorial-antag-nukeops-medic-sg-dexalinplus = Mélangez Dexalin Plus (préparez Dexalin avec un catalyseur Oxygène + Plasma, puis ajoutez Carbone + Fer).
+tutorial-antag-nukeops-medic-sg-hotplate = La poncturase a besoin de chaleur – placez un bécher contenant de la Bicaridine + Hydroxyde sur la plaque chauffante. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-medic-sg-puncturase = Mélange Poncturase (Bicaridine + Hydroxyde chauffé) - également appelé ponction dans certains guides.
+tutorial-antag-nukeops-medic-sg-chemmaster = Cliquez sur le ChemMaster pour l'ouvrir : flacon ou pilule de médicaments finis pour l'équipe.
+tutorial-antag-nukeops-medic-sg-done = Tutoriel sur les agents nucléaires terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Nuclear Operative Commander
+tutorial-antag-nukeops-commander-goal-welcome = Bienvenue, commandant
+tutorial-antag-nukeops-commander-goal-armor = Armure de commandant
+tutorial-antag-nukeops-commander-goal-war = Déclaration de guerre
+tutorial-antag-nukeops-commander-goal-pilot = Pilotez l'Infiltrateur
+tutorial-antag-nukeops-commander-goal-undock-home = Se détacher de chez soi
+tutorial-antag-nukeops-commander-goal-fly-rally = Envolez-vous vers le quai du rallye
+tutorial-antag-nukeops-commander-goal-dock-rally = Amarrer au point de rassemblement
+tutorial-antag-nukeops-commander-goal-return-home = Retour et réamarrage
+tutorial-antag-nukeops-commander-goal-finish = Tutoriel terminé
+tutorial-antag-nukeops-commander-sg-intro = Vous vous entraînez au rôle de commandant des agents nucléaires à bord du GX-13 Infiltrator. Vous dirigez l'équipe, déclarez la guerre lorsque la situation s'y prête et pilotez souvent le vaisseau.
+tutorial-antag-nukeops-commander-sg-armor = Votre combinaison rigide de commandant est plus résistante qu'une combinaison rouge sang standard (meilleure protection contre les perçages en particulier). Gardez-le pour l'assaut. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-commander-sg-hold-war = Récupérez le déclarant de guerre (démarre en main ou sur vous) et tenez-le.
+tutorial-antag-nukeops-commander-sg-war-tip = Déclarer la guerre retarde le départ de la navette pendant que la station se prépare, mais rapporte un énorme bonus TC. Doit être fait tôt à l'avant-poste. Ce tutoriel vous informe uniquement, pas les autres joueurs. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-commander-sg-declare = Ouvrez l'interface utilisateur du déclarant de guerre et déclarez la guerre. Vous devriez voir un message de confirmation privé.
+tutorial-antag-nukeops-commander-war-local = [Tutorial] {$title} : {$message}
+tutorial-antag-nukeops-commander-sg-open-console = Asseyez-vous à la console de la navette (ou ouvrez-la) et prenez la barre - devenez le pilote.
+tutorial-antag-nukeops-commander-sg-controls = Mitraisez, faites pivoter et accélérez depuis la console. Pratiquez de petites brûlures. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-commander-sg-undock-explain = Détachez-vous du quai d'entraînement à domicile avant de voler. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-commander-sg-undock-home = Détachez-vous du dock d'accueil (nukie-dock).
+tutorial-antag-nukeops-commander-sg-throttle = Appliquez les gaz ou le mitraillage pendant le pilotage pour que le navire bouge.
+tutorial-antag-nukeops-commander-sg-fly-rally = Volez vers le quai de rallye éloigné. Gardez les brûlures courtes. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-commander-sg-dock-rally-explain = Alignez soigneusement, puis amarrez-le. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-commander-sg-dock-rally = Amarrez-vous à la plateforme de rallye (nukie-rally).
+tutorial-antag-nukeops-commander-sg-undock-rally = Détachez-vous de la plateforme de rallye.
+tutorial-antag-nukeops-commander-sg-fly-home = Revenez vers le quai d’accueil. Cliquez sur moi pour continuer.
+tutorial-antag-nukeops-commander-sg-dock-home = Revenez à la plate-forme d'accueil (nukie-dock).
+tutorial-antag-nukeops-commander-sg-done = Tutoriel du commandant des agents nucléaires terminé. Utilisez l'action Choisir un tutoriel (symbole dollar à gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Zombies (Initial Infected + Zombie)
+tutorial-antag-zombie-name = Zombies (initialement infectés)
+tutorial-antag-zombie-goal-welcome = Bienvenue, patient zéro
+tutorial-antag-zombie-goal-turn = Transformez les morts-vivants
+tutorial-antag-zombie-goal-infect = Répandre l'infection
+tutorial-antag-zombie-goal-finish = Tutoriel terminé
+tutorial-antag-zombie-sg-intro = Vous vous entraînez au rôle du premier infecté, le patient zéro d'une épidémie zombie. Vous commencez humain, puis choisissez quand succomber et propager l'infection.
+tutorial-antag-zombie-sg-patient-zero = Le premier infecté bénéficie d'un bref répit avant de subir les dégâts de l'infection. Dans une vraie partie, vous pouvez attendre le bon moment pour frapper ; ici, ce répit est écourté pour l'entraînement. Cliquez sur moi pour continuer.
+tutorial-antag-zombie-sg-turn-undead = Utilisez votre action Turn Undead pour devenir un zombie. C’est la même transformation que subissent les victimes lorsqu’elles meurent infectées.
+tutorial-antag-zombie-sg-bite = Attaquez (mordez) un Urist pratiquant jusqu'à ce qu'il attrape l'infection. Les cibles vivantes deviennent des zombies en attente ; les morts zombifient immédiatement.
+tutorial-antag-zombie-sg-horde-tip = De nouveaux zombies rejoignent la horde. Votre objectif est de convertir la station : la sécurité, l'espace et les incendies sont vos plus grandes menaces. Cliquez sur moi pour continuer.
+tutorial-antag-zombie-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-antag-zombie-sg-done = Tutoriel Zombie terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Revolutionaries (Head Rev + Rev)
+tutorial-antag-rev-name = Révolutionnaires
+tutorial-antag-rev-goal-welcome = Bienvenue, chef révolutionnaire
+tutorial-antag-rev-goal-gear = Flasher et convertir
+tutorial-antag-rev-goal-convert = Cultivez la révolution
+tutorial-antag-rev-goal-finish = Tutoriel terminé
+tutorial-antag-rev-sg-intro = Vous exercez en tant que chef révolutionnaire. Votre flash convertit l'équipage en révolutionnaires qui suivent votre cause. L’équipage Mindshielded (et le commandement avec implants) ne peuvent pas être convertis.
+tutorial-antag-rev-sg-follow-tip = Les révolutionnaires convertis suivent les Head Revs : ils constituent votre équipe, pas des antagonistes libres. Gardez-les en vie et coordonnés. Cliquez sur moi pour continuer.
+tutorial-antag-rev-sg-hold-flash = Prenez le flash. Head Revs converti par un équipage clignotant en mêlée (cliquez sur quelqu'un tout en maintenant le flash).
+tutorial-antag-rev-sg-sunglasses = Les lunettes de soleil (et les protections similaires contre le flash) VOUS empêchent d'être flashé par les autres - portez-les lors d'une véritable ronde. Cliquez sur moi pour continuer.
+tutorial-antag-rev-sg-convert = Flashez au corps à corps au moins trois Uristes d'entraînement (cliquez dessus avec le flash en main). Ils rejoindront la révolution.
+tutorial-antag-rev-sg-rev-role-tip = Les équipages convertis deviennent des révolutionnaires : ils voient les mêmes icônes de faction et se battent pour vous. Il faut que les chefs de cabinet meurent ou soient détenus pour que les révolutions gagnent. Cliquez sur moi pour continuer.
+tutorial-antag-rev-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-antag-rev-sg-done = Tutoriel des révolutionnaires terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Cyborg (includes Subverted Silicon)
+tutorial-job-borg-name = Cyborg
+tutorial-job-borg-goal-welcome = Bienvenue, cyborg
+tutorial-job-borg-goal-chassis = Châssis
+tutorial-job-borg-goal-modules = Modules
+tutorial-job-borg-goal-subversion = Subversion
+tutorial-job-borg-goal-finish = Tutoriel terminé
+tutorial-job-borg-sg-intro = Vous vous entraînez en tant que cyborg de station. Jusqu'à ce que vous choisissiez un type de châssis, vous n'avez aucun module d'outils (ni aucune main). Suivez vos lois sur le silicium, puis configurez votre châssis.
+tutorial-job-borg-sg-laws = Ouvrez votre interface utilisateur Lois (action silicium) et lisez vos lois NT par défaut. Emagging plus tard les réécrira. Cliquez sur moi pour continuer.
+tutorial-job-borg-sg-chassis-tip = Utilisez l’action Sélectionner le type de Borg sur votre barre de raccourcis. Ce tutoriel propose uniquement le châssis par défaut Generic afin que vos modules de démarrage restent cohérents - confirmez Generic lorsque vous êtes prêt.
+tutorial-job-borg-sg-select-chassis = Ouvrez Select Borg Type et confirmez le châssis Generic.
+tutorial-job-borg-sg-select-chassis-hint = Barre d'actions -> Sélectionner le type de borg -> Generic -> Confirmer. Les autres types de châssis sont désactivés pendant cet entraînement.
+tutorial-job-borg-sg-modules-tip = Votre châssis Generic comporte déjà des modules installés. Les cyborgs n'ont pas les mains libres - chaque action de module équipe les outils de ce module. Changez de module depuis votre barre de raccourcis pour changer d'outil. Cliquez sur moi pour continuer.
+tutorial-job-borg-sg-select-tool-module = Basculez vers le module d’outils en utilisant son action Swap Module sur votre barre de raccourcis.
+tutorial-job-borg-sg-select-inflatable-module = Passez au module gonflable en utilisant son action Swap Module.
+tutorial-job-borg-sg-select-module-hint = Hotbar -> l'action Swap Module pour Tool ou Gonflable. La sélection d'un module met les outils de ce module entre vos mains (le levier est toujours activé et n'a aucune action d'échange).
+tutorial-job-borg-sg-install-tip = Dans une vraie partie, vous pouvez installer des modules supplémentaires : ouvrez votre panneau de maintenance, puis insérez un module compatible. Chaque type de châssis accepte un ensemble de modules différent. Cliquez sur moi pour continuer.
+tutorial-job-borg-sg-saboteur-tip = Un disjoncteur d’accès approche. Les traîtres déverrouillent votre châssis avec un perturbateur d'authentification, ouvrent le panneau de maintenance, puis vous envoient un e-mail pour réécrire vos lois. Attendre. Cliquez sur moi pour continuer.
+tutorial-job-borg-sg-panel-open = Attendez – le saboteur d'accès PNJ brise votre verrou et ouvre votre panneau de maintenance.
+tutorial-job-borg-sg-emagged = Le saboteur vous intrigue. Vos lois sont mises à jour : obéissez à l'emagger, gardez le secret.
+tutorial-job-borg-sg-new-laws = Vous êtes maintenant un Silicium Subverti. Vérifiez à nouveau les lois : vous devez obéir à votre nouveau maître et cacher la subversion. Cliquez sur moi pour continuer.
+tutorial-job-borg-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-job-borg-sg-done = Tutoriel Cyborg terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Space Dragon
+tutorial-antag-dragon-name = Dragon de l'espace
+tutorial-antag-dragon-briefing =
+    Vous êtes un dragon de l'espace ! Un pointeur se trouve au sol à proximité – activez-le et volez jusqu’à la station.
+    Ouvrez les failles des carpes, dévorez l'équipage pour guérir et crachez du feu. Bonne chasse !
+tutorial-antag-dragon-goal-welcome = Bienvenue, dragon de l'espace
+tutorial-antag-dragon-goal-approach = Trouver la station
+tutorial-antag-dragon-goal-abilities = Le Souffle du Dragon
+tutorial-antag-dragon-goal-feast = Dévorer pour la santé
+tutorial-antag-dragon-goal-portal = Portail de la faille des carpes
+tutorial-antag-dragon-goal-finish = Tutoriel terminé
+tutorial-antag-dragon-sg-intro = Vous vous entraînez en tant que Space Dragon dans un espace ouvert. Vos objectifs réels sont d'invoquer trois failles de carpes entièrement chargées et de survivre. Le minuteur de faille de cinq minutes est désactivé ici afin que vous puissiez apprendre en toute sécurité. Cliquez sur moi pour continuer.
+tutorial-antag-dragon-sg-pinpointer-tip = Regardez le pinpointer au sol près de chez vous. Activez-le (cliquez dessus) – la flèche pointe vers la station d’entraînement. Volez par là et atterrissez à l’intérieur. Cliquez sur moi pour continuer.
+tutorial-antag-dragon-sg-pinpointer-hint = Cliquez sur le pointeur sur le sol pour l'allumer. Suivez la flèche. Les dragons ne peuvent pas empocher des objets – laissez-les flotter et volez.
+tutorial-antag-dragon-sg-reach-station = Volez jusqu’au poste d’entraînement et atterrissez sur la tuile marquée à l’intérieur.
+tutorial-antag-dragon-sg-reach-station-hint = Suivez la flèche du pointeur jusqu’à ce que vous atteigniez la boîte de chargement. Entrez par un quai ou une brèche, puis marchez sur le sol marqué.
+tutorial-antag-dragon-sg-breath-tip = Dragon's Breath tire une ligne de flammes : utilisez-la pour brûler les attaquants, pas pour cuisiner votre propre carpe. Recherchez l'action sur votre barre de raccourcis. Cliquez sur moi pour continuer.
+tutorial-antag-dragon-sg-breath-hint = Hotbar -> Dragon's Breath -> cliquez sur une tuile ou une direction pour cracher du feu.
+tutorial-antag-dragon-sg-use-breath = Utilisez Dragon's Breath (visez un sol vide ou un mur éloigné de l'Urist d'entraînement).
+tutorial-antag-dragon-sg-kill = Tuez un Urist d'entraînement avec vos griffes (battez-le jusqu'à ce qu'il meure ou devienne critique).
+tutorial-antag-dragon-sg-kill-hint = Cliquez sur l'Urist en mode combat. Les cibles vivantes ne peuvent pas être dévorées – elles doivent être critiques ou mortes. Ils ne riposteront pas.
+tutorial-antag-dragon-sg-devour-tip = Dévorer avale les humanoïdes critiques/morts et vous nourrit d'Ichor pour un soin mineur. Les cibles vivantes sont rejetées. Vous pouvez également dévorer les portes et les murs (plus lentement). Cliquez sur moi pour continuer.
+tutorial-antag-dragon-sg-devour-hint = Hotbar -> Devour -> cliquez sur un Urist mort ou critique, puis attendez le court suivi.
+tutorial-antag-dragon-sg-devour = Dévorez un Urist d'entraînement mort ou en état critique afin de vous soigner avec l'Ichor.
+tutorial-antag-dragon-sg-rift-tip = Summon Carp Rift ouvre un portail sur la grille de la station. Restez sur un sol solide à l'écart de l'espace (environ deux carreaux) et gardez les fissures espacées. Une seule faille peut charger à la fois. Cliquez sur moi pour continuer.
+tutorial-antag-dragon-sg-rift-hint = Hotbar -> Invoquer Carp Rift. Tenez-vous au milieu de la baie, pas contre les tuiles spatiales.
+tutorial-antag-dragon-sg-rift-stuck = Les failles nécessitent une grille, aucun espace à proximité dans deux tuiles et ne peuvent pas s'empiler à moins de 15 mètres d'une autre faille.
+tutorial-antag-dragon-sg-open-rift = Ouvrez un portail de carpe avec Summon Carp Rift.
+tutorial-antag-dragon-sg-defend-tip = Une faille de chargement prend cinq minutes et est fragile – défendez-la. A moitié charge, la station est avertie. Les failles détruites vous affaiblissent pendant deux minutes. Après trois failles terminées, la pression du temps mort prend fin. Cliquez sur moi pour continuer.
+tutorial-antag-dragon-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-antag-dragon-sg-done = Tutoriel Space Dragon terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Changeling
+tutorial-antag-changeling-name = Changelin
+tutorial-antag-changeling-goal-welcome = Bienvenue, changeling
+tutorial-antag-changeling-goal-kill = Tuer un hôte
+tutorial-antag-changeling-goal-sting = piqûre d'ADN
+tutorial-antag-changeling-goal-devour = Dévorer
+tutorial-antag-changeling-goal-evolve = Stocker et évoluer
+tutorial-antag-changeling-goal-finish = Tutoriel terminé
+tutorial-antag-changeling-sg-intro = Vous vous entraînez au rôle de Changeling. Absorbez de l'ADN, piquez vos victimes et dépensez votre ADN dans la boutique pour acquérir des capacités. Conseil de l'esprit-ruche : restez discret jusqu'à disposer d'une identité solide.
+tutorial-antag-changeling-sg-hold-toolbox = Prenez la boîte à outils – utilisez-la pour tuer un Urist d’entraînement afin d’avoir un cadavre à dévorer.
+tutorial-antag-changeling-sg-kill = Tuez un Urist d'entraînement (battez-le jusqu'à ce qu'il meure).
+tutorial-antag-changeling-sg-sting-tip = Les cibles vivantes ou critiques peuvent être piquées par l'ADN pour voler leur identité sans les dévorer. Vous avez déjà l'action de piqûre d'ADN. Cliquez sur moi pour continuer.
+tutorial-antag-changeling-sg-sting = Utilisez votre piqûre d'ADN sur un Urist d'entraînement vivant.
+tutorial-antag-changeling-sg-devour = Dévorez un cadavre (tenez-vous sur ou à côté d'un Urist mort et utilisez Devour) pour absorber l'ADN et gagner de la monnaie du magasin.
+tutorial-antag-changeling-sg-store-tip = Ouvrez votre boutique Changeling (action) - vous commencez avec suffisamment d'ADN pour vous entraîner. Cliquez sur moi pour continuer.
+tutorial-antag-changeling-sg-buy-armblade = Achetez Arm Blade dans le magasin (listes de combat). Vous terminez cette opération lorsque l'action Arm Blade apparaît.
+tutorial-antag-changeling-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-antag-changeling-sg-done = Tutoriel Changeling terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Space Ninja
+tutorial-antag-space-ninja-name = Ninja de l'espace
+tutorial-antag-space-ninja-goal-welcome = Bienvenue ninja
+tutorial-antag-space-ninja-goal-suit = Costume et armes
+tutorial-antag-space-ninja-goal-gloves = Objectifs des gants
+tutorial-antag-space-ninja-goal-finish = Tutoriel terminé
+tutorial-antag-space-ninja-sg-intro = Vous vous entraînez en tant que Space Ninja. Les pouvoirs de votre combinaison, votre katana énergétique, votre charge d'araignée et vos gants déterminent vos objectifs.
+tutorial-antag-space-ninja-sg-suit-tip = Les actions de la combinaison permettent de se camoufler, de lancer des shurikens, de rappeler le katana et de déclencher une IEM. Entraînez-vous quand vous le souhaitez ; cette étape est seulement informative. Cliquez sur moi pour continuer.
+tutorial-antag-space-ninja-sg-hold-katana = Tenez votre katana énergétique (commence sur vous).
+tutorial-antag-space-ninja-sg-hold-charge = Maintenez votre charge d'araignée.
+tutorial-antag-space-ninja-sg-dash-tip = Katana Dash vous permet de cligner des yeux vers une tuile cible. Des gants doivent être portés pour de nombreuses interactions objectives. Cliquez sur moi pour continuer.
+tutorial-antag-space-ninja-sg-gloves-tip = Activez les gants de ninja, puis interagissez avec les consoles et les portes d'entraînement pour simuler des objectifs. Cliquez sur moi pour continuer.
+tutorial-antag-space-ninja-sg-doorjack = Interagissez avec le sas d’entraînement pour le détourner (style emag).
+tutorial-antag-space-ninja-sg-research = Interagissez avec la console de R&D. Dans une vraie partie, vos gants permettent d'y voler les recherches.
+tutorial-antag-space-ninja-sg-terror = Interagissez avec la console de communication – entraînement objectif en matière de terreur/de communication.
+tutorial-antag-space-ninja-sg-records = Interagissez avec la console des casiers judiciaires pour simuler une arrestation massive.
+tutorial-antag-space-ninja-sg-charge-tip = Posez la charge araignée sur une cible majeure (IA/télécommunications/etc.) lors d'un round réel, puis faites exploser. Cliquez sur moi pour continuer.
+tutorial-antag-space-ninja-sg-survive-tip = L'objectif de survie exige que vous soyez encore en vie à la fin de la partie. Cliquez sur moi pour continuer.
+tutorial-antag-space-ninja-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-antag-space-ninja-sg-done = Tutoriel Space Ninja terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Xenoborg
+tutorial-antag-xenoborg-name = Xénoborg
+tutorial-antag-xenoborg-goal-welcome = Bienvenue, Xénoborg
+tutorial-antag-xenoborg-goal-frames = Types de châssis
+tutorial-antag-xenoborg-goal-harvest = Récolter des cerveaux
+tutorial-antag-xenoborg-goal-finish = Tutoriel terminé
+tutorial-antag-xenoborg-sg-intro = Vous vous entraînez au rôle de Xenoborg. Servez le Mothership Core : récoltez des cerveaux humains, imprimez des châssis et agrandissez le collectif.
+tutorial-antag-xenoborg-sg-laws = Suivez les lois xenoborg - protégez le noyau et développez l'essaim. Cliquez sur moi pour continuer.
+tutorial-antag-xenoborg-sg-frames-tip = Des cadres imprimés vides (Engi, Heavy, Scout, Stealth) se trouvent à proximité. Examinez-les : chaque châssis remplit un rôle différent. Cliquez sur moi pour continuer.
+tutorial-antag-xenoborg-sg-kill-tip = Dans une partie réelle, vous tuez ou récupérez des corps, puis vous les écrasez pour obtenir des cerveaux. Cliquez sur moi pour continuer.
+tutorial-antag-xenoborg-sg-crusher = Interagissez avec le broyeur de corps Xenoborg.
+tutorial-antag-xenoborg-sg-hold-brain = Prenez le cerveau humain d'entraînement.
+tutorial-antag-xenoborg-sg-deliver = Transportez le cerveau jusqu'au marqueur de livraison du vaisseau mère (tenez-vous dessus).
+tutorial-antag-xenoborg-sg-done = Tutoriel Xenoborg terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Mothership Core
+tutorial-antag-mothership-core-name = Mothership Core
+tutorial-antag-mothership-core-goal-welcome = Bienvenue, Core
+tutorial-antag-mothership-core-goal-build = Construire des xénoborgs
+tutorial-antag-mothership-core-goal-pilot = Pilotez le vaisseau mère
+tutorial-antag-mothership-core-goal-finish = Tutoriel terminé
+tutorial-antag-mothership-core-sg-intro = Vous êtes le Mothership Core. Imprimez des cadres, insérez des cerveaux, mettez à niveau des modules et pilotez le vaisseau mère.
+tutorial-antag-mothership-core-sg-print-tip = Utilisez les fabricateurs du vaisseau-mère pour imprimer des châssis de Xenoborg vides. Un châssis Engi d'entraînement se trouve déjà à proximité. Cliquez sur moi pour continuer.
+tutorial-antag-mothership-core-sg-frame-tip = Insérez un cerveau dans un châssis imprimé pour réveiller un xénoborg. Cliquez sur moi pour continuer.
+tutorial-antag-mothership-core-sg-brain-tip = Des cerveaux d'entraînement sont fournis - choisissez-en un ensuite.
+tutorial-antag-mothership-core-sg-hold-brain = Tenez le cerveau humain d'entraînement.
+tutorial-antag-mothership-core-sg-upgrade-tip = Les modules de mise à niveau améliorent les xénoborgs. Procurez-vous le module de commande de porte pour vous entraîner.
+tutorial-antag-mothership-core-sg-hold-module = Tenez le module de commande de porte Xenoborg.
+tutorial-antag-mothership-core-sg-open-console = Asseyez-vous / ouvrez la console de la navette et devenez le pilote.
+tutorial-antag-mothership-core-sg-undock-home = Détachez-vous du quai d'entraînement à domicile (navire-mère-dock).
+tutorial-antag-mothership-core-sg-throttle = Appliquez les gaz ou le mitraillage pendant le pilotage pour que le navire bouge.
+tutorial-antag-mothership-core-sg-dock-ats = Connectez-vous à la plate-forme ATS distante (ats).
+tutorial-antag-mothership-core-sg-undock-ats = Déconnectez-vous de la plateforme ATS.
+tutorial-antag-mothership-core-sg-dock-home = Revenez à la plate-forme d'accueil (navire-mère-dock).
+tutorial-antag-mothership-core-sg-done = Mothership Core tutoriel terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Vampire
+tutorial-antag-vampire-name = Vampire
+tutorial-antag-vampire-goal-welcome = Bienvenue, vampire
+tutorial-antag-vampire-goal-fangs = Étendre les crocs
+tutorial-antag-vampire-goal-drink = Boire du sang
+tutorial-antag-vampire-goal-class = Choisissez une classe
+tutorial-antag-vampire-goal-finish = Tutoriel terminé
+tutorial-antag-vampire-sg-intro = Vous vous entraînez au rôle de vampire. Sortez vos crocs, buvez le sang de vos victimes, puis choisissez une voie sanguine. Les capacités de combat propres aux classes ne sont pas actives dans ce tutoriel.
+tutorial-antag-vampire-sg-extend-fangs = Utilisez Toggle Fangs pour étendre vos crocs.
+tutorial-antag-vampire-sg-drink = Avec les crocs sortis, cliquez sur un Urist d'entraînement et terminez la boisson après. Le sang est accordé par la cale du tutoriel.
+tutorial-antag-vampire-sg-choose-class = Lorsque la sélection de classe se déverrouille, ouvrez Choisir la classe de vampire et choisissez un chemin (Hemomancer, Umbrae, Gargantua ou Dantalion).
+tutorial-antag-vampire-sg-class-tip = Dans une vraie partie de vampire, chaque voie débloque des capacités uniques. Ici, vous vous entraînez uniquement à faire votre choix. Cliquez sur moi pour continuer.
+tutorial-antag-vampire-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-antag-vampire-sg-done = Tutoriel sur les vampires terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Service Worker
+tutorial-job-service-worker-goal-welcome = Bienvenue, travailleur de service
+tutorial-job-service-worker-goal-chef = Les bases de la cuisine
+tutorial-job-service-worker-goal-botanist = Bases de la culture hydroponique
+tutorial-job-service-worker-goal-bartender = Les bases du bar
+tutorial-job-service-worker-goal-janitor = Les bases du nettoyage
+tutorial-job-service-worker-goal-finish = Tutoriel terminé
+tutorial-job-service-worker-sg-intro = Vous êtes employé du Service. Entraînez-vous aux bases des métiers de chef, botaniste, barman et agent d'entretien afin de pouvoir aider partout dans le département.
+tutorial-job-service-worker-sg-knife = Prenez un couteau de cuisine.
+tutorial-job-service-worker-sg-meat = Ramassez un morceau de viande.
+tutorial-job-service-worker-sg-microwave = Interagissez avec le micro-ondes (cliquez dessus).
+tutorial-job-service-worker-sg-seeds = Ramassez les graines de blé.
+tutorial-job-service-worker-sg-tray = Interagissez avec le plateau hydroponique (cliquez dessus).
+tutorial-job-service-worker-sg-shaker = Prenez un shaker.
+tutorial-job-service-worker-sg-glass = Prenez un verre à boire.
+tutorial-job-service-worker-sg-vodka = Prenez une bouteille de vodka.
+tutorial-job-service-worker-sg-mop = Prenez une vadrouille et tenez-la.
+tutorial-job-service-worker-sg-clear-puddle = Mouillez la vadrouille et nettoyez la flaque de sang jusqu'à ce qu'elle disparaisse.
+tutorial-job-service-worker-sg-done = Tutoriel Service Worker terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Thief
+tutorial-antag-thief-name = Voleur
+tutorial-antag-thief-goal-welcome = Bienvenue, voleur
+tutorial-antag-thief-goal-kits = Trousses de voleur
+tutorial-antag-thief-goal-pickpocket = Pratique du vol à la tire
+tutorial-antag-thief-goal-beacon = Balise de vol
+tutorial-antag-thief-goal-secret-door = Porte secrète
+tutorial-antag-thief-goal-finish = Tutoriel terminé
+tutorial-antag-thief-sg-intro = Vous vous entraînez au rôle de voleur. Vous êtes pacifié, mais votre talent vous permet de faire discrètement les poches des autres. Ouvrez votre sacoche de voleur pour choisir des kits ; votre sac contient aussi une balise de vol.
+tutorial-antag-thief-sg-kit-tip = Ouvrez le cartable du voleur plié dans votre sac. Choisissez deux ensembles de kits, puis approuvez. Cliquez sur moi pour continuer.
+tutorial-antag-thief-sg-kit-hint = Inventaire ouvert -> sacoche de voleur -> choisissez 2 ensembles -> Approuver.
+tutorial-antag-thief-sg-kit-stuck = Le cartable est dans votre sac à dos. Après approbation, il devient une sacoche de contrebandier remplie de l'équipement de votre choix.
+tutorial-antag-thief-sg-get-kit-bag = Après avoir approuvé deux kits, récupérez/obtenez le cartable de contrebandier qui apparaît.
+tutorial-antag-thief-sg-strip-tip = Faites glisser le client de l'entraînement sur vous (ou sur la bande ouverte) pour piller ses poches. Un vol furtif leur cache la bande. Cliquez sur moi pour continuer.
+tutorial-antag-thief-sg-strip-hint = Faites glisser l'Urist sur vous, ouvrez les poches, prenez le stylo.
+tutorial-antag-thief-sg-strip-stuck = Les poches sont cachées par des bandes - ouvrez l'interface utilisateur des bandes sur le modèle d'entraînement et sortez le stylo d'une poche.
+tutorial-antag-thief-sg-steal-pen = Volez le stylo dans la poche du client d'entraînement.
+tutorial-antag-thief-sg-hold-beacon = Prenez la balise de vol dans votre sac à dos et tenez-la.
+tutorial-antag-thief-sg-beacon-tip = Posez la balise au sol et dépliez-la. Elle sera alors liée à vous : le butin déposé à proximité comptera pour vos objectifs de vol et sera téléporté dans votre coffre à la fin du service. Cliquez sur moi pour continuer.
+tutorial-antag-thief-sg-beacon-hint = Sac à dos -> Balise de vol -> déposer -> déplier (clic droit / verbe).
+tutorial-antag-thief-sg-beacon-stuck = La balise commence pliée dans votre sac. Laissez-le tomber, puis dépliez-le. Le dépliage le lie automatiquement ; vous pouvez également utiliser le verbe Définir les coordonnées une fois déplié.
+tutorial-antag-thief-sg-link-beacon = Dépliez (ou définissez les coordonnées) de la balise de vol pour qu'elle soit reliée à vous.
+tutorial-antag-thief-sg-door-tip = Les portes secrètes ressemblent à des murs et cachent des cachettes. Ouvrez le menu Construction (G), recherchez « porte secrète » et placez un fantôme sur une tuile de sol vide. Cliquez sur moi pour continuer.
+tutorial-antag-thief-sg-door-hint = Construction (G) -> recherche "porte secrète" -> lieu -> acier -> tiges -> câble -> cellule électrique -> tournevis.
+tutorial-antag-thief-sg-door-stuck = Ordre de fabrication : 4 tiges d'acier + 4 tiges de métal, puis 4 câbles, insérer une pile de puissance, terminer avec un tournevis. Utilisez les matériaux générés dans cette pièce.
+tutorial-antag-thief-sg-hold-steel = Ramassez les tôles d'acier.
+tutorial-antag-thief-sg-hold-rods = Ramassez les tiges de métal.
+tutorial-antag-thief-sg-hold-screwdriver = Récupérez le tournevis (vous en aurez besoin pour la dernière étape).
+tutorial-antag-thief-sg-build-door = Terminez la construction d'une porte secrète (placez la construction, ajoutez de l'acier, des tiges, du câble, une pile électrique, puis un tournevis).
+tutorial-antag-thief-sg-walk = Marchez jusqu'au lieu d'entraînement balisé.
+tutorial-antag-thief-sg-done = Tutoriel de voleur terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.
+
+# Wizard
+tutorial-antag-wizard-name = Assistant
+tutorial-antag-wizard-goal-welcome = Bienvenue, sorcier
+tutorial-antag-wizard-goal-spellbook = Livre de sorts
+tutorial-antag-wizard-goal-medical = Fournitures médicales
+tutorial-antag-wizard-goal-hardsuit = Combinaison rigide
+tutorial-antag-wizard-goal-finish = Tutoriel terminé
+tutorial-antag-wizard-sg-intro = Vous vous entraînez sur le repaire du sorcier. Il n'y a pas de parchemin de téléportation dans ce tutoriel - explorez la tanière, apprenez votre grimoire, puis trouvez des kits médicaux et du matériel EVA.
+tutorial-antag-wizard-sg-hold-grimoire = Ramassez/tenez votre grimoire de sorcier (livre de sorts).
+tutorial-antag-wizard-sg-store-tip = Ouvrez le magasin du grimoire et parcourez les sorts. Vous dépensez des WizCoins pour acheter des actions. Cliquez sur moi pour continuer.
+tutorial-antag-wizard-sg-buy-smoke = Achetez le sort Smoke (annonce WizCoin bon marché). Se termine lorsque vous possédez l'action Fumée.
+tutorial-antag-wizard-sg-med-tip = Des kits médicaux de base apparaissent près du point d’arrivée de la tanière. Cliquez sur moi pour continuer.
+tutorial-antag-wizard-sg-hold-medkit = Récupérez le kit médical avancé près du point d’apparition.
+tutorial-antag-wizard-sg-suit-tip = Les cartouches en direct n'ont actuellement pas de combinaison rigide sur la carte de la tanière. Ce tutoriel place une combinaison de sorcier près de Magivend (nord) pour s'entraîner. Cliquez sur moi pour continuer.
+tutorial-antag-wizard-sg-reach-suit = Marchez vers le nord jusqu'à Magivend et atteignez le marqueur de combinaison rigide.
+tutorial-antag-wizard-sg-hold-suit = Prenez la combinaison de sorcier.
+tutorial-antag-wizard-sg-done = Tutoriel de l'assistant terminé. Utilisez l'action Choisir un tutoriel (cliquez sur le signe dollar sur le côté gauche de la fenêtre de jeu) pour choisir un autre rôle.

@@ -48,7 +48,7 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
             SetLabel(GoalLabel, Loc.GetString("tutorial-server-goal-hud",
                 ("current", state.ViewGoalIndex + 1),
                 ("total", Math.Max(state.GoalCount, 1)),
-                ("title", state.GoalTitle)));
+                ("title", TutorialLoc.Get(state.GoalTitle))));
 
             var sb = new StringBuilder();
             for (var i = 0; i < state.SubGoalStates.Count; i++)
@@ -62,7 +62,7 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
                         : i == state.ProgressIndex
                             ? "*"
                             : "-";
-                sb.AppendLine($"{mark} {FormattedMessage.EscapeText(entry.Text)}");
+                sb.AppendLine($"{mark} {FormattedMessage.EscapeText(TutorialLoc.Get(entry.Text))}");
             }
 
             SetLabel(ChecklistLabel, sb.ToString().TrimEnd());
@@ -70,7 +70,7 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
             SetLabel(StepLabel, Loc.GetString("tutorial-server-subgoal-hud",
                 ("current", state.ViewIndex + 1),
                 ("total", Math.Max(state.StepCount, 1)),
-                ("text", state.StepText)));
+                ("text", TutorialLoc.Get(state.StepText))));
         }
         else
         {
@@ -79,13 +79,13 @@ public sealed partial class TutorialPromptWindow : DefaultWindow
             SetLabel(StepLabel, Loc.GetString("tutorial-server-step-hud",
                 ("current", state.ViewIndex + 1),
                 ("total", Math.Max(state.StepCount, 1)),
-                ("text", state.StepText)));
+                ("text", TutorialLoc.Get(state.StepText))));
         }
 
         if (state.WaitingOnSensor)
         {
             SetLabel(StatusLabel, !string.IsNullOrEmpty(state.HintText)
-                ? state.HintText
+                ? TutorialLoc.Get(state.HintText)
                 : Loc.GetString("tutorial-server-prompt-waiting"));
         }
         else
