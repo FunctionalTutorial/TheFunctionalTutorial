@@ -33,4 +33,11 @@ public sealed class TutorialCVars
     /// </summary>
     public static readonly CVarDef<bool> LiveTutorials =
         CVarDef.Create("tutorial.live_tutorials", false, CVar.SERVERONLY);
+
+    /// <summary>
+    /// When false, the ghost-roles button is hidden and takeover requests are rejected.
+    /// TutorialServer turns this off for the duration of the rule.
+    /// </summary>
+    public static readonly CVarDef<bool> GhostRolesEnabled =
+        CVarDef.Create("tutorial.ghost_roles_enabled", true, CVar.REPLICATED | CVar.SERVER);
 }

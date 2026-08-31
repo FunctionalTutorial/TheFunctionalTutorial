@@ -3,8 +3,7 @@
   id: TutorialTechnicalAssistant
   mentorName: Urist McWrench
   job: TechnicalAssistant
-  stub: false
-  liveTutorial: true
+  stub: true # temporarily greyed — incomplete
   category: Station Jobs
   pickerOrder: 4
   map: /Maps/_Functional/TutorialServer/Roles/TechnicalAssistant.yml

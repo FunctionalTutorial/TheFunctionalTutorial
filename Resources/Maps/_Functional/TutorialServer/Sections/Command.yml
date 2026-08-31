@@ -14993,7 +14993,7 @@ entities:
       nextSound: -1.0333323
     - type: Physics
       canCollide: False
-- proto: NuclearBomb
+- proto: TutorialNuclearBomb
   entities:
   - uid: 55
     mapInit: true

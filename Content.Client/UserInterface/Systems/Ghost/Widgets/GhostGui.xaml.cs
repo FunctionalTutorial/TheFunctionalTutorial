@@ -36,9 +36,10 @@ public sealed partial class GhostGui : UIWidget
         Visible = false;
     }
 
-    public void Update(int? roles, bool? canReturnToBody)
+    public void Update(int? roles, bool? canReturnToBody, bool ghostRolesEnabled = true) //Tutorial: ghostRolesEnabled
     {
         ReturnToBodyButton.Disabled = !canReturnToBody ?? true;
+        GhostRolesButton.Visible = ghostRolesEnabled; //Tutorial
 
         if (roles != null)
         {

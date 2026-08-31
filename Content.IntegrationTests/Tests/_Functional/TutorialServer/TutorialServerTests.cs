@@ -8,6 +8,7 @@ using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules.Components;
 using Content.Server.Ghost;
 using Content.Server.Medical;
+using Content.Server.Nuke;
 using Content.Server.Vocalization.Components;
 using Content.Server._Functional.TutorialServer.CyberMedSurgery;
 using Content.Server._Functional.TutorialServer.StarlightSurgery;
@@ -48,6 +49,7 @@ using Content.Shared.Maps;
 using Content.Shared.Mind;
 using Content.Shared.Objectives.Systems;
 using Content.Shared.Nutrition.EntitySystems;
+using Content.Shared.Paper;
 using Content.Shared.Physics;
 using Content.Shared.Preferences.Loadouts;
 using Content.Shared.Random;
@@ -273,6 +275,60 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
+    public async Task TutorialServer_BlocksGhostRoles()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var cfg = server.ResolveDependency<IConfigurationManager>();
+        var ghostRoles = server.System<Content.Server.Ghost.Roles.GhostRoleSystem>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(cfg.GetCVar(TutorialCVars.GhostRolesEnabled), Is.False,
+                "TutorialServer must disable ghost role takeovers");
+            Assert.That(ghostRoles.GetGhostRoleCount(), Is.EqualTo(0));
+            Assert.That(ghostRoles.GetGhostRolesInfo(pair.Player), Is.Empty);
+
+            // Even with a registered role id, Request/Takeover must no-op while disabled.
+            Assert.That(ghostRoles.Takeover(pair.Player!, 0), Is.False);
+        });
+    }
+
+    [Test]
+    public async Task TutorialServer_BlocksVotes()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var cfg = server.ResolveDependency<IConfigurationManager>();
+        var votes = server.ResolveDependency<Content.Server.Voting.Managers.IVoteManager>();
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(cfg.GetCVar(CCVars.VoteEnabled), Is.False,
+                "TutorialServer must disable player votes");
+            Assert.That(votes.CanCallVote(pair.Player!, Content.Shared.Voting.StandardVoteType.Preset), Is.False);
+        });
+    }
+
+    [Test]
     public async Task TutorialServer_BlocksLooc()
     {
         var pair = Pair;
@@ -363,7 +419,10 @@ public sealed class TutorialServerTests : GameTest
                 Assert.That(proto.TryIndex<TutorialRolePrototype>($"Tutorial{job}", out var role),
                     $"Missing tutorialRole Tutorial{job}");
                 Assert.That(role!.Job, Is.EqualTo(new ProtoId<JobPrototype>(job)));
-                Assert.That(role.Stub, Is.False, $"{job} should be a ready wiki tutorial");
+                if (job == "TechnicalAssistant")
+                    Assert.That(role.Stub, Is.True, $"{job} temporarily incomplete");
+                else
+                    Assert.That(role.Stub, Is.False, $"{job} should be a ready wiki tutorial");
                 Assert.That(role.Goals.Count, Is.GreaterThanOrEqualTo(3), $"{job} should have multi-goal curriculum");
                 Assert.That(role.Goals.Sum(g => g.SubGoals.Count), Is.GreaterThanOrEqualTo(5),
                     $"{job} should have enough sub-goals for a short practice session");
@@ -464,7 +523,7 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(Sub(janitor, "clear-puddle").Marker, Is.EqualTo("blood-puddle"));
 
             var ta = proto.Index<TutorialRolePrototype>("TutorialTechnicalAssistant");
-            Assert.That(ta.Stub, Is.False);
+            Assert.That(ta.Stub, Is.True); // temporarily incomplete
             Assert.That(ta.MentorSpawnOffset, Is.EqualTo(new System.Numerics.Vector2(-2f, -3f)));
             Assert.That(Sub(ta, "wear-gloves").Complete, Is.EqualTo(TutorialStepComplete.WearItem));
             Assert.That(Sub(ta, "wear-gloves").Entity, Is.EqualTo(new EntProtoId("ClothingHandsGlovesColorYellow")));
@@ -1154,7 +1213,6 @@ public sealed class TutorialServerTests : GameTest
                     "TutorialCargoTechnician",
                     "TutorialMedicalDoctor",
                     "TutorialChemist",
-                    "TutorialTechnicalAssistant",
                     "TutorialAntagDragon",
                     "TutorialAntagNukeops",
                 }));
@@ -2370,6 +2428,46 @@ public sealed class TutorialServerTests : GameTest
     }
 
     [Test]
+    public async Task TutorialNukes_ShareAuthenticationCodesWithPapers()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var maps = server.System<TutorialMapSystem>();
+        var proto = server.ProtoMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        EntityUid mapUid = default;
+        await server.WaitAssertion(() =>
+        {
+            var op = proto.Index<TutorialRolePrototype>("TutorialAntagNukeops");
+            Assert.That(maps.TryLoadTutorialMap(op, out mapUid, out _, out var spawn), Is.True);
+
+            var nukeA = server.EntMan.SpawnEntity("TutorialNuclearBomb", spawn.Offset(new Vector2(0f, -2f)));
+            var nukeB = server.EntMan.SpawnEntity("NuclearBombUnanchored", spawn.Offset(new Vector2(1f, -2f)));
+            Assert.That(server.EntMan.TryGetComponent<NukeComponent>(nukeA, out var compA));
+            Assert.That(server.EntMan.TryGetComponent<NukeComponent>(nukeB, out var compB));
+            Assert.That(compA!.Code, Is.Not.Empty);
+            Assert.That(compB!.Code, Is.EqualTo(compA.Code),
+                "All nukes must share one auth code while TutorialServer is active");
+
+            var paper = server.EntMan.SpawnEntity("NukeCodePaper", spawn.Offset(new Vector2(-1f, -2f)));
+            Assert.That(server.EntMan.TryGetComponent<PaperComponent>(paper, out var paperComp));
+            Assert.That(paperComp!.Content, Does.Contain(compA.Code),
+                "Nuke code paper must print the shared tutorial auth code");
+
+            maps.UnloadTutorialMap(mapUid);
+        });
+    }
+
+    [Test]
     public async Task TutorialNukeopsCommander_ArenaDocksInfiltrator()
     {
         var pair = Pair;
@@ -2798,6 +2896,7 @@ public sealed class TutorialServerTests : GameTest
                 "Dragon mentor starts in vacuum beside the player");
 
             ProtoId<Content.Shared.NPC.Prototypes.NpcFactionPrototype> nanoTrasenFaction = "NanoTrasen";
+            var factions = server.System<Content.Shared.NPC.Systems.NpcFactionSystem>();
             var prey = 0;
             var pacified = 0;
             var nanoTrasen = 0;
@@ -2813,8 +2912,7 @@ public sealed class TutorialServerTests : GameTest
                 prey++;
                 if (server.EntMan.HasComponent<Content.Shared.CombatMode.Pacification.PacifiedComponent>(uid))
                     pacified++;
-                if (server.EntMan.TryGetComponent<Content.Shared.NPC.Components.NpcFactionMemberComponent>(uid, out var faction) &&
-                    faction.Factions.Contains(nanoTrasenFaction))
+                if (factions.IsMember(uid, nanoTrasenFaction))
                     nanoTrasen++;
                 Assert.That(server.EntMan.HasComponent<Content.Server.NPC.HTN.HTNComponent>(uid), Is.True,
                     "Idle prey keep IdleCompound HTN");
@@ -3631,6 +3729,7 @@ public sealed class TutorialServerTests : GameTest
         var ticker = server.System<GameTicker>();
         var tutorial = server.System<TutorialServerRuleSystem>();
         var actions = server.System<SharedActionsSystem>();
+        var entMan = server.EntMan;
 
         await server.WaitPost(() =>
         {
@@ -3646,13 +3745,15 @@ public sealed class TutorialServerTests : GameTest
         });
         await pair.RunTicksSync(60);
 
+        EntityUid body = default;
         await server.WaitPost(() =>
         {
             var mob = pair.Player!.AttachedEntity!.Value;
+            body = mob;
             EntityUid? chooseAction = null;
             foreach (var (actionUid, _) in actions.GetActions(mob))
             {
-                if (server.EntMan.GetComponent<MetaDataComponent>(actionUid).EntityPrototype?.ID ==
+                if (entMan.GetComponent<MetaDataComponent>(actionUid).EntityPrototype?.ID ==
                     "ActionTutorialChooseRole")
                 {
                     chooseAction = actionUid;
@@ -3661,18 +3762,151 @@ public sealed class TutorialServerTests : GameTest
             }
 
             Assert.That(chooseAction, Is.Not.Null);
-            actions.PerformAction(mob, (chooseAction.Value, server.EntMan.GetComponent<ActionComponent>(chooseAction.Value)));
+            actions.PerformAction(mob, (chooseAction.Value, entMan.GetComponent<ActionComponent>(chooseAction.Value)));
         });
         await pair.RunTicksSync(20);
 
         await server.WaitAssertion(() =>
         {
             var player = pair.Player!;
-            Assert.That(player.AttachedEntity, Is.Not.Null);
-            Assert.That(server.EntMan.HasComponent<GhostComponent>(player.AttachedEntity!.Value), Is.True,
-                "Choose a tutorial from a living body should leave an observer");
+            Assert.That(player.AttachedEntity, Is.EqualTo(body),
+                "Choose a tutorial must not leave the current body until a role is selected");
+            Assert.That(entMan.HasComponent<GhostComponent>(body), Is.False);
             Assert.That(tutorial.IsPickerOpen(player), Is.True,
                 "Choose a tutorial from a living body must open the role picker");
+
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.State, Is.EqualTo(TutorialSessionState.InTutorial));
+            Assert.That(session.BodyUid, Is.EqualTo(body));
+        });
+    }
+
+    [Test]
+    public async Task TutorialChooseAction_CancelKeepsCurrentTutorial()
+    {
+        var pair = Pair;
+        var server = pair.Server;
+        var ticker = server.System<GameTicker>();
+        var tutorial = server.System<TutorialServerRuleSystem>();
+        var actions = server.System<SharedActionsSystem>();
+        var entMan = server.EntMan;
+
+        await server.WaitPost(() =>
+        {
+            ticker.SetGamePreset("TutorialServer");
+            ticker.StartGameRule(TutorialRule, out _);
+            ticker.StartRound();
+        });
+        await pair.RunTicksSync(5);
+
+        await server.WaitPost(() =>
+        {
+            tutorial.TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
+        });
+        await pair.RunTicksSync(60);
+
+        EntityUid body = default;
+        EntityUid mapUid = default;
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(pair.Player!.AttachedEntity, Is.Not.Null);
+            body = pair.Player.AttachedEntity!.Value;
+
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(pair.Player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            mapUid = session!.MapUid;
+        });
+
+        await server.WaitPost(() =>
+        {
+            EntityUid? chooseAction = null;
+            foreach (var (actionUid, _) in actions.GetActions(body))
+            {
+                if (entMan.GetComponent<MetaDataComponent>(actionUid).EntityPrototype?.ID ==
+                    "ActionTutorialChooseRole")
+                {
+                    chooseAction = actionUid;
+                    break;
+                }
+            }
+
+            Assert.That(chooseAction, Is.Not.Null);
+            actions.PerformAction(body, (chooseAction.Value, entMan.GetComponent<ActionComponent>(chooseAction.Value)));
+        });
+        await pair.RunTicksSync(10);
+
+        await server.WaitAssertion(() =>
+        {
+            Assert.That(tutorial.IsPickerOpen(pair.Player!), Is.True);
+        });
+
+        // Quit must leave the living tutorial untouched.
+        await server.WaitPost(() => tutorial.OnPickerQuit(pair.Player!));
+        await pair.RunTicksSync(10);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            Assert.That(tutorial.IsPickerOpen(player), Is.False);
+            Assert.That(player.AttachedEntity, Is.EqualTo(body));
+            Assert.That(entMan.HasComponent<GhostComponent>(body), Is.False);
+            Assert.That(entMan.Deleted(body), Is.False);
+            Assert.That(entMan.Deleted(mapUid), Is.False);
+
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.State, Is.EqualTo(TutorialSessionState.InTutorial));
+            Assert.That(session.BodyUid, Is.EqualTo(body));
+            Assert.That(session.MapUid, Is.EqualTo(mapUid));
+            Assert.That(session.SelectedRoleId, Is.EqualTo("TutorialPassenger"));
+            Assert.That(session.PickerQuit, Is.False);
+        });
+
+        // Re-open and dismiss with X — same no-op.
+        await server.WaitPost(() => tutorial.TryOpenRolePicker(pair.Player!));
+        await pair.RunTicksSync(5);
+        await server.WaitPost(() => tutorial.OnPickerClosed(pair.Player!));
+        await pair.RunTicksSync(5);
+
+        await server.WaitAssertion(() =>
+        {
+            var player = pair.Player!;
+            Assert.That(tutorial.IsPickerOpen(player), Is.False);
+            Assert.That(player.AttachedEntity, Is.EqualTo(body));
+
+            TutorialSessionData? session = null;
+            var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
+            while (ruleQuery.MoveNext(out _, out var ruleComp))
+            {
+                if (ruleComp.Sessions.TryGetValue(player.UserId, out session))
+                    break;
+            }
+
+            Assert.That(session, Is.Not.Null);
+            Assert.That(session!.State, Is.EqualTo(TutorialSessionState.InTutorial));
+            Assert.That(session.BodyUid, Is.EqualTo(body));
         });
     }
 
@@ -3730,14 +3964,13 @@ public sealed class TutorialServerTests : GameTest
         await server.WaitAssertion(() =>
         {
             var player = pair.Player!;
-            Assert.That(player.AttachedEntity, Is.Not.Null);
-            Assert.That(entMan.HasComponent<GhostComponent>(player.AttachedEntity!.Value), Is.True);
+            Assert.That(player.AttachedEntity, Is.EqualTo(firstBody),
+                "Opening the picker must not tear down the current tutorial");
+            Assert.That(entMan.HasComponent<GhostComponent>(firstBody), Is.False);
             Assert.That(tutorial.IsPickerOpen(player), Is.True);
-            Assert.That(entMan.Deleted(firstBody) || entMan.IsQueuedForDeletion(firstBody), Is.True,
-                "Leaving via Choose a tutorial must tear down the previous Passenger body");
         });
 
-        // Reselecting the same role must spawn a fresh session (no mid-transfer map unload leftovers).
+        // Selecting a role is what leaves the current tutorial and spawns cleanly.
         await server.WaitPost(() =>
         {
             tutorial.TrySelectRole(pair.Player!, "TutorialPassenger", confirmedStub: false);
@@ -3752,6 +3985,8 @@ public sealed class TutorialServerTests : GameTest
             Assert.That(entMan.HasComponent<GhostComponent>(mob), Is.False);
             Assert.That(entMan.HasComponent<TutorialParticipantComponent>(mob), Is.True);
             Assert.That(mob, Is.Not.EqualTo(firstBody));
+            Assert.That(entMan.Deleted(firstBody) || entMan.IsQueuedForDeletion(firstBody), Is.True,
+                "Selecting a new role must tear down the previous tutorial body");
 
             TutorialSessionData? session = null;
             var ruleQuery = entMan.EntityQueryEnumerator<TutorialServerRuleComponent>();
@@ -3769,6 +4004,17 @@ public sealed class TutorialServerTests : GameTest
                 "Passenger reselect must spawn a mentor coach");
             Assert.That(entMan.Deleted(session.MentorUid), Is.False);
             Assert.That(tutorial.IsPickerOpen(player), Is.False);
+
+            var liveGhosts = 0;
+            var ghostQuery = entMan.EntityQueryEnumerator<GhostComponent>();
+            while (ghostQuery.MoveNext(out var ghostUid, out _))
+            {
+                if (!entMan.Deleted(ghostUid) && !entMan.IsQueuedForDeletion(ghostUid))
+                    liveGhosts++;
+            }
+
+            Assert.That(liveGhosts, Is.EqualTo(0),
+                "Starting a tutorial must WipeMind the observer so GhostOnShutdown cannot leave idle ghosts");
         });
     }
 
@@ -5735,7 +5981,7 @@ public sealed class TutorialServerTests : GameTest
 
         await server.WaitPost(() =>
         {
-            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: false);
+            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: true);
         });
         await pair.RunTicksSync(60);
 
@@ -5803,7 +6049,7 @@ public sealed class TutorialServerTests : GameTest
 
         await server.WaitPost(() =>
         {
-            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: false);
+            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: true);
         });
         await pair.RunTicksSync(60);
 
@@ -5856,7 +6102,7 @@ public sealed class TutorialServerTests : GameTest
         // Floor screwdriver: practice-spawned tool on a fresh TA session.
         await server.WaitPost(() =>
         {
-            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: false);
+            tutorial.TrySelectRole(pair.Player!, "TutorialTechnicalAssistant", confirmedStub: true);
         });
         await pair.RunTicksSync(60);
 

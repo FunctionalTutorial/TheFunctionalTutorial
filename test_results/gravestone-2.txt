@@ -1,0 +1,26 @@
+Test pair initialized.
+#1: _Functional.TutorialServer.TutorialServerTests.TutorialJoinCommand_OpensRolePicker (started at 1451265104 bytes allocated.)
+Test pair killed.
+   at System.Environment.get_StackTrace()
+   at Robust.UnitTesting.Pool.TestPair`2.Kill() in G:\TheFunctionalTutorial\RobustToolbox\Robust.UnitTesting\Pool\TestPair.cs:line 127
+   at Robust.UnitTesting.Pool.PoolManager`1.Shutdown() in G:\TheFunctionalTutorial\RobustToolbox\Robust.UnitTesting\Pool\PoolManager.cs:line 116
+   at Content.IntegrationTests.PoolManager.Shutdown() in G:\TheFunctionalTutorial\Content.IntegrationTests\PoolManager.cs:line 85
+   at Content.IntegrationTests.PoolManagerTestEventHandler.TearDown() in G:\TheFunctionalTutorial\Content.IntegrationTests\PoolManagerTestEventHandler.cs:line 33
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.RuntimeMethodHandle.InvokeMethod(ObjectHandleOnStack target, Void** arguments, ObjectHandleOnStack sig, BOOL isConstructor, ObjectHandleOnStack result)
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)
+   at NUnit.Framework.Internal.Reflect.InvokeMethod(MethodInfo method, Object fixture, Object[] args)
+   at NUnit.Framework.Internal.MethodWrapper.Invoke(Object fixture, Object[] args)
+   at NUnit.Framework.Internal.Commands.SetUpTearDownItem.InvokeMethod(IMethodInfo method, TestExecutionContext context)
+   at NUnit.Framework.Internal.Commands.SetUpTearDownItem.RunSetUpOrTearDownMethod(TestExecutionContext context, IMethodInfo method)
+   at NUnit.Framework.Internal.Commands.SetUpTearDownItem.RunTearDown(TestExecutionContext context)
+   at NUnit.Framework.Internal.Commands.AfterTestCommand.<>c__DisplayClass1_0.<Execute>b__1()
+   at NUnit.Framework.Internal.Commands.DelegatingTestCommand.RunTestMethodInThreadAbortSafeZone(TestExecutionContext context, Action action)
+   at NUnit.Framework.Internal.Commands.AfterTestCommand.Execute(TestExecutionContext context)
+   at NUnit.Framework.Internal.Execution.CompositeWorkItem.PerformOneTimeTearDown()
+   at NUnit.Framework.Internal.Execution.CompositeWorkItem.OneTimeTearDownWorkItem.Execute()
+   at NUnit.Framework.Internal.Execution.TestWorker.TestWorkerThreadProc()
+   at System.Threading.Thread.StartHelper.Callback(Object state)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)

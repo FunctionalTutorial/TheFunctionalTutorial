@@ -6,6 +6,7 @@ using Content.Server.GameTicking.Events;
 using Content.Server.Ghost.Roles.Components;
 using Content.Shared.Ghost.Roles.Raffles;
 using Content.Server.Ghost.Roles.UI;
+using Content.Shared._Functional.TutorialServer; //Tutorial
 using Content.Shared.Administration;
 using Content.Shared.CCVar;
 using Content.Shared.Database;
@@ -34,6 +35,7 @@ using Content.Shared.Verbs;
 using Robust.Shared.Collections;
 using Content.Shared.Ghost.Roles.Components;
 using Content.Shared.Roles.Components;
+using Content.Server.Chat.Managers; //Tutorial
 
 namespace Content.Server.Ghost.Roles;
 
@@ -52,6 +54,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
     [Dependency] private SharedRoleSystem _roleSystem = default!;
     [Dependency] private IGameTiming _timing = default!;
     [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private readonly IChatManager _chat = default!; //Tutorial
 
     private uint _nextRoleIdentifier;
     private bool _needsUpdateGhostRoleCount = true;
@@ -90,7 +93,25 @@ public sealed partial class GhostRoleSystem : EntitySystem
         SubscribeLocalEvent<GhostRoleMobSpawnerComponent, GetVerbsEvent<Verb>>(OnVerb);
         SubscribeLocalEvent<GhostRoleMobSpawnerComponent, GhostRoleRadioMessage>(OnGhostRoleRadioMessage);
         _playerManager.PlayerStatusChanged += PlayerStatusChanged;
+        //Tutorial - Begin
+        _cfg.OnValueChanged(TutorialCVars.GhostRolesEnabled, OnGhostRolesEnabledChanged, invokeImmediately: true);
+        //Tutorial - End
     }
+
+    //Tutorial - Begin
+    private bool GhostRolesAllowed() => _cfg.GetCVar(TutorialCVars.GhostRolesEnabled);
+
+    private void OnGhostRolesEnabledChanged(bool enabled)
+    {
+        if (!enabled)
+        {
+            foreach (var session in _openUis.Keys.ToList())
+                CloseEui(session);
+        }
+
+        UpdateAllEui();
+    }
+    //Tutorial - End
 
     private void OnMobStateChanged(Entity<GhostTakeoverAvailableComponent> component, ref MobStateChangedEvent args)
     {
@@ -117,6 +138,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
         base.Shutdown();
 
         _playerManager.PlayerStatusChanged -= PlayerStatusChanged;
+        _cfg.UnsubValueChanged(TutorialCVars.GhostRolesEnabled, OnGhostRolesEnabledChanged); //Tutorial
     }
 
     private uint GetNextRoleIdentifier()
@@ -126,6 +148,14 @@ public sealed partial class GhostRoleSystem : EntitySystem
 
     public void OpenEui(ICommonSession session)
     {
+        //Tutorial - Begin
+        if (!GhostRolesAllowed())
+        {
+            _chat.DispatchServerMessage(session, Loc.GetString("tutorial-server-ghost-roles-disabled"), suppressLog: true);
+            return;
+        }
+        //Tutorial - End
+
         if (session.AttachedEntity is not { Valid: true } attached ||
             !HasComp<GhostComponent>(attached))
             return;
@@ -300,7 +330,7 @@ public sealed partial class GhostRoleSystem : EntitySystem
     {
         if (args.NewStatus == SessionStatus.InGame)
         {
-            var response = new GhostUpdateGhostRoleCountEvent(_ghostRoles.Count);
+            var response = new GhostUpdateGhostRoleCountEvent(GetGhostRoleCount()); //Tutorial: respect GhostRolesEnabled
             RaiseNetworkEvent(response, args.Session.Channel);
         }
         else
@@ -458,6 +488,14 @@ public sealed partial class GhostRoleSystem : EntitySystem
     /// <param name="identifier">ID of the ghost role.</param>
     public void Request(ICommonSession player, uint identifier)
     {
+        //Tutorial - Begin
+        if (!GhostRolesAllowed())
+        {
+            _chat.DispatchServerMessage(player, Loc.GetString("tutorial-server-ghost-roles-disabled"), suppressLog: true);
+            return;
+        }
+        //Tutorial - End
+
         if (!_ghostRoles.TryGetValue(identifier, out var roleEnt))
             return;
 
@@ -565,6 +603,11 @@ public sealed partial class GhostRoleSystem : EntitySystem
     /// <returns>True if takeover was successful, otherwise false.</returns>
     public bool Takeover(ICommonSession player, uint identifier)
     {
+        //Tutorial - Begin
+        if (!GhostRolesAllowed())
+            return false;
+        //Tutorial - End
+
         if (!_ghostRoles.TryGetValue(identifier, out var role))
             return false;
 
@@ -618,6 +661,10 @@ public sealed partial class GhostRoleSystem : EntitySystem
     /// </summary>
     public int GetGhostRoleCount()
     {
+        //Tutorial: hide the count so the ghost GUI does not advertise roles.
+        if (!GhostRolesAllowed())
+            return 0;
+
         return _ghostRoles.Count(pair => MetaData(pair.Value.Owner).EntityPaused == false);
     }
 
@@ -629,6 +676,11 @@ public sealed partial class GhostRoleSystem : EntitySystem
     /// </param>
     public GhostRoleInfo[] GetGhostRolesInfo(ICommonSession? player)
     {
+        //Tutorial - Begin
+        if (!GhostRolesAllowed())
+            return [];
+        //Tutorial - End
+
         var roles = new List<GhostRoleInfo>();
 
         foreach (var (id, (uid, role)) in _ghostRoles)

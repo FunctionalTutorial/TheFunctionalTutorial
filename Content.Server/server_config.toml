@@ -25,6 +25,9 @@ max_connections = 256
 hostname = "MyServer"
 # Description of the server. This is what will be displayed in the server list.
 desc = "Interactive tutorials with NPC guides that teach players game mechanics."
+#Tutorial: always TutorialServer across restarts (safety; matches development ConfigPreset)
+defaultpreset = "TutorialServer"
+fallbackpreset = "TutorialServer"
 # The maximum number of players that can connect to the server. (Exluding admins)
 soft_max_players = 40 #Tutorial: TutorialServer cap
 # Controls the lobby timer in seconds.
@@ -108,6 +111,10 @@ enabled = false #Tutorial
 
 [dead_chat]
 enabled = false #Tutorial
+
+#Tutorial: no player-started votes (admins with Moderator can still call votes)
+[vote]
+enabled = false
 
 #Tutorial: deployed Tutorial host — hide unfinished tutorials from the picker
 [tutorial]

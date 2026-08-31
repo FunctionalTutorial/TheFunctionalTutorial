@@ -4,6 +4,7 @@
 lobbyenabled = true
 map = "TutorialLobby"
 defaultpreset = "TutorialServer"
+fallbackpreset = "TutorialServer"
 role_timers = false
 admin_job_tracking = true
 role_loadout_timers = false
