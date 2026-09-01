@@ -116,27 +116,28 @@ enabled = false #Tutorial
 [vote]
 enabled = false
 
-#Tutorial: deployed Tutorial host — hide unfinished tutorials from the picker
+#Tutorial: false locally so unfinished tutorials stay visible. Host launch
+# scripts (Start-Ss14 / Start-TutorialHostLan) pass tutorial.live_tutorials=true.
 [tutorial]
-live_tutorials = true
+live_tutorials = false
 
 [hub]
 # Set to true to show this server on the public server list
 # Before enabling this, read: https://docs.spacestation14.com/en/community/space-wizards-hub-rules.html
 # By advertising your server, you agree to follow the rules of the hub.
-#Tutorial: advertise Functional Tutorial on WizDen hub
-advertise = true
+#Tutorial: false locally so a laptop/dev server is not listed. Host launch
+# scripts pass hub.advertise=true plus hub_urls / server_url / tags.
+advertise = false
 # Comma-separated list of tags, useful for categorizing your server. For a list of standard tags, see the link below.
 # https://docs.spacestation14.com/en/robust-toolbox/server-http-api.html?highlight=http#standard-tags
-tags = "lang:en,region:am_n_c"
+tags = ""
 # Comma-separated list of URLs of hub servers to advertise to.
 hub_urls = "https://hub.spacestation14.com/"
 # URL of your server. Fill this in if you have a domain name,
 # want to use HTTPS (with a reverse proxy), or other advanced scenarios.
 # Must be in the form of an ss14:// or ss14s:// URI pointing to the status API.
 # Example: ss14://mydomain.com
-#Tutorial
-server_url = "ss14://ss14tutorial.mynetgear.com:1212"
+server_url = ""
 
 [status]
 # This is the address of the SS14 server as the launcher uses it.

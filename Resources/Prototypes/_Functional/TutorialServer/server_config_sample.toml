@@ -42,15 +42,17 @@ time = 5
 validity_days = 0
 
 [tutorial]
-# Deployed host: picker lists only liveTutorial roles. Development leaves this off.
-live_tutorials = true
+# Development default (unfinished tutorials stay visible). Host launch scripts
+# pass tutorial.live_tutorials=true.
+live_tutorials = false
 
 [infolinks]
 discord = "https://discord.gg/jkvg7k9w2n"
 github = "https://github.com/FunctionalTutorial/TheFunctionalTutorial"
 
 [hub]
-advertise = true
-tags = "lang:en,region:am_n_c"
+# Local/dev default. Host Start-Ss14 / Start-TutorialHostLan pass advertise=true.
+advertise = false
+tags = ""
 hub_urls = "https://hub.spacestation14.com/"
-server_url = "ss14://ss14tutorial.mynetgear.com:1212"
+server_url = ""

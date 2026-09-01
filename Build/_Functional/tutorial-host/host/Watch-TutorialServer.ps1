@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   - Watches D:\WizdenHost\drive-drop\incoming\tutorial-update.ready
-  - On marker: Apply-TutorialUpdate.ps1 (stop/extract/start SS14 only; MCP/FileShare untouched)
+  - On marker: Apply-TutorialUpdate.ps1 (stop/extract/start SS14 only; MCP/FileShare/SQLite untouched)
   - Publishes host-status/heartbeat.json each loop so the laptop can refresh MCP
   - Restarts localhost Content.Server and public Python relay if they die
   - Content.Server binds 127.0.0.1 only; relay uses firewall-allowed python.exe
@@ -32,7 +32,7 @@ function Write-Sup([string]$msg) {
 Write-Sup "Supervisor starting (PID $PID). Poll=${PollSeconds}s"
 Write-Sup "Public ${PublicHost}:${PublicPort} via Python relay; SS14 on ${BindHost}:${GamePort}"
 Write-Sup "Drive drop incoming: $IncomingReady"
-Write-Sup 'Will not manage MCP/FileShare.'
+Write-Sup 'Will not manage MCP/FileShare/SQLite data dir.'
 
 $lastRelayAttemptUtc = [datetime]::MinValue
 $relayRestartCooldownSec = 120

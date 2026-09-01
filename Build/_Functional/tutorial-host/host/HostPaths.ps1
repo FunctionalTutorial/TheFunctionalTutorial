@@ -8,6 +8,11 @@ $script:StateRoot = Join-Path $WizdenHostRoot 'state'
 $script:LogsRoot = Join-Path $WizdenHostRoot 'logs'
 $script:PackagesRoot = Join-Path $WizdenHostRoot 'packages'
 $script:ToolsRoot = Join-Path $WizdenHostRoot 'tools'
+# Persistent SQLite (saved characters, admin ranks). Must stay outside live/bin
+# so Apply-TutorialUpdate robocopy cannot overwrite it. The engine default is
+# <dll-dir>/data; start scripts pass --data-dir $DataRoot instead.
+$script:DataRoot = Join-Path $WizdenHostRoot 'data'
+$script:LegacyDataDir = Join-Path $LiveRoot 'bin\Content.Server\data'
 $script:DriveDropRoot = Join-Path $WizdenHostRoot 'drive-drop'
 $script:DotnetExe = 'D:\dotnet\dotnet.exe'
 $script:PythonExe = 'C:\Users\nadin\AppData\Local\Python\pythoncore-3.14-64\python.exe'
@@ -78,3 +83,25 @@ function Get-TrackedProcessId([string]$PidFile) {
 
 function Get-TrackedSs14ProcessId { Get-TrackedProcessId $Ss14PidFile }
 function Get-TrackedRelayProcessId { Get-TrackedProcessId $RelayPidFile }
+
+# If DataRoot has no preferences.db yet but the pre-move location does, copy it.
+# Call only while SS14 is stopped so WAL files are consistent.
+function Ensure-TutorialHostDataDir {
+    New-Item -ItemType Directory -Path $DataRoot -Force | Out-Null
+    $destDb = Join-Path $DataRoot 'preferences.db'
+    $legacyDb = Join-Path $LegacyDataDir 'preferences.db'
+    if ((Test-Path -LiteralPath $destDb) -or -not (Test-Path -LiteralPath $legacyDb)) {
+        return
+    }
+    Write-Host "Seeding $DataRoot from legacy $LegacyDataDir (one-time)"
+    Get-ChildItem -LiteralPath $LegacyDataDir -File -Force | ForEach-Object {
+        Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $DataRoot $_.Name) -Force
+    }
+}
+
+# Robocopy extras for bin/Content.Server: never copy host SQLite or local config.
+# Do not use /MIR — that would delete extra files on live (including data/).
+$script:ContentServerRobocopyExcludes = @(
+    '/XD', 'data',
+    '/XF', '*.db', '*.db-wal', '*.db-shm', 'server_config.local.toml'
+)
