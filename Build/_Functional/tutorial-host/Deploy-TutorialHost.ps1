@@ -15,10 +15,13 @@
   The host supervisor (Watch-TutorialServer.ps1) applies the package:
   stop SS14 -> extract -> start SS14 (infra stays up).
 
-  Defaults to Release so the live host does not ship DEBUG asserts
-  (DebugTools.Assert / DebugAssertException can crash the process).
-  Release builds pass /p:TreatWarningsAsErrors=false so analyzer noise
-  does not block packaging; use -Configuration DebugOpt for local assert checks.
+  Runtime host state is never packaged: bin/Content.Server/data (preferences.db,
+  admin ranks), SQLite WAL/SHM, or server_config.local.toml. Those live on the
+  host under D:\WizdenHost\data (and gitignored local toml), not in the zip.
+
+  Defaults to DebugOpt (TOOLS + development preset compiled in). Host launch
+  scripts pass config.preset_development=false so the live process does not
+  load development.toml. Use -Configuration Release to omit DEBUG asserts.
 
 .EXAMPLE
   .\Deploy-TutorialHost.ps1
@@ -27,12 +30,12 @@
   .\Deploy-TutorialHost.ps1 -SkipBuild
 
 .EXAMPLE
-  .\Deploy-TutorialHost.ps1 -Configuration DebugOpt
+  .\Deploy-TutorialHost.ps1 -Configuration Release
 #>
 param(
     [string] $RepoRoot = "",
     [ValidateSet("Debug", "DebugOpt", "Release")]
-    [string] $Configuration = "Release",
+    [string] $Configuration = "DebugOpt",
     [switch] $SkipBuild,
     [string] $DropRoot = "",
     [switch] $ResourcesOnly,
@@ -91,11 +94,28 @@ try {
     }
 
     if (-not $ResourcesOnly) {
-        Write-Step "Staging bin/Content.Server"
+        Write-Step "Staging bin/Content.Server (excluding data/ SQLite and server_config.local.toml)"
         $destBin = Join-Path $stageRoot "bin\Content.Server"
         New-Item -ItemType Directory -Path $destBin -Force | Out-Null
-        & robocopy.exe (Join-Path $RepoRoot "bin\Content.Server") $destBin /E /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
+        $srcBin = Join-Path $RepoRoot "bin\Content.Server"
+        $binCopyArgs = @(
+            $srcBin, $destBin, '/E',
+            '/XD', 'data',
+            '/XF', '*.db', '*.db-wal', '*.db-shm', 'server_config.local.toml',
+            '/NFL', '/NDL', '/NJH', '/NJS', '/nc', '/ns', '/np'
+        )
+        & robocopy.exe @binCopyArgs | Out-Null
         if ($LASTEXITCODE -ge 8) { throw "robocopy bin/Content.Server failed (exit $LASTEXITCODE)" }
+
+        $leakedData = Join-Path $destBin "data"
+        if (Test-Path -LiteralPath $leakedData) {
+            throw "Staged package contains bin/Content.Server/data - refusing to ship host SQLite"
+        }
+        $leakedDb = Get-ChildItem -LiteralPath $destBin -Force -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like '*.db' -or $_.Name -like '*.db-wal' -or $_.Name -like '*.db-shm' }
+        if ($leakedDb) {
+            throw ("Staged package contains SQLite files: " + (($leakedDb | ForEach-Object { $_.Name }) -join ', '))
+        }
 
         # Hybrid ACZ prefers Content.Client.zip over Magic ACZ. A stale zip (common when only
         # DLLs are rebuilt) makes launcher clients deserialize against old Shared net types and

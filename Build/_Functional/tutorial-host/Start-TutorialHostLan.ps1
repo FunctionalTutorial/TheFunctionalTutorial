@@ -10,12 +10,19 @@
   Does NOT touch windows-mcp or FileShare.
   Do not run Start-Ss14.ps1 / Start-Supervisor.ps1 while this is up.
 
+  SQLite is --data-dir D:\WizdenHost\data (not live\bin\Content.Server\data).
+  WorkingDirectory does not control the database path.
+
+  Production CVars are set here (hub.advertise, tutorial.live_tutorials,
+  config.preset_development=false). server_config.toml stays at local/dev defaults.
+
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File D:\WizdenHost\tools\Start-TutorialHostLan.ps1
 #>
 param(
     [string] $LiveRoot = 'D:\WizdenHost\live',
     [string] $ToolsRoot = 'D:\WizdenHost\tools',
+    [string] $DataRoot = 'D:\WizdenHost\data',
     [string] $DotnetExe = 'D:\dotnet\dotnet.exe',
     [string] $BindHost = '192.168.1.4',
     [int] $Port = 1212,
@@ -138,8 +145,21 @@ $loginHostUser = Get-LoginHostUser @(
     (Join-Path $ToolsRoot 'server_config.local.toml')
 )
 
+# Engine default is <dll-dir>/data; keep SQLite outside live/bin so deploys cannot overwrite it.
+New-Item -ItemType Directory -Path $DataRoot -Force | Out-Null
+$destDb = Join-Path $DataRoot 'preferences.db'
+$legacyData = Join-Path $LiveRoot 'bin\Content.Server\data'
+$legacyDb = Join-Path $legacyData 'preferences.db'
+if (-not (Test-Path -LiteralPath $destDb) -and (Test-Path -LiteralPath $legacyDb)) {
+    Write-Step "Seeding $DataRoot from legacy $legacyData (one-time)"
+    Get-ChildItem -LiteralPath $legacyData -File -Force | ForEach-Object {
+        Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $DataRoot $_.Name) -Force
+    }
+}
+
 Write-Step "Starting TutorialServer on ${BindHost}:${Port} (hub.advertise=true)"
 Write-Host "WorkingDirectory=$LiveRoot"
+Write-Host "DataDir=$DataRoot"
 Write-Host 'Click Allow if Windows Firewall prompts for dotnet.'
 Write-Host 'Connect: ss14://192.168.1.4:1212  (LAN)  or  ss14://ss14tutorial.mynetgear.com:1212  (hub/public)'
 Write-Host 'Ctrl+C stops the server when you are done.'
@@ -150,9 +170,11 @@ Write-Host ''
 
 $argList = @(
     $serverDll,
+    '--data-dir', $DataRoot,
     '--cvar', 'hub.advertise=true',
     '--cvar', 'hub.hub_urls=https://hub.spacestation14.com/',
     '--cvar', 'hub.server_url=ss14://ss14tutorial.mynetgear.com:1212',
+    '--cvar', 'hub.tags=lang:en,region:am_n_c',
     '--cvar', 'net.upnp=false',
     '--cvar', "net.port=$Port",
     '--cvar', "net.bindto=$BindHost",

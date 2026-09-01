@@ -1,6 +1,7 @@
 #Requires -Version 5.1
 # Applies incoming/tutorial-update.zip: wait for Drive sync, stop SS14 -> extract -> start SS14+relay.
-# Never touches MCP (8000) or FileShare (8765).
+# Never touches MCP (8000), FileShare (8765), or host SQLite (D:\WizdenHost\data
+# and live\bin\Content.Server\data). Do not robocopy /MIR.
 param(
     [switch] $SkipStart,
     [int] $StableSeconds = 20,
@@ -118,10 +119,19 @@ try {
     }
 
     if ($hasBin) {
-        Write-Host 'Syncing bin/Content.Server -> live'
+        $stagedData = Join-Path $stagedBin 'data'
+        if (Test-Path -LiteralPath $stagedData) {
+            Write-Warning "Package contains bin/Content.Server/data - skipping (host SQLite is $DataRoot; do not /MIR)"
+        }
+        Write-Host 'Syncing bin/Content.Server -> live (excluding data/ SQLite and server_config.local.toml)'
         $liveBin = Join-Path $LiveRoot 'bin\Content.Server'
         New-Item -ItemType Directory -Path $liveBin -Force | Out-Null
-        & robocopy.exe $stagedBin $liveBin /E /NFL /NDL /NJH /NJS /nc /ns /np | Out-Null
+        $binCopyArgs = @(
+            $stagedBin, $liveBin, '/E'
+        ) + $ContentServerRobocopyExcludes + @(
+            '/NFL', '/NDL', '/NJH', '/NJS', '/nc', '/ns', '/np'
+        )
+        & robocopy.exe @binCopyArgs | Out-Null
         if ($LASTEXITCODE -ge 8) { throw "robocopy bin failed (exit $LASTEXITCODE)" }
     }
 
