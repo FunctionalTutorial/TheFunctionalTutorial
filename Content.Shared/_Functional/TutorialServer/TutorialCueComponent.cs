@@ -24,9 +24,16 @@ public sealed partial class TutorialCueComponent : Component
     public TimeSpan Delay = TimeSpan.Zero;
 
     /// <summary>
-    /// Fire once the coach has spoken this many lines of <see cref="SubGoalId"/> (one-based), so
-    /// rewording her script moves the effect with it instead of stranding it on the wrong line.
+    /// Fire once the coach has reached this line of <see cref="SubGoalId"/>'s script (one-based, as
+    /// written), so rewording her script moves the effect with it instead of stranding it on the
+    /// wrong line.
     /// </summary>
+    /// <remarks>
+    /// Counted by authored position, not by lines actually said. A player who finishes the beat
+    /// early has the rest of the instruction half dropped, and a tally would then spend those lines
+    /// on the reaction instead — landing the effect several seconds behind the line it was written
+    /// to punctuate, which is the sort of thing a player notices and cannot name.
+    /// </remarks>
     [DataField]
     public int? AfterLine;
 
@@ -120,6 +127,13 @@ public sealed partial class TutorialCueComponent : Component
     /// <summary>Set once <see cref="AfterLine"/> has pulled <see cref="FireAt"/> onto that line.</summary>
     [ViewVariables]
     public bool CuedOnLine;
+
+    /// <summary>
+    /// Set once the coach has been seen working through <see cref="SubGoalId"/>, so a cue can tell
+    /// "she has not started yet" from "she has finished without ever reaching my line".
+    /// </summary>
+    [ViewVariables]
+    public bool HeardTheScript;
 }
 
 [Serializable, NetSerializable]

@@ -60,7 +60,7 @@ public sealed class TutorialTrainerSystem : EntitySystem
                 trainer.PendingAfterLines.Clear();
                 trainer.ReactingFor = null;
                 trainer.NextLineAt = null;
-                trainer.LinesSpoken = 0;
+                trainer.SpokenLineIndex = 0;
 
                 // Don't pile IC speech on top of an open tutorial prompt, and don't talk over a
                 // beat that was handed to somebody else. The bookkeeping above still runs for a
@@ -130,15 +130,25 @@ public sealed class TutorialTrainerSystem : EntitySystem
             if (now < trainer.NextLineAt.Value)
                 continue;
 
+            var interjecting = ReferenceEquals(queue, trainer.PendingInterjections);
             var next = queue.Dequeue();
-            trainer.NextLineAt = now + ResolveNextLineDelay(trainer);
+            var due = now + ResolveNextLineDelay(trainer);
+
+            trainer.NextLineAt = due;
             trainer.HasSpoken = true;
-            trainer.LinesSpoken++;
+
+            // Only the script moves the script on. A remark that landed in the middle of a segment
+            // is not a line of it, and counting it would slide every cue keyed to a later line.
+            if (!interjecting)
+                trainer.SpokenLineIndex = next.Index;
+            else
+                ReleaseClockAfterInterjection(trainer, due);
+
             Dirty(trainerUid, trainer);
 
             SpeakLine(trainerUid, playerUid, subGoalId, next.Text);
             trainer.TypingResumeAt = now + trainer.TypingPause;
-            trainer.SpeakingUntil = trainer.NextLineAt.Value;
+            trainer.SpeakingUntil = due;
 
             if (next.ShowControlHint)
                 _tutorial.ShowPendingControlHint(playerUid);
@@ -241,10 +251,15 @@ public sealed class TutorialTrainerSystem : EntitySystem
     }
 
     /// <summary>
-    /// How many lines of <paramref name="subGoalId"/> this player's coach has spoken. False when no
-    /// coach is on that segment, which callers must read as "no cue is coming", not as zero.
+    /// How far into <paramref name="subGoalId"/>'s script this player's coach has got, as the
+    /// authored position of the last line she said. False when no coach is on that segment, which
+    /// callers must read as "no cue is coming", not as zero.
     /// </summary>
-    public bool TryGetLinesSpoken(EntityUid player, string subGoalId, out int spoken)
+    /// <remarks>
+    /// The position rather than a tally, so a cue written for the fourth line still lands on the
+    /// fourth line when the player finished the beat early and the lines before it were dropped.
+    /// </remarks>
+    public bool TryGetScriptPosition(EntityUid player, string subGoalId, out int spoken)
     {
         spoken = 0;
 
@@ -254,11 +269,11 @@ public sealed class TutorialTrainerSystem : EntitySystem
             if (mentor.PlayerUid != player)
                 continue;
 
-            // A different segment means her count belongs to another beat.
+            // A different segment means her place belongs to another beat.
             if (!string.Equals(trainer.LastSpokenSubGoal, subGoalId, StringComparison.Ordinal))
                 return false;
 
-            spoken = trainer.LinesSpoken;
+            spoken = trainer.SpokenLineIndex;
             return true;
         }
 
@@ -280,6 +295,11 @@ public sealed class TutorialTrainerSystem : EntitySystem
         // sub-goal changed. Until it has, she is about to start rather than finished.
         if (!string.Equals(trainer.LastSpokenSubGoal, subGoalId, StringComparison.Ordinal))
             return TutorialCoachSpeech.Waiting;
+
+        // A queued remark is her talking whatever the script is doing, and it has a clock of its
+        // own, so it is answered before the arrival gate below.
+        if (trainer.PendingInterjections.Count > 0)
+            return TutorialCoachSpeech.Speaking;
 
         // Lines queued with no clock running means nobody has walked into earshot yet.
         if (trainer.PendingLines.Count > 0 && trainer.NextLineAt == null)
@@ -347,11 +367,22 @@ public sealed class TutorialTrainerSystem : EntitySystem
     }
 
     /// <summary>
-    /// Speaks a one-off correction outside the sub-goal script, rate limited so a player who keeps
-    /// breaking a drill is corrected once rather than continuously.
+    /// Queues a one-off remark outside the sub-goal script — a correction, or a quip about
+    /// something the player did that nobody asked them to do. Rate limited, so a player who keeps
+    /// breaking a drill is answered once rather than continuously.
     /// </summary>
+    /// <remarks>
+    /// Queued rather than spoken where it is raised. Said on the spot it arrives with none of the
+    /// typing pause every other line has, which reads as a trigger going off rather than as
+    /// somebody remarking on something; and dropped into the middle of a segment it lands on top of
+    /// whatever she was already saying. Going through the queue gets it the indicator, the pause in
+    /// front of it, and a pause behind it before the script picks back up.
+    /// </remarks>
     public void TrySpeakInterjection(EntityUid mentor, EntityUid player, LocId line)
     {
+        // player reserved for future per-player coach delivery, as in SpeakAsCoach.
+        _ = player;
+
         if (!TryComp<TutorialTrainerComponent>(mentor, out var trainer))
             return;
 
@@ -364,8 +395,34 @@ public sealed class TutorialTrainerSystem : EntitySystem
             return;
 
         trainer.NextInterjectionAt = now + trainer.InterjectionCooldown;
+        trainer.PendingInterjections.Enqueue(new TutorialPendingLine(text, false));
+
+        // A coach with no clock running is one who has not started a segment yet: waiting to be
+        // walked up to, or held while she walks. Remarks do not wait for either, but the gate has
+        // to be given back once this one has been said, or the quip opens the next segment early.
+        if (trainer.NextLineAt == null)
+            trainer.InterjectionOwnsClock = true;
+
+        // Long enough to have been typed, and never sooner than the gap the last line bought.
+        var due = now + ResolveTypingDelay(trainer, text);
+        if (trainer.NextLineAt is not { } next || next < due)
+            trainer.NextLineAt = due;
+
         Dirty(mentor, trainer);
-        SpeakAsCoach(mentor, player, string.Empty, text, null);
+    }
+
+    /// <summary>
+    /// Hands the segment gate back to the coach after a remark borrowed her line clock, carrying
+    /// the pause the remark earned across with it so the script does not resume on top of it.
+    /// </summary>
+    private static void ReleaseClockAfterInterjection(TutorialTrainerComponent trainer, TimeSpan due)
+    {
+        if (!trainer.InterjectionOwnsClock || trainer.PendingInterjections.Count > 0)
+            return;
+
+        trainer.InterjectionOwnsClock = false;
+        trainer.CarriedGap = due;
+        trainer.NextLineAt = null;
     }
 
     private void OnInteractHand(Entity<TutorialTrainerComponent> ent, ref InteractHandEvent args)
@@ -391,8 +448,19 @@ public sealed class TutorialTrainerSystem : EntitySystem
         if (pending.Count > 0)
         {
             args.Handled = true;
+            var interjecting = ReferenceEquals(pending, ent.Comp.PendingInterjections);
             var next = pending.Dequeue();
-            ent.Comp.NextLineAt = _timing.CurTime + ResolveNextLineDelay(ent.Comp);
+            var due = _timing.CurTime + ResolveNextLineDelay(ent.Comp);
+
+            ent.Comp.NextLineAt = due;
+
+            // Same bookkeeping the timed path does, so clicking her through a segment does not
+            // strand a cue that was written to land on one of its lines.
+            if (!interjecting)
+                ent.Comp.SpokenLineIndex = next.Index;
+            else
+                ReleaseClockAfterInterjection(ent.Comp, due);
+
             Dirty(ent.Owner, ent.Comp);
             SpeakLine(ent, args.User, subGoalId, next.Text);
 
@@ -514,11 +582,19 @@ public sealed class TutorialTrainerSystem : EntitySystem
 
             var text = Loc.GetString(line.Dialogue);
             if (!string.IsNullOrWhiteSpace(text))
-                lines.Add(new TutorialPendingLine(text, line.ShowControlHint, line.AfterComplete));
+            {
+                // Numbered here, where the script is still whole. A cue keyed to a line has to
+                // survive the instruction half being dropped when the player finishes early.
+                lines.Add(new TutorialPendingLine(
+                    text,
+                    line.ShowControlHint,
+                    line.AfterComplete,
+                    lines.Count + 1));
+            }
         }
 
         if (lines.Count == 0 && !string.IsNullOrWhiteSpace(fallback))
-            lines.Add(new TutorialPendingLine(fallback, false));
+            lines.Add(new TutorialPendingLine(fallback, false, false, 1));
 
         return lines;
     }
@@ -555,7 +631,13 @@ public sealed class TutorialTrainerSystem : EntitySystem
         if (!ActiveQueue(trainer).TryPeek(out var upcoming))
             return trainer.MinLineDelay;
 
-        var typed = TimeSpan.FromSeconds(upcoming.Text.Length * trainer.SecondsPerCharacter);
+        return ResolveTypingDelay(trainer, upcoming.Text);
+    }
+
+    /// <summary>How long this coach takes to type one line, floored and capped.</summary>
+    private static TimeSpan ResolveTypingDelay(TutorialTrainerComponent trainer, string text)
+    {
+        var typed = TimeSpan.FromSeconds(text.Length * trainer.SecondsPerCharacter);
         if (typed < trainer.MinLineDelay)
             typed = trainer.MinLineDelay;
 
@@ -563,11 +645,21 @@ public sealed class TutorialTrainerSystem : EntitySystem
     }
 
     /// <summary>
-    /// The queue this coach is currently speaking from: the reaction to a finished beat if one is
-    /// running, the beat's own script otherwise.
+    /// The queue this coach is currently speaking from: anything she has been given to remark on
+    /// first, then the reaction to a finished beat if one is running, then the beat's own script.
     /// </summary>
+    /// <remarks>
+    /// Remarks jump the script because they are about something that just happened in front of her.
+    /// Held behind a segment they arrive after the moment they were written for, which is the same
+    /// complaint the reaction queue exists to answer.
+    /// </remarks>
     private static Queue<TutorialPendingLine> ActiveQueue(TutorialTrainerComponent trainer)
-        => trainer.ReactingFor != null ? trainer.PendingAfterLines : trainer.PendingLines;
+    {
+        if (trainer.PendingInterjections.Count > 0)
+            return trainer.PendingInterjections;
+
+        return trainer.ReactingFor != null ? trainer.PendingAfterLines : trainer.PendingLines;
+    }
 
     /// <summary>
     /// Clears the arrival gate, so this coach waits for the player to walk up to her again.

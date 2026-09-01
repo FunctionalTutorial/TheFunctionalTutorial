@@ -200,13 +200,11 @@
       controlHint: tutorial-items-control-wear-suit
       complete: WearItem
       entity: ClothingOuterSuitEmergency
-      stuckHint: tutorial-items-stuck-wear-suit
     - id: deploy-helmet
       text: tutorial-items-sg-deploy-helmet
       controlHint: tutorial-items-control-deploy-helmet
       complete: WearItem
       entity: ClothingHeadHelmetEVALarge
-      stuckHint: tutorial-items-stuck-deploy-helmet
     - id: find-box
       text: tutorial-items-sg-find-box
       controlHint: tutorial-items-control-find-box
@@ -226,7 +224,6 @@
       controlHint: tutorial-items-control-take-mask
       complete: HoldItem
       component: BreathMask
-      stuckHint: tutorial-items-stuck-take-mask
     - id: wear-mask
       text: tutorial-items-sg-wear-mask
       controlHint: tutorial-items-control-wear-mask
@@ -254,8 +251,9 @@
     - id: pry-firelock
       text: tutorial-items-sg-pry-firelock
       controlHint: tutorial-items-control-pry-firelock
-      complete: InteractTargetTag
+      complete: InteractTargetHolding
       tag: TutorialFirelock
+      usedTag: Crowbar
     - id: cross-vacuum
       text: tutorial-items-sg-cross-vacuum
       complete: ReachMarker

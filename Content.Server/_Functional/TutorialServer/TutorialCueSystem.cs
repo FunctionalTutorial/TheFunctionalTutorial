@@ -123,8 +123,18 @@ public sealed class TutorialCueSystem : EntitySystem
         if (cue.Comp.ArmedBy is not { } player || TerminatingOrDeleted(player))
             return;
 
-        if (!_trainer.TryGetLinesSpoken(player, cue.Comp.SubGoalId, out var spoken))
+        if (!_trainer.TryGetScriptPosition(player, cue.Comp.SubGoalId, out var spoken))
+        {
+            // She was on this segment and is not any more, without ever reaching the line: the
+            // guide UI swallowed it, or the beat moved on under her. Waiting out the backstop from
+            // here would drop the effect a full Delay later, on nothing at all, so take it now.
+            if (cue.Comp.HeardTheScript)
+                CueNow(now, cue);
+
             return;
+        }
+
+        cue.Comp.HeardTheScript = true;
 
         if (spoken < afterLine)
         {
@@ -132,6 +142,12 @@ public sealed class TutorialCueSystem : EntitySystem
             return;
         }
 
+        CueNow(now, cue);
+    }
+
+    /// <summary>Pulls an armed cue onto the beat it is waiting for, never later than it already was.</summary>
+    private static void CueNow(TimeSpan now, Entity<TutorialCueComponent> cue)
+    {
         cue.Comp.CuedOnLine = true;
 
         var onCue = now + cue.Comp.LineDelay;

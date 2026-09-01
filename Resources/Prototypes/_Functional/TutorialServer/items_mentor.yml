@@ -4,6 +4,8 @@
   suffix: Tutorial, Mentor, Items
   categories: [ HideSpawnMenu ]
   components:
+  - type: TutorialQuip
+    quips: []
   - type: TutorialTrainer
     speakRange: 3
     startDelay: 0
@@ -233,11 +235,7 @@
       dialogue: tutorial-items-nanci-wear-suit-2
     - subGoalId: wear-suit
       dialogue: tutorial-items-nanci-wear-suit-3
-    - subGoalId: wear-suit
-      dialogue: tutorial-items-nanci-wear-suit-4
       showControlHint: true
-    - subGoalId: wear-suit
-      dialogue: tutorial-items-nanci-wear-suit-5
     - subGoalId: deploy-helmet
       dialogue: tutorial-items-nanci-deploy-helmet-1
     - subGoalId: deploy-helmet
@@ -247,8 +245,6 @@
       showControlHint: true
     - subGoalId: deploy-helmet
       dialogue: tutorial-items-nanci-deploy-helmet-4
-    - subGoalId: deploy-helmet
-      dialogue: tutorial-items-nanci-deploy-helmet-5
     - subGoalId: find-box
       dialogue: tutorial-items-nanci-find-box-1
     - subGoalId: find-box

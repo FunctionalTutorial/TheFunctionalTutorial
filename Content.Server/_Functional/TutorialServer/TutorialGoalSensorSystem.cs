@@ -213,6 +213,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 case TutorialStepComplete.HoldTag:
                 case TutorialStepComplete.ObtainItem:
                 case TutorialStepComplete.StowItem:
+                case TutorialStepComplete.CarryItem:
                     TryCompleteFromPossession(uid, sub);
                     break;
                 case TutorialStepComplete.ReachMarker:
@@ -471,6 +472,7 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                     break;
                 case TutorialStepComplete.DoorAccessDenied:
                 case TutorialStepComplete.PlayerShocked:
+                case TutorialStepComplete.TargetSparked:
                 case TutorialStepComplete.DoorBoltsRaised:
                 case TutorialStepComplete.ConstructionMenuOpened:
                 case TutorialStepComplete.PlayerInDisposal:
@@ -1391,9 +1393,8 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         if (sub.Complete == TutorialStepComplete.InteractTargetHolding)
         {
             if (string.IsNullOrEmpty(sub.Tag) ||
-                sub.Entity == null ||
                 !_tags.HasTag(args.Target, (ProtoId<TagPrototype>) sub.Tag) ||
-                !IsProto(args.Used, sub.Entity.Value))
+                !IsUsedMatch(args.Used, sub))
                 return;
 
             if (HasComp<ActivatableUIComponent>(args.Target))
@@ -1622,6 +1623,12 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
                 if (!HasStowedMatch(mob, sub))
                     return;
                 break;
+            case TutorialStepComplete.CarryItem:
+                if (!HasItemSpec(sub))
+                    return;
+                if (!IsCarrying(mob, sub))
+                    return;
+                break;
             default:
                 return;
         }
@@ -1704,6 +1711,61 @@ public sealed partial class TutorialGoalSensorSystem : EntitySystem
         {
             if (MatchesItemSpec(item, sub) && MatchesStorageCount(item, requireStorageCount))
                 return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// True when the item the player clicked with is the one the sub-goal asked to be clicked with.
+    /// </summary>
+    /// <remarks>
+    /// Naming neither prototype nor tag is refused rather than waved through. The whole point of
+    /// <see cref="TutorialStepComplete.InteractTargetHolding"/> over
+    /// <see cref="TutorialStepComplete.InteractTargetTag"/> is that the tool matters, and a beat
+    /// that forgot to say which tool would otherwise be finished by an empty-handed click.
+    /// </remarks>
+    private bool IsUsedMatch(EntityUid used, TutorialSubGoalData sub)
+    {
+        if (sub.Entity is { } proto)
+            return IsProto(used, proto);
+
+        if (!string.IsNullOrEmpty(sub.UsedTag))
+            return _tags.HasTag(used, (ProtoId<TagPrototype>) sub.UsedTag);
+
+        return false;
+    }
+
+    /// <summary>
+    /// True when a matching item is anywhere on the player: held, worn, or inside something held or
+    /// worn, at any depth.
+    /// </summary>
+    /// <remarks>
+    /// Walks the containers rather than the inventory slots, because the slot enumerators stop at
+    /// what is in the slot. An ID card lives inside the PDA that lives in the ID slot, and to every
+    /// other possession sensor that card is simply not on the player at all.
+    /// </remarks>
+    private bool IsCarrying(EntityUid mob, TutorialSubGoalData sub, int depth = 0)
+    {
+        // Deep enough for a card in a PDA in a bag in a suit; short enough that a cycle in the
+        // container graph cannot hang the tick.
+        const int maxDepth = 6;
+
+        // TryComp, not the resolve inside GetAllContainers: recursion reaches leaf items that hold
+        // nothing, and asking those for containers logs an error apiece.
+        if (depth > maxDepth || !TryComp<ContainerManagerComponent>(mob, out var containers))
+            return false;
+
+        foreach (var container in _containers.GetAllContainers(mob, containers))
+        {
+            foreach (var contained in container.ContainedEntities)
+            {
+                if (MatchesItemSpec(contained, sub))
+                    return true;
+
+                if (IsCarrying(contained, sub, depth + 1))
+                    return true;
+            }
         }
 
         return false;

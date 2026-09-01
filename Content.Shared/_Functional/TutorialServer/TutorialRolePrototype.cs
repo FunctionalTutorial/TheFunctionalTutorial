@@ -419,6 +419,14 @@ public sealed partial class TutorialSubGoalData
     public EntProtoId? Entity;
 
     /// <summary>
+    /// Tag the held item must carry for <see cref="TutorialStepComplete.InteractTargetHolding"/>,
+    /// where <see cref="Tag"/> is the target's. The looser half of the pair: <see cref="Entity"/>
+    /// names one prototype, this accepts whichever variant of a tool the mapper happened to place.
+    /// </summary>
+    [DataField]
+    public string? UsedTag;
+
+    /// <summary>
     /// Marker id for ReachMarker (matches <see cref="TutorialStepMarkerComponent.MarkerId"/>),
     /// or dock-station id for DockShuttle / UndockShuttle (matches <see cref="TutorialDockStationComponent.StationId"/>),
     /// or puddle marker id for <see cref="TutorialStepComplete.PuddleCleared"/>.
@@ -611,6 +619,18 @@ public enum TutorialStepComplete : byte
     /// Player has the entity in an inventory/storage slot (not currently held in hands).
     /// </summary>
     StowItem,
+
+    /// <summary>
+    /// Player has the item somewhere on them: in a hand, worn, or stowed inside something they are
+    /// carrying, however deep.
+    /// </summary>
+    /// <remarks>
+    /// For a beat that only wants the thing back in the player's possession. <see cref="HoldItem"/>
+    /// asks for it in a hand, which reads as pedantry once they have already picked it up and put
+    /// it away: they have to fish it back out of the pocket they just put it in to be told well
+    /// done. This one looks through containers, so an ID card slotted back into its holder counts.
+    /// </remarks>
+    CarryItem,
 
     /// <summary>Player is piloting a shuttle (has PilotComponent).</summary>
     PilotShuttle,
@@ -1042,6 +1062,18 @@ public enum TutorialStepComplete : byte
 
     /// <summary>Player took a shock. Taught by consequence, so the drill is to get hurt once.</summary>
     PlayerShocked,
+
+    /// <summary>
+    /// A tagged electrified thing is arcing. Whatever set it off counts: a click, a swing, a tool,
+    /// or walking into it.
+    /// </summary>
+    /// <remarks>
+    /// The counterpart to <see cref="PlayerShocked"/> for the drill that comes after the gloves.
+    /// Once the shock is gone the click has no consequence to sense, and asking for the click
+    /// alone fails the player who proves the point by walking straight through it — which is
+    /// exactly what the gloves were for. The sparks are the one thing every route has in common.
+    /// </remarks>
+    TargetSparked,
 
     /// <summary>
     /// A tagged door's bolts are up. The state rather than the pulse that raised them, so a player

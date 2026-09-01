@@ -114,7 +114,7 @@
     - id: touch-grille-again
       text: tutorial-tide-sg-touch-grille-again
       controlHint: tutorial-tide-control-touch-grille-again
-      complete: InteractTargetTag
+      complete: TargetSparked
       tag: TutorialTideGrille
       mentorHolds: true
   # --- Chamber 4. materials storage ---------------------------------
@@ -201,8 +201,6 @@
       complete: PlayerInDisposal
       tag: TutorialTideDisposal
       mentorHolds: true
-    # The bin is a bin: vanilla timings, and the player works the flush themselves. Sitting in one
-    # waiting for it to go off on its own teaches nothing and reads as the tutorial having hung.
     - id: flush
       text: tutorial-tide-sg-flush
       controlHint: tutorial-tide-control-flush
@@ -274,7 +272,7 @@
       autoAdvanceSeconds: 22
     - id: take-id-back
       text: tutorial-tide-sg-take-id-back
-      complete: HoldItem
+      complete: CarryItem
       entity: PassengerIDCard
       mentorHolds: true
   # --- Chamber 8. graduation ----------------------------------------

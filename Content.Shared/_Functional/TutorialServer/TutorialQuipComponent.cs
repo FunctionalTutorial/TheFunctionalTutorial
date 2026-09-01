@@ -34,4 +34,7 @@ public enum TutorialQuipTrigger : byte
 
     /// <summary>Player put themselves inside this.</summary>
     PlayerInserted,
+
+    /// <summary>Player pried a floor tile up with a tool.</summary>
+    TilePried,
 }
