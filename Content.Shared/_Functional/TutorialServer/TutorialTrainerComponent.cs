@@ -49,6 +49,26 @@ public sealed partial class TutorialTrainerComponent : Component
     public Queue<TutorialPendingLine> PendingAfterLines = new();
 
     /// <summary>
+    /// One-off remarks waiting to be spoken: quips and corrections, which answer something the
+    /// player just did rather than anything in the script.
+    /// </summary>
+    /// <remarks>
+    /// Queued rather than said on the spot so they are typed out like every other line, and so one
+    /// landing in the middle of a segment pushes the rest of that segment back instead of appearing
+    /// on top of it. Spoken ahead of both scripted queues, since a remark about something that has
+    /// just happened is worth nothing once the moment has passed.
+    /// </remarks>
+    [ViewVariables]
+    public Queue<TutorialPendingLine> PendingInterjections = new();
+
+    /// <summary>
+    /// Set when a queued interjection started the line clock that a segment had not started yet,
+    /// so the gate it bypassed can be handed back once the remark has been said.
+    /// </summary>
+    [ViewVariables]
+    public bool InterjectionOwnsClock;
+
+    /// <summary>
     /// Sub-goal whose reaction is being spoken right now. While this is set the beat is satisfied
     /// but deliberately not advanced, so the coach gets to finish before the next objective lands.
     /// </summary>
@@ -98,11 +118,19 @@ public sealed partial class TutorialTrainerComponent : Component
     public TimeSpan TypingPause = TimeSpan.FromSeconds(0.7);
 
     /// <summary>
-    /// Lines of <see cref="LastSpokenSubGoal"/> said out loud, reset when the segment changes, so a
-    /// staged effect can land on a line of the script rather than on a stopwatch.
+    /// How far into <see cref="LastSpokenSubGoal"/>'s script the coach has got: the authored
+    /// position of the last line said, reset when the segment changes, so a staged effect can land
+    /// on a line of the script rather than on a stopwatch.
     /// </summary>
+    /// <remarks>
+    /// The authored position rather than a count of lines actually spoken. A player who finishes
+    /// the beat early has the rest of the instruction half dropped from under them (see
+    /// <see cref="PendingLines"/>), and counting would then leave the cue written for line four
+    /// waiting for a fourth line that is never coming — it went off somewhere in the reaction
+    /// instead, several seconds after the line it was meant to punctuate.
+    /// </remarks>
     [ViewVariables]
-    public int LinesSpoken;
+    public int SpokenLineIndex;
 
     /// <summary>
     /// How close the player must get before the coach starts a queued segment. Null speaks as soon
@@ -250,4 +278,14 @@ public sealed partial class TutorialTrainerLine
 /// One queued line of coach dialogue: resolved text plus whether speaking it should reveal the
 /// control hint.
 /// </summary>
-public readonly record struct TutorialPendingLine(string Text, bool ShowControlHint, bool AfterComplete = false);
+/// <remarks>
+/// <paramref name="Index"/> is the line's one-based position in the segment as written, which is
+/// not the same as how many lines end up being said: see
+/// <see cref="TutorialTrainerComponent.SpokenLineIndex"/>. Left at zero for a line that belongs to
+/// no script, which is every queued interjection.
+/// </remarks>
+public readonly record struct TutorialPendingLine(
+    string Text,
+    bool ShowControlHint,
+    bool AfterComplete = false,
+    int Index = 0);

@@ -283,6 +283,10 @@
       dialogue: tutorial-basics-nanci-farewell-3
     - subGoalId: farewell
       dialogue: tutorial-basics-nanci-farewell-4
+  - type: TutorialQuip
+    quips:
+    - trigger: TilePried
+      line: tutorial-basics-nanci-quip-tile
   - type: Speech
     speechVerb: Robotic
     speechSounds: Borg
@@ -352,6 +356,10 @@
   components:
   - type: Transform
     anchored: true
+  - type: TutorialQuip
+    quips:
+    - trigger: PlayerInserted
+      line: tutorial-basics-nanci-quip-crate
   - type: Tag
     tags:
     - TutorialPointTarget
@@ -488,14 +496,6 @@
     unlockAtGoalIndex: 6
 
 # ReachMarker targets.
-#
-# Deliberately not parented to TutorialStepMarker: that one is a glowing pink cross meant to be
-# seen, which suits the practice-room tutorials that stamp it down as a "stand here" pad. This
-# curriculum tells the player where to go in N.A.N.C.I.'s own words and marks the destinations with
-# floor decals, so the markers are pure geometry. MarkerBase gets that for free — Content.Client's
-# MarkerSystem hides every Marker sprite unless `showmarkers` is on, which `mapping` turns on, so
-# they stay visible in the editor and invisible in game. No PointLight, since the marker system only
-# hides the sprite and a disembodied purple glow is worse than the cross was.
 - type: entity
   abstract: true
   parent: MarkerBase

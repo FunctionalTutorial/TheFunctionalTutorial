@@ -51,7 +51,7 @@ tutorial-basics-nanci-gait-intro-1 = I will be accompanying you.
 tutorial-basics-nanci-gait-intro-2 = Not physically.
 tutorial-basics-nanci-gait-intro-3 = I am projected from the holopads you will find in every chamber.
 tutorial-basics-nanci-gait-intro-4 = It is considerably more efficient than walking.
-tutorial-basics-nanci-gait-intro-5 = Move onto the yellow sqaure to begin the next test.
+tutorial-basics-nanci-gait-intro-5 = Move onto the yellow square to begin the next test.
 
 tutorial-basics-sg-walk-toggle = Walk instead of running.
 tutorial-basics-control-walk-toggle = Use [color=#FFD24A][bold][keybind="Walk"][/bold][/color] to walk.
@@ -200,3 +200,8 @@ tutorial-basics-nanci-farewell-1 = Your assignments aboard the station begin sho
 tutorial-basics-nanci-farewell-2 = Please remember that workplace fatalities are preventable.
 tutorial-basics-nanci-farewell-3 = But workplace fatalities can also be extremely funny.
 tutorial-basics-nanci-farewell-4 = Have a productive shift and enjoy your cake.
+
+## Quips
+
+tutorial-basics-nanci-quip-crate = The crate is for pointing at. Applicant nine was in one for two days before anyone noticed the smell.
+tutorial-basics-nanci-quip-tile = That was a floor tile, employee. The door is the vertical one.

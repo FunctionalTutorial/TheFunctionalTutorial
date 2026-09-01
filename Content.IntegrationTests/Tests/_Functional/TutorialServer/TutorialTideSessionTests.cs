@@ -449,7 +449,7 @@ public sealed class TutorialTideSessionTests : GameTest
                 var spot = xforms.GetWorldPosition(entMan.GetComponent<TransformComponent>(session.MentorWalkPoint));
                 var atSpot = Vector2.Distance(here, spot) <= 1.5f;
 
-                if (!atSpot && comp.LinesSpoken > 0 && comp.LastSpokenSubGoal == "introductions")
+                if (!atSpot && comp.SpokenLineIndex > 0 && comp.LastSpokenSubGoal == "introductions")
                     spokeWhileAway = true;
 
                 // Stand in for the player following him, or he waits at the spot for a listener
@@ -457,7 +457,7 @@ public sealed class TutorialTideSessionTests : GameTest
                 if (atSpot)
                     xforms.SetCoordinates(mob, entMan.GetComponent<TransformComponent>(session.MentorUid).Coordinates);
 
-                arrived = atSpot && comp.LastSpokenSubGoal == "introductions" && comp.LinesSpoken > 0;
+                arrived = atSpot && comp.LastSpokenSubGoal == "introductions" && comp.SpokenLineIndex > 0;
             });
         }
 

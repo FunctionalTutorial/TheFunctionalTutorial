@@ -158,7 +158,7 @@ tutorial-tide-him-restore-power-2 = You can't move bolts without electricity. Re
 tutorial-tide-him-restore-power-3 = We need to pulse the bolt. A cut wire can't be pulsed.
 
 tutorial-tide-sg-unbolt-door = Get the bolts up.
-tutorial-tide-control-unbolt-door = Use a multitool on the wires until you find the bolt wire.
+tutorial-tide-control-unbolt-door = Use a multitool on the wire pads until you find the bolt wire. Try until the "BOLT" light turns off while the door is still powered. 
 tutorial-tide-him-unbolt-door-1 = Now use the multitool. Pulse the wires until the bolt light goes away.
 tutorial-tide-him-unbolt-door-2 = Bolts are motors, and motors need power. That's why we put back the wires.
 
@@ -214,7 +214,7 @@ tutorial-tide-him-open-construction-5 = Let's lay some pipe.
 
 tutorial-tide-sg-place-pipe = Lay the first length of pipe.
 tutorial-tide-control-place-pipe = Find "disposal pipe segment" under "Utilities" and place a construction ghost. You can rotate the ghost with [color=#FFD24A][bold][keybind="EditorRotateObject"][/bold][/color]. Then close the construction menu and exit build mode with [color=#FFD24A][bold][keybind="EditorCancelPlace"][/bold][/color]. Then put the steel in your hand and click on the green construction ghosts you placed to start construction.
-tutorial-tide-him-place-pipe-1 = The straigh pieces. Not the fancy ones.
+tutorial-tide-him-place-pipe-1 = The straight pieces. Not the fancy ones.
 tutorial-tide-him-place-pipe-2 = You don't want a junction, you don't want a signaller, and you definitely don't want whatever a router is.
 tutorial-tide-him-place-pipe-3 = Line it up with the ones already there.
 

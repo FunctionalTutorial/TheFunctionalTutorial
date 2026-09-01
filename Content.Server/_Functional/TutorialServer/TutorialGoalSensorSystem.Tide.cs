@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared._Functional.TutorialServer;
+using Content.Server.Electrocution;
 using Content.Server.Power.Components;
 using Content.Shared.Access.Systems;
 using Content.Shared.Disposal.Components;
@@ -61,6 +62,10 @@ public sealed partial class TutorialGoalSensorSystem
                 break;
             case TutorialStepComplete.PlayerShocked:
                 if (_shocked.Remove(uid))
+                    _tutorial.AdvanceSubGoal(uid);
+                break;
+            case TutorialStepComplete.TargetSparked:
+                if (IsTargetSparking(xform.MapUid, sub.Tag))
                     _tutorial.AdvanceSubGoal(uid);
                 break;
             case TutorialStepComplete.DoorBoltsRaised:
@@ -153,6 +158,34 @@ public sealed partial class TutorialGoalSensorSystem
             return;
 
         _openedConstruction.Add(player);
+    }
+
+    /// <summary>
+    /// True while a tagged electrified thing on the player's map is arcing.
+    /// </summary>
+    /// <remarks>
+    /// <c>ActivatedElectrified</c> is what <c>ElectrocutionSystem</c> hangs the spark sprite off,
+    /// and it goes on before any of the checks that decide whether the shock lands. So it is on for
+    /// the bare hand, the insulated hand, the tool, the swing and the shoulder — every route to the
+    /// same visible answer, which is the answer the drill is asking the player to notice. It clears
+    /// itself after about a second, so this reads as "just now" rather than "at some point".
+    /// </remarks>
+    private bool IsTargetSparking(EntityUid? mapUid, string? tag)
+    {
+        if (mapUid == null || string.IsNullOrEmpty(tag))
+            return false;
+
+        var tagId = (ProtoId<TagPrototype>) tag;
+        var query = EntityQueryEnumerator<ActivatedElectrifiedComponent, TransformComponent>();
+        while (query.MoveNext(out var uid, out _, out var xform))
+        {
+            if (xform.MapUid != mapUid || !_tags.HasTag(uid, tagId))
+                continue;
+
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
